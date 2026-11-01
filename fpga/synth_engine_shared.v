@@ -6,6 +6,7 @@ module synth_engine_shared #(
 )(
     input wire clk, input wire rst, input wire sample_tick,
     input wire cfg_valid, output wire cfg_ready,
+    input wire signed [13:0] pitch_offset,
     input wire [4:0] cfg_voice,
     input wire cfg_gate,cfg_restart, input wire [31:0] cfg_step,
     input wire [2:0] cfg_wave, input wire [15:0] cfg_level,
@@ -43,6 +44,10 @@ module synth_engine_shared #(
     reg signed [23:0] mix;
     wire signed [15:0] voice_sample = level_product[31:16];
     wire signed [23:0] scaled_mix = mix >>> MIX_SHIFT;
+    // Compute the table-voice DDS increment across existing pipeline stages.
+    reg signed [42:0] pitch_product;
+    reg [31:0] next_step;
+    wire signed [32:0] bent_step=$signed({1'b0,step[voice]})+(pitch_product>>>15);
     integer i;
     assign cfg_ready = !rst && !busy && !sample_tick;
     waveform_rom tables(.clk(clk), .addr(rom_addr), .data(wave_sample));
@@ -85,7 +90,7 @@ module synth_engine_shared #(
             state <= IDLE; voice <= 0; busy <= 0; pcm <= 0; pcm_valid <= 0;
             overrun <= 0; clipped <= 0; mix <= 0; rom_addr <= 0;
             active_voices<=0; active_work<=0; active_mask_work<=0;active_pending<=0;voice_active_mask<=0;mix_sum<=0;
-            env_work <= 0; env_product <= 0; level_product <= 0;
+            env_work <= 0; env_product <= 0; level_product <= 0;pitch_product<=0;next_step<=0;
             for (i=0; i<VOICES; i=i+1) begin
                 phase[i]<=0; step[i]<=0; gate[i]<=0; wave[i]<=0; level[i]<=0;
                 env[i]<=0; env_state[i]<=E_OFF;
@@ -120,16 +125,18 @@ module synth_engine_shared #(
                 LOAD: begin
                     rom_addr <= {wave[voice][1:0],phase[voice][31:22]};
                     if(wave[voice]==4) begin
+                        phase[voice]<=phase[voice]+step[voice];
                         piano_retrigger[voice]<=0;
                         state<=PIANO_ENV;
                     end else begin
+                        pitch_product<=$signed({1'b0,step[voice][27:0]})*pitch_offset;
                         env[voice] <= env_next; env_work <= env_next;
                         env_state[voice] <= env_state_next; state<=ROM_WAIT;
                         active_pending<=env_next != 0 && level[voice] != 0 && step[voice] != 0;
                         if (env_next != 0 && level[voice] != 0 && step[voice] != 0)begin
                             active_work <= active_work+1'b1;end
                     end
-                    phase[voice] <= phase[voice] + step[voice];
+
                 end
                 PIANO_ENV:if(piano_done) begin
                     level_product<=$signed(piano_sample)*33'sd65536;
@@ -139,8 +146,12 @@ module synth_engine_shared #(
                     if(piano_active)active_work<=active_work+1'b1;
                     state<=ACCUM;
                 end
-                ROM_WAIT: state<=ENV_MUL;
+                ROM_WAIT:begin
+                    next_step<=bent_step>33'sh0fffffff ? 32'h0fffffff : bent_step[31:0];
+                    state<=ENV_MUL;
+                end
                 ENV_MUL: begin
+                    phase[voice]<=phase[voice]+next_step;
                     env_product <= wave_sample * $signed({1'b0,env_work});
                     state<=LEVEL_MUL;
                 end

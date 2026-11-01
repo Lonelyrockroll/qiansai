@@ -1,0 +1,57 @@
+{
+  "scope": "Sampled actual v27 board telemetry during local physical testing, not a count of all hardware events.",
+  "device": "J18, 1189:8840",
+  "saw_C4_pressed": true,
+  "bend_positions_cents_seen": [
+    -200,
+    -150,
+    -100,
+    -50,
+    0,
+    50,
+    100,
+    150,
+    200
+  ],
+  "depth_cents_seen": [
+    0,
+    10,
+    20,
+    30,
+    40,
+    50
+  ],
+  "missed_audio_frame": false,
+  "examples": {
+    "B_held_volume": {
+      "ms": 118078,
+      "last": 20,
+      "bend": 0,
+      "vibrato": 0,
+      "volume": 9,
+      "focus": 0,
+      "armed": true,
+      "keys": 0
+    },
+    "A_free_bend": {
+      "ms": 134500,
+      "last": 12,
+      "bend": 200,
+      "vibrato": 0,
+      "volume": 9,
+      "focus": 0,
+      "armed": true,
+      "keys": 32768
+    },
+    "A_held_depth": {
+      "ms": 178453,
+      "last": 18,
+      "bend": 0,
+      "vibrato": 20,
+      "volume": 9,
+      "focus": 0,
+      "armed": true,
+      "keys": 32768
+    }
+  }
+}

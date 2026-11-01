@@ -136,6 +136,11 @@ module synth_display_top(
       .drum_hit_ready(drum_hit_ready),.drum_hit_valid(drum_hit_valid),.drum_hit_pad(drum_hit_pad),
       .command_ready(native_ready),.command_valid(native_valid),.command_action(native_action),.command_value(native_value),
       .disconnect_pulse(native_panic),.connected(native_connected),.event_count(native_events),.last_event(native_last_event),.diagnostic(native_diagnostic));
+    wire express_adjust,express_depth,express_up;
+    wire [3:0] bend_position;wire [2:0] vibrato_depth;wire signed [13:0] pitch_offset;
+    pitch_expression expression_ctrl(.clk(sys_clk),.rst(rst),.tick(tick),.clear(panic || native_panic),
+        .adjust(express_adjust),.select_depth(express_depth),.increase(express_up),
+        .bend_position(bend_position),.vibrato_depth(vibrato_depth),.pitch_offset(pitch_offset));
     wire [3:0] ui_focus;wire [6:0] ui_volume;
     wire pixel_clk,serial_clk,video_locked;
     reg [1:0] lock_sync=0;
@@ -213,7 +218,8 @@ module synth_display_top(
         .led_latched_mask(led_latched_mask),.led_frames(led_frames),
         .diag_command_valid(diag_command_valid),.diag_command(diag_command),.diag_mode(diag_mode),.diag_phase(diag_phase),.diag_seconds(diag_seconds),
         .ui_valid(ui_valid),.ui_action(ui_action),.ui_value(button_valid?16'd0:native_value),.ui_ready(ui_ready),
-        .native_panic(native_panic),.native_connected(native_connected),.native_last_event(native_last_event),.native_diagnostic(native_diagnostic),.native_events(native_events),.video_locked(lock_sync[1]),
+        .express_adjust(express_adjust),.express_depth(express_depth),.express_up(express_up),
+        .bend_position(bend_position),.vibrato_depth(vibrato_depth),.native_panic(native_panic),.native_connected(native_connected),.native_last_event(native_last_event),.native_diagnostic(native_diagnostic),.native_events(native_events),.video_locked(lock_sync[1]),
         .loop_command_valid(loop_command_valid),.loop_command(loop_command),.loop_playing(loop_playing),.loop_recording(loop_recording),
         .loop_pending(loop_pending),.loop_full(loop_full),.loop_layers(loop_layers),.loop_notice(loop_notice),.loop_duration(loop_duration),
         .loop_position(loop_position),.loop_actual_length(loop_actual_length),.loop_actual_cs(loop_actual_cs),.loop_position_cs(loop_position_cs),.loop_counts(loop_counts),.loop_replayed(loop_replayed),.pc_pad_valid(pc_pad_valid),.pc_pad(pc_pad),.pc_pad_ready(pc_pad_ready),
@@ -232,7 +238,7 @@ module synth_display_top(
         .panic(uart_panic),.cfg_valid(cfg_valid),.cfg_ready(cfg_ready),.cfg_voice(cfg_voice),
         .cfg_gate(cfg_gate),.cfg_step(cfg_step),.cfg_wave(cfg_wave),.cfg_level(cfg_level),
         .cfg_attack(cfg_attack),.cfg_decay(cfg_decay),.cfg_sustain(cfg_sustain),.cfg_release(cfg_release));
-    synth_engine_shared engine(.clk(sys_clk),.rst(rst|clear_engine),.sample_tick(tick),
+    synth_engine_shared engine(.pitch_offset(pitch_offset),.clk(sys_clk),.rst(rst|clear_engine),.sample_tick(tick),
         .cfg_valid(routed_cfg_valid && !panic && !amp_muting),.cfg_ready(engine_ready),.cfg_voice(routed_voice),
         .cfg_gate(routed_gate),.cfg_restart(routed_restart),.cfg_step(routed_step),.cfg_wave(routed_wave),.cfg_level(routed_level),
         .cfg_attack(routed_attack),.cfg_decay(routed_decay),.cfg_sustain(routed_sustain),.cfg_release(routed_release),
@@ -266,15 +272,15 @@ module synth_display_top(
             else if(peak_div==0 && peak!=0) peak<=peak-1'b1;
         end
     end
-    wire [113:0] panel_state;
-    display_snapshot #(.WIDTH(114)) snapshot(.sys_clk(sys_clk),.sys_rst(rst),.pixel_clk(pixel_clk),.pixel_rst(pixel_rst),
-        .frame_start(frame_start),.source({fx_status_mask,ui_focus[3],loop_actual_cs,loop_position_cs,loop_layers,loop_duration,loop_playing,loop_recording,loop_pending,loop_notice,loop_progress,drum_mode,ui_focus[2:0],key_wave,ui_volume,active_voices,key_mode,
+    wire [120:0] panel_state;
+    display_snapshot #(.WIDTH(121)) snapshot(.sys_clk(sys_clk),.sys_rst(rst),.pixel_clk(pixel_clk),.pixel_rst(pixel_rst),
+        .frame_start(frame_start),.source({bend_position,vibrato_depth,fx_status_mask,ui_focus[3],loop_actual_cs,loop_position_cs,loop_layers,loop_duration,loop_playing,loop_recording,loop_pending,loop_notice,loop_progress,drum_mode,ui_focus[2:0],key_wave,ui_volume,active_voices,key_mode,
             key_calibrated,key_fault,PA_EN,amp_ready,uart_amp_hold,ui_pattern,ui_notice,(drum_mode?{20'd0,drum_mask}:panel_keys),peak}),.snapshot(panel_state));
     wire [23:0] rgb;wire hs_out,vs_out,de_out;
     panel_renderer renderer(.clk(pixel_clk),.rst(pixel_rst),.x(x),.y(y),.hs(hs),.vs(vs),.de(de),
         .loop_actual_cs(panel_state[109:100]),.loop_position_cs(panel_state[99:90]),.loop_layers(panel_state[89:87]),.loop_duration(panel_state[86:85]),.loop_playing(panel_state[84]),
         .loop_recording(panel_state[83]),.loop_pending(panel_state[82]),.loop_notice(panel_state[81:79]),.loop_progress(panel_state[78:72]),
-        .drum_mode(panel_state[71]),.focus({panel_state[110],panel_state[70:68]}),.fx(panel_state[113:111]),.timbre(panel_state[67:65]),.volume(panel_state[64:58]),
+        .bend_position(panel_state[120:117]),.vibrato_depth(panel_state[116:114]),.drum_mode(panel_state[71]),.focus({panel_state[110],panel_state[70:68]}),.fx(panel_state[113:111]),.timbre(panel_state[67:65]),.volume(panel_state[64:58]),
         .voices(panel_state[57:52]),.mode(panel_state[51:50]),.calibrated(panel_state[49]),.fault(panel_state[48]),
         .muted(panel_state[47]),.ready(panel_state[46]),.playing(panel_state[45]),.pattern(panel_state[44]),
         .notice(panel_state[43:40]),.pressed(panel_state[39:8]),.peak(panel_state[7:0]),

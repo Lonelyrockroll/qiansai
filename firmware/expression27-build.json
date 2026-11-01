@@ -1,0 +1,101 @@
+{
+  "sha256": "a515600203c574cbe732baca68e5eccaaea12441ec102320bf620ab8df7c39c4",
+  "user_code": "0x0000DC5C",
+  "frequency": [
+    [
+      "1",
+      "sys_clk",
+      "50.000(MHz)",
+      "50.097(MHz)",
+      "17",
+      "TOP"
+    ],
+    [
+      "2",
+      "pixel_clk",
+      "49.000(MHz)",
+      "65.748(MHz)",
+      "14",
+      "TOP"
+    ],
+    [
+      "3",
+      "usb_clk",
+      "60.000(MHz)",
+      "73.770(MHz)",
+      "7",
+      "TOP"
+    ]
+  ],
+  "slack": [
+    [
+      "sys_clk",
+      "Setup",
+      "0.000",
+      "0"
+    ],
+    [
+      "sys_clk",
+      "Hold",
+      "0.000",
+      "0"
+    ],
+    [
+      "serial_clk",
+      "Setup",
+      "0.000",
+      "0"
+    ],
+    [
+      "serial_clk",
+      "Hold",
+      "0.000",
+      "0"
+    ],
+    [
+      "pixel_clk",
+      "Setup",
+      "0.000",
+      "0"
+    ],
+    [
+      "pixel_clk",
+      "Hold",
+      "0.000",
+      "0"
+    ],
+    [
+      "usb_clk",
+      "Setup",
+      "0.000",
+      "0"
+    ],
+    [
+      "usb_clk",
+      "Hold",
+      "0.000",
+      "0"
+    ]
+  ],
+  "warning": "PR1014 retained. Tight 50 MHz synthesis-path timing margin. Static timing is not an electrical/video-link test.",
+  "firmware": 27,
+  "resources": {
+    "Logic": [
+      38233.0,
+      59904
+    ],
+    "Register": [
+      19157.0,
+      60780
+    ],
+    "BSRAM": [
+      115.0,
+      118
+    ],
+    "DSP": [
+      54.0,
+      118
+    ]
+  },
+  "place_option": 1
+}

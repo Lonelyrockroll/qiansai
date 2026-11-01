@@ -1,0 +1,15 @@
+{
+  "scope": "RTL simulation, melodic mix, accelerated idle clocks, no analog output",
+  "base_hz": 261.62407988791495,
+  "bent_hz": 293.6710588560578,
+  "returned_hz": 261.6292176180886,
+  "vibrato_hz": 5.498023303091379,
+  "vibrato_cents": 50.06434411513621,
+  "piano_samples_identical": 40000,
+  "latencies": {
+    "sine": "PASS           1 voices       92000 frames max           7 /1024 clocks",
+    "piano": "PASS           1 voices       40000 frames max          20 /1024 clocks",
+    "original_piano": "PASS           1 voices       40000 frames max          20 /1024 clocks",
+    "mixed": "PASS          32 voices         192 frames max         370 /1024 clocks"
+  }
+}

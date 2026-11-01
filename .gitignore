@@ -1,0 +1,5 @@
+__pycache__/
+/realtime_synth/keypad_control/physical_replay_validation.json
+/fpga/impl/
+/fpga/source_manifest.json
+/fpga/*.gprj.user

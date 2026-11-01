@@ -48,8 +48,6 @@ module native_usb_bridge(input wire sys_clk,rst,inout wire usb_dp,usb_dm,
    if(event_valid && event_ready)begin event_count<=event_count+1'b1;last_event<=event_id;end
   end
  end
- reg previous_drum_mode=0;
- always @(posedge sys_clk)previous_drum_mode<=drum_mode;
  native_keypad_drums decoder(.clk(sys_clk),.rst(rst || disconnect_pulse),.connected(connected),.report_valid(report_valid),
   .mode_change(1'b0),
   .report_length(report_length),.report_data(report_data),.event_valid(event_valid),.event_ready(event_ready),.event_id(event_id),.fault(parser_fault));
@@ -60,8 +58,10 @@ module native_usb_bridge(input wire sys_clk,rst,inout wire usb_dp,usb_dm,
    17:command_action=2;
    16:command_action=9;
    15:command_action=1;
-   12:begin command_action=7;command_value=current_level<15073?current_level+16'd1311:16'd16384;end
-   13:begin command_action=7;command_value=current_level>1311?current_level-16'd1311:16'd0;end
+   12,13:begin command_action=13;command_value={15'd0,event_id==12};end
+   18,19:begin command_action=15;command_value={15'd0,event_id==18};end
+   20:begin command_action=7;command_value=current_level<15073?current_level+16'd1311:16'd16384;end
+   21:begin command_action=7;command_value=current_level>1311?current_level-16'd1311:16'd0;end
    default:;
   endcase
  end

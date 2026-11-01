@@ -12,6 +12,7 @@
     <File path="audio_output_limited.v" type="file.verilog" enable="1" />
     <File path="uart_rx.v" type="file.verilog" enable="1" />
     <File path="uart_tx.v" type="file.verilog" enable="1" />
+    <File path="pitch_expression.v" type="file.verilog" enable="1" />
     <File path="synth_engine_shared.v" type="file.verilog" enable="1" />
     <File path="audio_tx.v" type="file.verilog" enable="1" />
     <File path="waveform_rom.v" type="file.verilog" enable="1" />

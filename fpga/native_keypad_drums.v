@@ -6,18 +6,41 @@ module native_keypad_drums #(parameter CLK_HZ=50000000)(input wire clk,rst,conne
  input wire report_valid,input wire [4:0] report_length,input wire [127:0] report_data,
  output wire event_valid,input wire event_ready,output reg [4:0] event_id,
  output reg fault);
- reg [11:0] held;reg [18:0] pending;reg [2:0] mouse_held;
-
- // Ctrl is exclusively a knob-A prefix. The tail tolerates reordered mouse
- // reports after Ctrl-up; it never delays or generates a drum event.
- reg ctrl,ctrl_tail;reg [21:0] release_timer;
- reg [7:0] a_cw,a_ccw,b_cw,b_ccw;
- reg [11:0] new_keys;reg new_ctrl;reg [7:0] usage;reg [3:0] slots;
- integer i,j;reg chosen;reg [18:0] available;
+ // The 12 pads are edges. Encoder gestures are ordered, including repeated wheel detents.
+ reg [11:0] held,pad_pending,new_keys;
+ reg [2:0] mouse_held;
+ reg a_turned,b_turned,ctrl,ctrl_wheeled,ctrl_tail;
+ reg [21:0] release_timer;
+ reg [2:0] cleanup_mask;
+ reg [20:0] cleanup_timer;
+ reg [12:0] queue[0:15];   // {event ID, detents in this report}
+ reg [3:0] rd,wr;
+ reg [4:0] queued;
+ reg [7:0] delivered;
  wire keyboard_report=(report_data[7:0]==1 && report_length==9) || (report_data[7:0]==4 && report_length==12);
  wire mouse_report=report_data[7:0]==2 && report_length==5;
+ wire [2:0] buttons=report_data[10:8];
+ wire new_ctrl=report_data[8] || report_data[12];
  wire [7:0] wheel=report_data[39:32];
- wire [7:0] wheel_count=wheel[7]?(~wheel+1'b1):wheel;
+ wire [7:0] wheel_count=wheel[7] ? (~wheel+1'b1) : wheel;
+ wire a_wheel=ctrl || (ctrl_tail && !(buttons[0] || mouse_held[0]));
+ wire moving=wheel!=0;
+ // 1189:8840 sends each detent as wheel+zero, temporarily clearing button
+ // bits in both packets even when the encoder is physically held. Its real
+ // release is a *separate* zero report. Ignore only the detent's own trailer.
+ wire [2:0] next_buttons = moving ? (mouse_held|buttons) :
+                           (buttons | (cleanup_timer!=0 ? cleanup_mask : 3'b0));
+ wire a_held=buttons[1] || mouse_held[1];
+ wire b_held=buttons[0] || mouse_held[0];
+ // A+/A-, B+/B-, held A+/A-, held B+/B-.
+ wire [4:0] wheel_id=(a_wheel ? (a_held ? 5'd18 : 5'd12) : (b_held ? 5'd20 : 5'd15)) + wheel[7];
+ wire a_tap=mouse_held[1] && !next_buttons[1] && !a_turned;
+ wire b_tap=mouse_held[0] && !next_buttons[0] && !b_turned;
+ wire [2:0] additions={2'd0,moving}+{2'd0,a_tap}+{2'd0,b_tap};
+ wire [3:0] tap_pos=wr+moving;
+ wire [3:0] b_pos=tap_pos+a_tap;
+ wire [12:0] head=queue[rd];
+ integer i,j;
  function [11:0] usage_mask(input [7:0] u);
   begin case(u)
    8'h09:usage_mask=11'b00000000001;8'h0e:usage_mask=11'b00000000010;
@@ -28,52 +51,55 @@ module native_keypad_drums #(parameter CLK_HZ=50000000)(input wire clk,rst,conne
    8'h1a:usage_mask=12'h400;8'h68:usage_mask=12'h800;default:usage_mask=0;
   endcase end
  endfunction
- always @*begin
-  new_keys=0;new_ctrl=report_data[8] || report_data[12];slots=report_data[7:0]==4?9:6;usage=0;
-  for(i=0;i<9;i=i+1)if(i<slots)begin usage=report_data[24+i*8 +: 8];new_keys=new_keys|usage_mask(usage);end
-  available=pending;available[12]=a_cw!=0;available[13]=a_ccw!=0;available[15]=b_cw!=0;available[16]=b_ccw!=0;
-  chosen=0;event_id=0;
-  for(j=0;j<19;j=j+1)if(available[j] && !chosen)begin event_id=j;chosen=1;end
+ always @* begin
+  new_keys=0;
+  for(i=0;i<9;i=i+1)
+   if(report_data[7:0]==4 || i<6) new_keys=new_keys|usage_mask(report_data[24+i*8 +: 8]);
+  event_id=head[12:8];
+  for(j=11;j>=0;j=j-1) if(pad_pending[j]) event_id=j;
  end
- assign event_valid=chosen && connected && !report_valid;
- always @(posedge clk)begin
-  if(rst || !connected)begin
-   held<=0;pending<=0;mouse_held<=0;ctrl<=0;ctrl_tail<=0;release_timer<=0;
-   a_cw<=0;a_ccw<=0;b_cw<=0;b_ccw<=0;fault<=0;
+ assign event_valid=connected && !report_valid && (pad_pending!=0 || queued!=0);
+ always @(posedge clk) begin
+  if(rst || !connected || mode_change) begin
+   held<=0;pad_pending<=0;mouse_held<=0;a_turned<=0;b_turned<=0;
+   ctrl<=0;ctrl_wheeled<=0;ctrl_tail<=0;release_timer<=0;
+   cleanup_mask<=0;cleanup_timer<=0;
+   rd<=0;wr<=0;queued<=0;delivered<=0;fault<=0;
   end else begin
-   if(event_valid && event_ready)begin
-    case(event_id)
-     12:a_cw<=a_cw-1'b1;13:a_ccw<=a_ccw-1'b1;15:b_cw<=b_cw-1'b1;16:b_ccw<=b_ccw-1'b1;
-     default:pending[event_id]<=0;
-    endcase
+   if(event_valid && event_ready) begin
+    if(pad_pending!=0) pad_pending[event_id]<=0;
+    else if(delivered+1'b1==head[7:0]) begin rd<=rd+1'b1;queued<=queued-1'b1;delivered<=0;end
+    else delivered<=delivered+1'b1;
    end
-   if(ctrl_tail && !report_valid)begin
-    if(release_timer!=0)release_timer<=release_timer-1'b1;
-    else ctrl_tail<=0;
+   if(ctrl_tail) begin
+    if(release_timer==0) ctrl_tail<=0;
+    else release_timer<=release_timer-1'b1;
    end
-   if(report_valid)begin
-    if(keyboard_report)begin
-     // All twelve keys, including F13/K12, trigger only on a down edge.
-     pending[11:0]<=pending[11:0] | (new_keys & ~held);held<=new_keys;
-     if(new_ctrl && !ctrl)ctrl_tail<=0;
-     if(!new_ctrl && ctrl)begin ctrl_tail<=1;release_timer<=CLK_HZ/25;end
-     ctrl<=new_ctrl;
-    end else if(mouse_report)begin
-     if(report_data[9] && !mouse_held[1])pending[14]<=1;
-     if(report_data[8] && !mouse_held[0])pending[17]<=1;
-     mouse_held<=report_data[10:8];
-     if(wheel!=0)begin
-      if(ctrl || ctrl_tail)begin
-       ctrl_tail<=0;
-       if(wheel[7])begin if({1'b0,a_ccw}+{1'b0,wheel_count}>255)fault<=1;else a_ccw<=a_ccw+wheel_count;end
-       else begin if({1'b0,a_cw}+{1'b0,wheel_count}>255)fault<=1;else a_cw<=a_cw+wheel_count;end
-      end else if(wheel[7])begin if({1'b0,b_ccw}+{1'b0,wheel_count}>255)fault<=1;else b_ccw<=b_ccw+wheel_count;end
-      else begin if({1'b0,b_cw}+{1'b0,wheel_count}>255)fault<=1;else b_cw<=b_cw+wheel_count;end
-     end
-     if(report_data[10:8]!=0)ctrl_tail<=0;
+   if(cleanup_timer!=0)cleanup_timer<=cleanup_timer-1'b1;
+   if(report_valid && keyboard_report) begin
+    pad_pending<=pad_pending|(new_keys & ~held);held<=new_keys;
+    if(new_ctrl && !ctrl) begin ctrl_wheeled<=0;ctrl_tail<=0;end
+    if(!new_ctrl && ctrl) begin ctrl_tail<=!ctrl_wheeled;release_timer<=CLK_HZ/25;end
+    ctrl<=new_ctrl;
+   end
+   if(report_valid && mouse_report) begin
+    if(queued+additions>16) fault<=1;
+    else if(additions!=0) begin
+     if(moving) queue[wr]<={wheel_id,wheel_count};
+     if(a_tap) queue[tap_pos]<={5'd14,8'd1};
+     if(b_tap) queue[b_pos]<={5'd17,8'd1};
+     wr<=wr+additions;queued<=queued+additions;
     end
+    if(moving || buttons!=0) ctrl_tail<=0;
+    if(moving && a_wheel && ctrl) ctrl_wheeled<=1;
+    if(moving)begin cleanup_mask<=mouse_held & ~buttons;cleanup_timer<=CLK_HZ/50;end
+    else begin cleanup_mask<=0;cleanup_timer<=0;end
+    if(!next_buttons[1]) a_turned<=0;
+    else if(moving && a_wheel) a_turned<=1;
+    if(!next_buttons[0]) b_turned<=0;
+    else if(moving && !a_wheel) b_turned<=1;
+    mouse_held<=next_buttons;
    end
-   if(mode_change)begin pending<=0;a_cw<=0;a_ccw<=0;b_cw<=0;b_ccw<=0;ctrl_tail<=0;end
   end
  end
 endmodule

@@ -150,7 +150,8 @@ class Decoder:
                     level=int.from_bytes(p[14:16],'little'),firmware=p[18],opcode=p[19]))
                 continue
             if p[19]==12 and p[18]>=13:
-                result.append(dict(seq=frame[3],status=p[0],native_usb_connected=bool(p[1]),
+                expr={'bend_cents':(int(p[3]&15)-4)*50,'vibrato_cents':((p[3]>>4)&7)*10} if p[18]>=27 and p[3]&128 else {}
+                result.append(dict(seq=frame[3],status=p[0],native_usb_connected=bool(p[1]),**expr,
                     last_event=p[2],diagnostic_hex=p[4:12].hex(),event_count=int.from_bytes(p[12:16],'little'),firmware=p[18],opcode=p[19]))
                 continue
             if p[19]==DISPLAY_STATUS:

@@ -1,0 +1,152 @@
+{
+  "scope": "USB reports read by a temporary FPGA raw HID probe with the control keyboard on J18. Combined gestures then replayed into the v27 HDL decoder.",
+  "device": "1189:8840",
+  "actual_order": [
+    "B held: clockwise x2, counterclockwise x1, release",
+    "A held: clockwise x2, counterclockwise x1, release",
+    "A tap",
+    "B tap"
+  ],
+  "expected_decoded_events": [
+    20,
+    20,
+    21,
+    18,
+    18,
+    19,
+    14,
+    17
+  ],
+  "reports": [
+    {
+      "ms": 0,
+      "sequence": 9,
+      "report_hex": "0201000000"
+    },
+    {
+      "ms": 1125,
+      "sequence": 10,
+      "report_hex": "0200000001"
+    },
+    {
+      "ms": 1125,
+      "sequence": 11,
+      "report_hex": "0200000000"
+    },
+    {
+      "ms": 2266,
+      "sequence": 12,
+      "report_hex": "0200000001"
+    },
+    {
+      "ms": 2266,
+      "sequence": 13,
+      "report_hex": "0200000000"
+    },
+    {
+      "ms": 3563,
+      "sequence": 14,
+      "report_hex": "02000000ff"
+    },
+    {
+      "ms": 3563,
+      "sequence": 15,
+      "report_hex": "0200000000"
+    },
+    {
+      "ms": 4469,
+      "sequence": 16,
+      "report_hex": "0200000000"
+    },
+    {
+      "ms": 6250,
+      "sequence": 17,
+      "report_hex": "0202000000"
+    },
+    {
+      "ms": 7203,
+      "sequence": 18,
+      "report_hex": "010100000000000000"
+    },
+    {
+      "ms": 7203,
+      "sequence": 19,
+      "report_hex": "0200000001"
+    },
+    {
+      "ms": 7203,
+      "sequence": 20,
+      "report_hex": "0200000000"
+    },
+    {
+      "ms": 7219,
+      "sequence": 21,
+      "report_hex": "010000000000000000"
+    },
+    {
+      "ms": 8391,
+      "sequence": 22,
+      "report_hex": "010100000000000000"
+    },
+    {
+      "ms": 8406,
+      "sequence": 23,
+      "report_hex": "0200000001"
+    },
+    {
+      "ms": 8406,
+      "sequence": 24,
+      "report_hex": "0200000000"
+    },
+    {
+      "ms": 8406,
+      "sequence": 25,
+      "report_hex": "010000000000000000"
+    },
+    {
+      "ms": 10766,
+      "sequence": 26,
+      "report_hex": "010100000000000000"
+    },
+    {
+      "ms": 10781,
+      "sequence": 27,
+      "report_hex": "02000000ff"
+    },
+    {
+      "ms": 10781,
+      "sequence": 28,
+      "report_hex": "0200000000"
+    },
+    {
+      "ms": 10781,
+      "sequence": 29,
+      "report_hex": "010000000000000000"
+    },
+    {
+      "ms": 11578,
+      "sequence": 30,
+      "report_hex": "0200000000"
+    },
+    {
+      "ms": 13734,
+      "sequence": 31,
+      "report_hex": "0202000000"
+    },
+    {
+      "ms": 13875,
+      "sequence": 32,
+      "report_hex": "0200000000"
+    },
+    {
+      "ms": 15000,
+      "sequence": 33,
+      "report_hex": "0201000000"
+    },
+    {
+      "ms": 15125,
+      "sequence": 34,
+      "report_hex": "0200000000"
+    }
+  ]
+}

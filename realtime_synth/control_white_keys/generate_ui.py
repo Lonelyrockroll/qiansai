@@ -3,11 +3,16 @@ No framebuffer, CPU or external memory is required. Run with Pillow installed.
 """
 from pathlib import Path
 from PIL import Image,ImageDraw,ImageFont
-import json
-ROOT=Path(__file__).resolve().parent
+import argparse,json,tempfile
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--expression-fpga', type=Path, help='generate the compact knob-expression panel in this FPGA directory')
+args=parser.parse_args()
+SOURCE=Path(__file__).resolve().parent
+temporary=tempfile.TemporaryDirectory() if args.expression_fpga else None
+ROOT=Path(temporary.name) if temporary else SOURCE
 # Use the same pitches as the PC keyboard; H1 is C2, H15 is middle C (C4).
 import sys
-sys.path.insert(0,str(ROOT.parent/'host'))
+sys.path.insert(0,str(SOURCE.parent/'host'))
 from protocol import WHITE_KEYS as MIDIS
 LETTERS="CDEFGAB"
 assert len(MIDIS)==32 and (MIDIS[0],MIDIS[14],MIDIS[-1])==(36,60,89)
@@ -78,8 +83,22 @@ for i,label in enumerate(['开始演奏','录制一轮','切换音色','琴键�
     elif i==5:text(688,372,(f'{loop_play_labels}+loop_playing',4))
     else:text(688,132+i*48,label)
     number(648,132+i*48,str(i+1),1,color="24'h55dfbd")
-text(34,552,'旋钮A 琴键音量 / 静音',color="24'h96a9ba")
-text(432,552,'旋钮B 选择 / 执行',color="24'h96a9ba")
+def knob_help(old_a):
+    if not args.expression_fpga:
+        text(34,552,old_a,color="24'h96a9ba")
+        text(432,552,'旋钮B 选择 / 执行',color="24'h96a9ba")
+        return
+    text(34,552,'A 转滑音 按转颤音 点静音',color="24'h96a9ba")
+    text(432,552,'B 转选择 按转音量 点执行',color="24'h96a9ba")
+    color="(timbre==4)?24'h798693:24'h55dfbd"
+    text(34,576,(f'{bend_names}+bend_position',11),color=color)
+    text(286,576,(f'{depth_names}+vibrato_depth',10),color=color)
+    text(552,576,(f'{bypass_names}+(timbre==4)',10),color=color)
+if args.expression_fpga:
+    bend_names=choices([f'滑音 {i*50:+d} 音分' if i else '滑音 0 音分' for i in range(-4,5)])
+    depth_names=choices([f'颤音 {i*10} 音分' for i in range(6)])
+    bypass_names=choices(['','钢琴原音'])
+knob_help('旋钮A 琴键音量 / 静音')
 cal=choices(['扫描未启用','正在校准','校准完成','ADC 故障'])
 text(800,552,(f'{cal}+(fault?3:(mode==0?0:(calibrated?2:1)))',8),color="fault?24'hff7b78:24'h55dfbd")
 notices=choices(['实体琴键需开扫描并校准；鼓组始终可用。','请先启用琴键扫描。','ADC故障，仅暂停现场实体琴键。'])
@@ -111,8 +130,7 @@ text(688,180,(f'{record_names}+(loop_recording?1:(loop_pending?2:0))',4));text(6
 loop_play_labels=choices(['播放循环','停止循环']);text(688,276,(f'{loop_play_labels}+loop_playing',4))
 loop_lengths=choices(['上限 2 秒','上限 4 秒','上限 8 秒']);text(688,324,(f'{loop_lengths}+loop_duration',7))
 text(688,372,'清空循环');text(688,468,'琴键设置')
-text(34,552,'旋钮A 鼓组音量 / 静音',color="24'h96a9ba")
-text(432,552,'旋钮B 选择 / 执行',color="24'h96a9ba")
+knob_help('旋钮A 鼓组音量 / 静音')
 playing_base=choices(['短按B 开始','鼓组已就绪'])
 text(800,552,(f'{playing_base}+(playing?1:0)',8),color="24'h55dfbd")
 drum_slots=slots;slots=base_slots
@@ -211,5 +229,12 @@ v+='''  if(pattern) begin
  end
 endmodule
 '''
+if args.expression_fpga:
+    v=v.replace('input wire [3:0] focus,','input wire [3:0] bend_position,focus,input wire [2:0] vibrato_depth,')
 (ROOT/'panel_renderer.v').write_text(v,encoding='utf8')
+if args.expression_fpga:
+    sys.path.insert(0,str(SOURCE.parent/'throughput_eval/experiments/modal32'))
+    from pack_font import pack
+    pack(ROOT,args.expression_fpga.resolve())
+    temporary.cleanup()
 print(f'Generated {len(strings)} strings / {len(chars)} glyphs / {len(slots)} text fields')
