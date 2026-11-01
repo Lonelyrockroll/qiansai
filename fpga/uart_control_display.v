@@ -2,7 +2,8 @@
 // Fixed 28-byte packets; stop-and-wait request/response protocol.
 module uart_control_display #(
     parameter CLK_HZ=50000000, parameter BAUD=115200,
-    parameter WATCHDOG_CYCLES=150000000,parameter DEFAULT_DRUM_MODE=1
+    parameter WATCHDOG_CYCLES=150000000,parameter DEFAULT_DRUM_MODE=1,
+    parameter [11:0] DEFAULT_PT_BIAS=12'd1637
 )(
     input wire clk,input wire rst,input wire uart_in,output wire uart_out,
     input wire bt_request,input wire [7:0] bt_command,input wire bt_locked,pmod_testing,
@@ -28,6 +29,7 @@ module uart_control_display #(
     input wire [1:0] diag_mode,diag_phase,input wire [5:0] diag_seconds,
     input wire sample_tick,input wire [5:0] active_voices,
     input wire signed [15:0] pcm,input wire overrun,clipped,
+    output reg [11:0] pt_bias,
     input wire amp_muted,amp_ready,output reg [1:0] gain_mode,output reg amp_hold,
     input wire ui_valid,input wire [3:0] ui_action,input wire [15:0] ui_value,
     output reg express_adjust,express_depth,express_up,
@@ -144,7 +146,7 @@ module uart_control_display #(
             state<=COLLECT;rx_index<=0;tx_index<=0;checksum<=0;crc_ok<=0;
             seq<=0;opcode<=0;result_code<=0;gate_mask<=0;command_count<=0;frame_count<=0;
             watchdog<=0;rx_timeout<=0;armed<=0;timed_out<=0;panic<=0;tx_data<=0;tx_valid<=0;gain_mode<=1;amp_hold<=0;
-            express_adjust<=0;express_depth<=0;express_up<=0;
+            pt_bias<=DEFAULT_PT_BIAS;express_adjust<=0;express_depth<=0;express_up<=0;
             key_mode<=0;key_test<=12;key_wave<=4;key_recalibrate<=0;
             key_level<=4588;key_press<=256;key_release<=128;key_attack<=672;
             key_decay<=2;key_sustain<=0;key_tail<=13;key_scale<=64;
@@ -258,6 +260,14 @@ module uart_control_display #(
                                     state<=BUILD;
                                 end
                                 11,12,13,14,16,17,19,27,29: begin result_code<=0;state<=BUILD;end
+                                // Read trim (0), or write (1, uint16 little endian) with the PA safely off.
+                                30:begin
+                                    if(rx_buf[6]==0) result_code<=0;
+                                    else if(rx_buf[6]!=1 || rx_buf[8][7:4]!=0) result_code<=3;
+                                    else if(!amp_muted || amp_hold || active_voices!=0 || gated_count!=0) result_code<=4;
+                                    else begin pt_bias<={rx_buf[8][3:0],rx_buf[7]};result_code<=0;end
+                                    state<=BUILD;
+                                end
                                 28:begin
                                     if(rx_buf[6]!=1 && (rx_buf[6]!=2 || rx_buf[7]>7))result_code<=3;
                                     else begin pmod_test<=1;pmod_single<=rx_buf[6]==2;pmod_select<=rx_buf[7][2:0];result_code<=0;end
@@ -371,7 +381,8 @@ module uart_control_display #(
                         tx_buf[20]=key_scale[7:0];tx_buf[21]=key_scale[15:8];
                         tx_buf[22]={6'd0,drum_mode,native_connected};tx_buf[23]={3'd0,native_last_event};
                     end
-                    tx_buf[24]=27;tx_buf[25]=opcode;
+                    if(opcode==30) begin tx_buf[7]=pt_bias[7:0];tx_buf[8]={4'b0,pt_bias[11:8]};end
+                    tx_buf[24]=28;tx_buf[25]=opcode;
                     response_xor=0;
                     if(opcode==12)begin
                         tx_buf[7]={7'd0,native_connected};tx_buf[8]={3'd0,native_last_event};tx_buf[9]={1'b1,vibrato_depth,bend_position};

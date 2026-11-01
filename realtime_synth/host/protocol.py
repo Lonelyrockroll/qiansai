@@ -77,6 +77,9 @@ class Decoder:
                 continue
             del self.buffer[:28]
             p = frame[6:26]
+            if p[19]==30 and p[18]>=28:
+                result.append(dict(seq=frame[3],status=p[0],pt_bias=int.from_bytes(p[1:3],'little'),firmware=p[18],opcode=p[19]))
+                continue
             if p[19]==PMOD_STATUS and p[18]>=22:
                 period=int.from_bytes(p[3:5],'little')
                 result.append(dict(seq=frame[3],status=p[0],locked=bool(p[1]&1),testing=bool(p[1]&2),lamps=p[2],

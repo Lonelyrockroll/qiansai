@@ -3,9 +3,10 @@
 // I2S: 32-bit slots, 16 significant bits, MSB one BCLK after LRCLK edge.
 // PT8211: 16-bit slots, WS=0 right / WS=1 left, no I2S one-bit delay.
 // PT_BIAS is only for an AC-coupled PT8211 path; standard I2S remains unbiased.
-module audio_tx #(parameter integer PT_BIAS=0)(
+module audio_tx #(parameter integer PT_BIAS=0,parameter USE_PT_TRIM=0)(
     input wire clk, input wire rst,
     input wire signed [15:0] pcm_left, pcm_right,
+    input wire [11:0] pt_trim,
     output wire sample_tick,
     output wire i2s_bclk, i2s_lrclk, output reg i2s_data,
     output wire hp_bck, hp_ws, output reg hp_din
@@ -13,8 +14,9 @@ module audio_tx #(parameter integer PT_BIAS=0)(
     reg [9:0] count;
     reg [15:0] left_frame, right_frame;
     reg [15:0] pt_left_frame,pt_right_frame;
-    wire signed [16:0] pt_left_sum=$signed(pcm_left)+PT_BIAS;
-    wire signed [16:0] pt_right_sum=$signed(pcm_right)+PT_BIAS;
+    wire signed [16:0] pt_offset=USE_PT_TRIM ? $signed({5'b0,pt_trim}) : PT_BIAS;
+    wire signed [16:0] pt_left_sum=$signed(pcm_left)+pt_offset;
+    wire signed [16:0] pt_right_sum=$signed(pcm_right)+pt_offset;
     wire [15:0] pt_left=(pt_left_sum>32767)?16'h7fff:(pt_left_sum< -32768)?16'h8000:pt_left_sum[15:0];
     wire [15:0] pt_right=(pt_right_sum>32767)?16'h7fff:(pt_right_sum< -32768)?16'h8000:pt_right_sum[15:0];
     wire [5:0] next_i2s_bit = count[9:4] + 6'd1;
