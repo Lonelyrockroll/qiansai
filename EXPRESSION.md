@@ -28,3 +28,5 @@ J18 原始鼠标报告在转动时会暂时清掉按压位，上报滚轮值并�
 整机系统 Fmax 50.097 MHz，四组时钟 setup/hold 检查通过，保留 PR1014 通用时钟布线警告。逻辑 38,233 / 59,904，BSRAM 115 / 118，DSP 54 / 118。[码流](firmware/knob-expression.zip) · [布局结果](firmware/expression27-build.json) · [实板 PCM 与测量记录](tests/expression/results/board)
 
 实琴联调中，板卡回报第 15 个白键 C4 按下，A 裸旋覆盖 −200 到 +200 音分，按住 A 旋转覆盖 0～50 音分。按住 B 旋转时，琴键音量从 7% 增至 9%，菜单焦点仍为 0，演奏保持开启。[J18 实际操作回读](tests/expression/results/board/live_gestures.json)
+
+2026-11-01，演奏者使用风琴音色和实体琴键试听，确认 A 裸旋滑音、按住 A 调颤音、按住 B 调音量三项均正常。
