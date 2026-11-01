@@ -9,7 +9,7 @@ module tb_output_trim;
     reg [15:0] il=0,ir=0,pl=0,pr=0;
     reg [15:0] expected_left=0,expected_right=0,expected_pt_left=0,expected_pt_right=0;
     function [15:0] biased(input signed [15:0] x); integer sum;begin sum=x+$signed({1'b0,trim});biased=sum>32767?16'h7fff:sum< -32768?16'h8000:sum;end endfunction
-    audio_tx #(.USE_PT_TRIM(1)) dut(.pt_trim(trim),.clk(clk),.rst(rst),.pcm_left(left),.pcm_right(right),.sample_tick(tick),
+    audio_tx #(.USE_PT_TRIM(1)) dut(.pt_mode(2'd0),.pt_trim(trim),.clk(clk),.rst(rst),.pcm_left(left),.pcm_right(right),.sample_tick(tick),
         .i2s_bclk(ib),.i2s_lrclk(iw),.i2s_data(id),.hp_bck(hb),.hp_ws(hw),.hp_din(hd));
     always @(posedge clk) begin
         cycles=cycles+1;

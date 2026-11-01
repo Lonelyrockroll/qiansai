@@ -1,0 +1,414 @@
+{
+  "scope": "Same physical headphone endpoint and RETURN, full tracked harmonics to 20 kHz plus remaining noise, both channels. No unrelated inputs.",
+  "selected": [
+    2,
+    1577
+  ],
+  "user_code": "0x00009269",
+  "metrics": {
+    "C4": {
+      "v28": {
+        "H2_H8_percent": [
+          0.7142726442925954,
+          0.686793356802801
+        ],
+        "H2_to_20k_percent": [
+          2.0508403365999697,
+          2.0342757896770083
+        ],
+        "unrelated_20k_percent": [
+          1.3754947107529263,
+          1.361655112792
+        ],
+        "total_THDN_percent": [
+          2.4693990737697202,
+          2.447934360774122
+        ],
+        "fundamental_dbfs": [
+          -48.98933451305949,
+          -48.86081458102737
+        ],
+        "bias": 1637,
+        "mode": 0,
+        "level": 0.020004577706569007,
+        "pcm_capture": {
+          "seq": 126,
+          "status": 0,
+          "flags": 4,
+          "armed": false,
+          "recording": false,
+          "ready": true,
+          "aborted": false,
+          "error": false,
+          "capture_id": 1,
+          "count": 24576,
+          "target": 24576,
+          "first_frame": 410017,
+          "crc32": 1154804834,
+          "capacity": 32768,
+          "sample_rate": 48828.125,
+          "firmware": 29,
+          "opcode": 22
+        }
+      },
+      "spread": {
+        "H2_H8_percent": [
+          0.17500801395058105,
+          0.2040552243823793
+        ],
+        "H2_to_20k_percent": [
+          0.5839891387137274,
+          0.5559201088993693
+        ],
+        "unrelated_20k_percent": [
+          1.2415637717483234,
+          1.2305842710616592
+        ],
+        "total_THDN_percent": [
+          1.372050987920465,
+          1.3503276697391051
+        ],
+        "fundamental_dbfs": [
+          -49.011785712922766,
+          -48.8660667244075
+        ],
+        "bias": 1577,
+        "mode": 2,
+        "level": 0.020004577706569007,
+        "pcm_capture": {
+          "seq": 10,
+          "status": 0,
+          "flags": 4,
+          "armed": false,
+          "recording": false,
+          "ready": true,
+          "aborted": false,
+          "error": false,
+          "capture_id": 4,
+          "count": 24576,
+          "target": 24576,
+          "first_frame": 2522362,
+          "crc32": 1154804834,
+          "capacity": 32768,
+          "sample_rate": 48828.125,
+          "firmware": 29,
+          "opcode": 22
+        }
+      }
+    },
+    "G4": {
+      "v28": {
+        "H2_H8_percent": [
+          0.7835714325227207,
+          0.7822848650520723
+        ],
+        "H2_to_20k_percent": [
+          2.1283688548110167,
+          2.1165910204339773
+        ],
+        "unrelated_20k_percent": [
+          1.3798248821181736,
+          1.3830971886548125
+        ],
+        "total_THDN_percent": [
+          2.5365075768548357,
+          2.528421519653436
+        ],
+        "fundamental_dbfs": [
+          -48.717556838010374,
+          -48.607542731210465
+        ],
+        "bias": 1637,
+        "mode": 0,
+        "level": 0.020004577706569007,
+        "pcm_capture": null
+      },
+      "spread": {
+        "H2_H8_percent": [
+          0.1968889083168638,
+          0.23614913133830548
+        ],
+        "H2_to_20k_percent": [
+          0.6047527558324735,
+          0.582256656016408
+        ],
+        "unrelated_20k_percent": [
+          1.218150977423557,
+          1.2093090999764233
+        ],
+        "total_THDN_percent": [
+          1.3600065071480132,
+          1.3421815498512848
+        ],
+        "fundamental_dbfs": [
+          -48.73806864070653,
+          -48.61069081273766
+        ],
+        "bias": 1577,
+        "mode": 2,
+        "level": 0.020004577706569007,
+        "pcm_capture": null
+      }
+    },
+    "half": {
+      "v28": {
+        "H2_H8_percent": [
+          1.1802111422259298,
+          1.1913029759572122
+        ],
+        "H2_to_20k_percent": [
+          3.0869456897560603,
+          3.08812716507374
+        ],
+        "unrelated_20k_percent": [
+          2.6318915451576346,
+          2.590866249534998
+        ],
+        "total_THDN_percent": [
+          4.056610259437769,
+          4.0310193885227
+        ],
+        "fundamental_dbfs": [
+          -55.19890375398023,
+          -54.92439935891588
+        ],
+        "bias": 1637,
+        "mode": 0,
+        "level": 0.010002288853284504,
+        "pcm_capture": null
+      },
+      "spread": {
+        "H2_H8_percent": [
+          0.48091052140356294,
+          0.3772957705269829
+        ],
+        "H2_to_20k_percent": [
+          1.0698165812010225,
+          0.9761312939835232
+        ],
+        "unrelated_20k_percent": [
+          2.434006332256533,
+          2.421570514468376
+        ],
+        "total_THDN_percent": [
+          2.6587392393534093,
+          2.610907133476138
+        ],
+        "fundamental_dbfs": [
+          -55.01028050332064,
+          -54.87204449852509
+        ],
+        "bias": 1577,
+        "mode": 2,
+        "level": 0.010002288853284504,
+        "pcm_capture": null
+      }
+    },
+    "double": {
+      "v28": {
+        "H2_H8_percent": [
+          0.2935375134408058,
+          0.4690525471062757
+        ],
+        "H2_to_20k_percent": [
+          1.084668887461423,
+          1.1295874125894902
+        ],
+        "unrelated_20k_percent": [
+          0.8135731587174192,
+          0.803116396803796
+        ],
+        "total_THDN_percent": [
+          1.355879006405896,
+          1.3859883367098482
+        ],
+        "fundamental_dbfs": [
+          -42.982282087876904,
+          -42.80833873265749
+        ],
+        "bias": 1637,
+        "mode": 0,
+        "level": 0.040009155413138014,
+        "pcm_capture": null
+      },
+      "spread": {
+        "H2_H8_percent": [
+          0.8650590529692505,
+          1.0169077582509671
+        ],
+        "H2_to_20k_percent": [
+          1.0200098112621618,
+          1.1790589678918624
+        ],
+        "unrelated_20k_percent": [
+          0.6544115283580493,
+          0.6543364245220614
+        ],
+        "total_THDN_percent": [
+          1.2118887999808352,
+          1.3484569723289428
+        ],
+        "fundamental_dbfs": [
+          -43.065763404157885,
+          -42.90893618167242
+        ],
+        "bias": 1577,
+        "mode": 2,
+        "level": 0.040009155413138014,
+        "pcm_capture": null
+      }
+    },
+    "normal": {
+      "v28": {
+        "H2_H8_percent": [
+          3.639102174611945,
+          3.7935510825396377
+        ],
+        "H2_to_20k_percent": [
+          4.076501883229794,
+          4.294987093439535
+        ],
+        "unrelated_20k_percent": [
+          0.7000983397367014,
+          0.7347773307178506
+        ],
+        "total_THDN_percent": [
+          4.136182453576986,
+          4.357385897364272
+        ],
+        "fundamental_dbfs": [
+          -38.724792865914935,
+          -38.58636573507199
+        ],
+        "bias": 1637,
+        "mode": 0,
+        "level": 0.07,
+        "pcm_capture": null
+      },
+      "spread": {
+        "H2_H8_percent": [
+          2.4401604376682893,
+          2.5427719577690056
+        ],
+        "H2_to_20k_percent": [
+          2.5743613222260717,
+          2.691413031438036
+        ],
+        "unrelated_20k_percent": [
+          0.4977290511251859,
+          0.5129062001694447
+        ],
+        "total_THDN_percent": [
+          2.62203555004648,
+          2.7398497907671393
+        ],
+        "fundamental_dbfs": [
+          -38.6940388001601,
+          -38.55108008654253
+        ],
+        "bias": 1577,
+        "mode": 2,
+        "level": 0.07,
+        "pcm_capture": null
+      }
+    },
+    "long_v28": {
+      "H2_H8_percent": [
+        0.7121205029892649,
+        0.68015140169003
+      ],
+      "H2_to_20k_percent": [
+        2.050859584246903,
+        2.0310367064388526
+      ],
+      "unrelated_20k_percent": [
+        1.369404152855378,
+        1.3536300994345039
+      ],
+      "total_THDN_percent": [
+        2.4660277306135336,
+        2.440783593233338
+      ],
+      "fundamental_dbfs": [
+        -48.99983160578464,
+        -48.87143688893015
+      ],
+      "bias": 1637,
+      "mode": 0,
+      "level": 0.020004577706569007,
+      "pcm_capture": {
+        "seq": 21,
+        "status": 0,
+        "flags": 4,
+        "armed": false,
+        "recording": false,
+        "ready": true,
+        "aborted": false,
+        "error": false,
+        "capture_id": 5,
+        "count": 24576,
+        "target": 24576,
+        "first_frame": 4446428,
+        "crc32": 1154804834,
+        "capacity": 32768,
+        "sample_rate": 48828.125,
+        "firmware": 29,
+        "opcode": 22
+      }
+    },
+    "long_best": {
+      "H2_H8_percent": [
+        0.16695116088734252,
+        0.1982499041829022
+      ],
+      "H2_to_20k_percent": [
+        0.5774744391277122,
+        0.5470269586628813
+      ],
+      "unrelated_20k_percent": [
+        1.2427050712541696,
+        1.2338481799355168
+      ],
+      "total_THDN_percent": [
+        1.3703257357164014,
+        1.3496739697549733
+      ],
+      "fundamental_dbfs": [
+        -49.014619973161935,
+        -48.868998805864635
+      ],
+      "bias": 1577,
+      "mode": 2,
+      "level": 0.020004577706569007,
+      "pcm_capture": {
+        "seq": 200,
+        "status": 0,
+        "flags": 4,
+        "armed": false,
+        "recording": false,
+        "ready": true,
+        "aborted": false,
+        "error": false,
+        "capture_id": 6,
+        "count": 24576,
+        "target": 24576,
+        "first_frame": 5084679,
+        "crc32": 1154804834,
+        "capacity": 32768,
+        "sample_rate": 48828.125,
+        "firmware": 29,
+        "opcode": 22
+      }
+    }
+  },
+  "idle_dbfs": {
+    "quiet_v28": [
+      -87.95773568197853,
+      -87.93550576868425
+    ],
+    "quiet_spread": [
+      -88.13908956576921,
+      -88.01578772060738
+    ]
+  }
+}

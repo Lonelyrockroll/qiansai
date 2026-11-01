@@ -197,8 +197,8 @@ module synth_display_top(
         .lamps(pmod_lamps),.testing(pmod_testing),.led_n(led_n));
     wire [31:0] pc_key_pressed;
     wire [31:0] panel_keys=key_mode==0?pc_key_pressed:key_pressed;
-    wire [11:0] pt_bias;
-    uart_control_display controller(.pt_bias(pt_bias),
+    wire [11:0] pt_bias;wire [1:0] pt_mode;
+    uart_control_display controller(.pt_mode(pt_mode),.pt_bias(pt_bias),
         .pc_key_pressed(pc_key_pressed),
         .bt_request(bt_request),.bt_command(bt_command),.bt_accept(bt_accept),.bt_period(bt_period),.bt_locked(bt_locked),
         .bt_count(bt_count),.bt_dropped(bt_dropped),.pmod_test(pmod_test),.pmod_single(pmod_single),.pmod_select(pmod_select),.pmod_testing(pmod_testing),.pmod_lamps(pmod_lamps),
@@ -253,7 +253,7 @@ module synth_display_top(
         .clear_engine(clear_engine),.clipped(output_clipped));
     // NEO 31004 is AC-coupled at C111/C113 and C135/C136. The measured
     // trim is held constant during playback; PCM and I2S retain their original samples.
-    audio_tx #(.USE_PT_TRIM(1)) tx(.pt_trim(pt_bias),.clk(sys_clk),.rst(rst),.pcm_left(pcm),.pcm_right(pcm),.sample_tick(tick),
+    audio_tx #(.USE_PT_TRIM(1)) tx(.pt_mode(pt_mode),.pt_trim(pt_bias),.clk(sys_clk),.rst(rst),.pcm_left(pcm),.pcm_right(pcm),.sample_tick(tick),
         .i2s_bclk(i2s_bclk),.i2s_lrclk(i2s_lrclk),.i2s_data(i2s_data),.hp_bck(HP_BCK),.hp_ws(HP_WS),.hp_din(HP_DIN));
     assign hpd_en=1;
     display_pll pll(.clkin(sys_clk),.lock(video_locked),.clkout0(serial_clk),.clkout1(pixel_clk));

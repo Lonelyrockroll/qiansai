@@ -4,4 +4,4 @@ v27 在原 32 分量钢琴工程上加入滑音和颤音，钢琴直通。控制
 
 打开同目录的 `synth_display.gprj`，顶层为 `synth_display_top`。本目录包含 32 分量演奏钢琴版的全部综合输入，包括 RTL、引脚与时序约束、屏幕字库、鼓组和 USB 的 ROM。
 
-在本目录用 Python 3 运行 `python check_sources.py` 检查工程依赖，然后用 Gowin 教育版执行 `gw_sh.exe build.tcl`。当前 v28 SRAM User Code 为 `0x0000729A`。[耳机输出校准及码流](../OUTPUT-CALIBRATION.md)；v27 旋钮版为 `0x0000DC5C`；原 32 分量钢琴基线为 `0x0000D27F`。
+在本目录用 Python 3 运行 `python check_sources.py` 检查工程依赖，然后用 Gowin 教育版执行 `gw_sh.exe build.tcl`。当前 v29 SRAM User Code 为 `0x00009269`。[四子帧输出与码流](../OUTPUT-HARMONICS.md)。 v28 为 `0x0000729A`。[耳机输出校准及码流](../OUTPUT-CALIBRATION.md)；v27 旋钮版为 `0x0000DC5C`；原 32 分量钢琴基线为 `0x0000D27F`。
