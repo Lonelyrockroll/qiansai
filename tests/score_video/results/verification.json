@@ -1,0 +1,39 @@
+{
+  "checked_at_utc": "2026-11-01T17:45:52.343320+00:00",
+  "production_sha256": {
+    "score_renderer.v": "1045acf5a11434539d084c4ee9259d80ed77ab1d7a7e2893f039574e430f11e1",
+    "score_capture_ram.v": "3e940ab2f3f022ade8e9a541139d877c0799b504e1f8e71cb1e35b4033741c89",
+    "video_timing.v": "2409163c27b875f19330e4e824ec0bbc34c6ab5a3705555e52256b113ef1cae4",
+    "panel_renderer.v": "508ccd186332959cf61bd8972edbf555cc50b03ff4f82f0976c96a9b5152b591"
+  },
+  "checks": {
+    "independent_row_formula": "floor(y*512/600)",
+    "pattern_frames": 5,
+    "pattern_pixels": 3072000,
+    "demo_frames": 2,
+    "demo_pixels": 1228800,
+    "first_frame_reset": true,
+    "continuous_frames": true,
+    "all_line_first_last_pixels": true,
+    "all_last_row_pixels": true,
+    "async_visibility_expected_frames": [
+      0,
+      1,
+      0,
+      0,
+      1
+    ],
+    "late_request_deferred_one_more_frame": true,
+    "real_ram_both_ports_synchronous": true,
+    "real_panel_rgb_hs_vs_de_score_select_mux_3_stages": true
+  },
+  "actual_rtl_png": "score-page-01-rtl.png",
+  "pixels_different_from_pdf_restored_preview": 0,
+  "rgb_sha256": "66e92be0f16ad2e99f5edc97c196dfebe6bb68d93e52261b547b6576cf2907d6",
+  "raw_sha256": "d4c0a213cc54a3031b3856c3a6eacf6ee2d3287187076e9631fb356216c4a677",
+  "pass_lines": [
+    "PASS raster mode=0 frames=5 pixels=3072000 line_edges=6000 last_row_pixels=5120 cycles=4051170",
+    "PASS raster mode=1 frames=2 pixels=1228800 line_edges=2400 last_row_pixels=2048 cycles=1602978",
+    "PASS alignment samples=1202 real_panel_rgb_hs_vs_de_score_select_and_mux"
+  ]
+}

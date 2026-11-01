@@ -1,5 +1,7 @@
 # qiansai
 
+v31 加入手机选 PDF、蓝牙传页、板卡全屏显示与翻页。[曲谱验收步骤](FULLSCREEN-SCORE.md) · [安卓 1.2](realtime_synth/android_recorder/dist/TangRecorder-1.2.apk) · [示范谱](output/pdf/score-demo.pdf)
+
 v30 增加手机 MIDI 传曲与板卡独立计时的屏幕演奏指引，32 个白键在上方完整一行显示。[操作与容量说明](SCREEN-GUIDE.md) · [安卓 1.1](realtime_synth/android_recorder/dist/TangRecorder-1.1.apk)
 
 ![屏幕演奏指引](tests/guide_ui/results/guide.png)

@@ -26,7 +26,7 @@ import java.util.Arrays;
 import java.util.Locale;
 
 public final class MainActivity extends Activity implements RecorderSession.Listener {
-    private static final int PERMISSION=101, EXPORT=102, IMPORT_MIDI=103;
+    private static final int PERMISSION=101, EXPORT=102, IMPORT_MIDI=103,IMPORT_PDF=104;
     private static final int BG=0xff102226,PANEL=0xff1c3338,TEXT=0xffecf5f1,MUTED=0xffa7bfbe,MINT=0xff94ebca;
     private RecorderSession session;
     private MediaPlayer player;
@@ -45,6 +45,13 @@ public final class MainActivity extends Activity implements RecorderSession.List
     private Spinner tracks;
     private Button chooseMidi,sampleMidi,sendMidi,guideToggle,guideRestart,guidePrevious,guideNext,guideDemo,guideSpeed;
     private int compileGeneration;
+    private TextView scoreInfo,scoreHint;
+    private Button choosePdf,samplePdf,sendScore,scorePrevious,scoreNext,scoreHide,scoreShow,scoreClear;
+    private ImageView scorePreview;
+    private android.graphics.Bitmap scoreBitmap;
+    private ScoreProtocol.Page scorePage;
+    private boolean scorePreparing;
+    private String scoreName="";
 
     @Override public void onCreate(Bundle saved){
         super.onCreate(saved);
@@ -55,6 +62,9 @@ public final class MainActivity extends Activity implements RecorderSession.List
         reloadTakes(null);render(null,"等待连接",0,0);
         File remembered=new File(getFilesDir(),"last-guide.mid");
         if(remembered.isFile())loadMidi(remembered,getPreferences(0).getString("midiName","上次导入的 MIDI"));
+        if(new File(getFilesDir(),"last-score.pdf").isFile()){
+            scoreName=getPreferences(0).getString("scoreName","上次导入的 PDF");prepareScore(0,false);
+        }
     }
     private int dp(int value){return Math.round(value*getResources().getDisplayMetrics().density);}
     private GradientDrawable panel(int color,int radius){
@@ -87,7 +97,7 @@ public final class MainActivity extends Activity implements RecorderSession.List
         LinearLayout root=column();root.setPadding(dp(20),dp(24),dp(20),dp(24));scroll.addView(root);setContentView(scroll);
         add(root,label("TANG   /   PLAY",13,MINT,true),0);
         add(root,label("演奏助手",32,TEXT,true),5);
-        add(root,label("MIDI 屏幕指引 · 演奏录音",15,MUTED,false),4);
+        add(root,label("MIDI 指引 · PDF 曲谱 · 演奏录音",15,MUTED,false),4);
         LinearLayout device=card(root);
         add(device,label("01    蓝牙设备",13,MINT,true),0);
         add(device,label("=BTNU1  ·  JDY-31",21,TEXT,true),8);
@@ -128,8 +138,30 @@ public final class MainActivity extends Activity implements RecorderSession.List
         guideDemo.setOnClickListener(v->guideCommand(GuideProtocol.DEMO));
         guideSpeed.setOnClickListener(v->guideCommand(GuideProtocol.SPEED));
         add(guide,label("传完后可断开手机，由 FPGA 自行计时。导入曲目保存在板内 SRAM，断电后需重传。指引显示与录音传输分时操作。",12,MUTED,false),10);
+        LinearLayout score=card(root);add(score,label("03    PDF 曲谱",13,MINT,true),0);
+        add(score,label("在琴上全屏看谱",23,TEXT,true),7);
+        add(score,label("选择已下载的 PDF，发送当前页。上一页、下一页会重新传送，请保持蓝牙连接。",13,MUTED,false),5);
+        LinearLayout scoreFiles=new LinearLayout(this);add(score,scoreFiles,12);
+        choosePdf=button("选择 PDF",0xff33545b);samplePdf=button("示例 PDF",0xff33545b);pair(scoreFiles,choosePdf,samplePdf);
+        choosePdf.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/pdf");documentPicker=true;startActivityForResult(i,IMPORT_PDF);});
+        samplePdf.setOnClickListener(v->loadPdf(null));
+        scoreInfo=label("尚未选择曲谱",14,MUTED,false);add(score,scoreInfo,10);
+        scorePreview=new ImageView(this);scorePreview.setAdjustViewBounds(true);scorePreview.setScaleType(ImageView.ScaleType.FIT_CENTER);add(score,scorePreview,8);
+        sendScore=button("发送本页并显示",MINT);add(score,sendScore,9);
+        sendScore.setOnClickListener(v->{if(session!=null && scorePage!=null)session.uploadScore(scorePage);});
+        scoreHint=label("连接 v31 或更新的曲谱固件后可使用。",14,MUTED,false);add(score,scoreHint,10);
+        LinearLayout pageRow=new LinearLayout(this);add(score,pageRow,10);
+        scorePrevious=button("上一页并发送",0xff33545b);scoreNext=button("下一页并发送",0xff33545b);pair(pageRow,scorePrevious,scoreNext);
+        scorePrevious.setOnClickListener(v->{if(scorePage!=null)prepareScore(scorePage.index-1,true);});
+        scoreNext.setOnClickListener(v->{if(scorePage!=null)prepareScore(scorePage.index+1,true);});
+        LinearLayout visibleRow=new LinearLayout(this);add(score,visibleRow,8);
+        scoreHide=button("返回演奏界面",0xff33545b);scoreShow=button("显示已传页面",0xff33545b);pair(visibleRow,scoreHide,scoreShow);
+        scoreHide.setOnClickListener(v->{if(session!=null)session.scoreControl(ScoreProtocol.HIDE);});
+        scoreShow.setOnClickListener(v->{if(session!=null)session.scoreControl(ScoreProtocol.SHOW);});
+        scoreClear=button("清除板上曲谱",0xff33545b);add(score,scoreClear,8);scoreClear.setOnClickListener(v->{if(session!=null)session.scoreControl(ScoreProtocol.CLEAR);});
+        add(score,label("板卡保留一页；换页时会暂时退出全屏。短按旋钮 B 或板上 KEY.0 也可返回演奏界面。横向、大字号曲谱更易阅读；上限 20 MB / 200 页。",12,MUTED,false),10);
         LinearLayout capture=card(root);
-        add(capture,label("03    录音",13,MINT,true),0);
+        add(capture,label("04    录音",13,MINT,true),0);
         clock=label("00:00.0",37,TEXT,true);clock.setTypeface(Typeface.MONOSPACE);add(capture,clock,6);
         meter=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);meter.setMax(32768);
         meter.setProgressTintList(android.content.res.ColorStateList.valueOf(MINT));add(capture,meter,4);
@@ -137,7 +169,7 @@ public final class MainActivity extends Activity implements RecorderSession.List
         record=button("开始录音",MINT);add(capture,record,14);
         record.setOnClickListener(v->{if(session==null)return;stopPlayback();if(session.phase()==RecorderSession.Phase.READY)session.start();else session.stop();});
         add(capture,label("单声道 WAV · 16.28 kHz · 最长 10 分钟。请保持 App 在前台，先在板上开始演奏。",13,MUTED,false),10);
-        LinearLayout clips=card(root);add(clips,label("04    手机录音",13,MINT,true),0);
+        LinearLayout clips=card(root);add(clips,label("05    手机录音",13,MINT,true),0);
         libraryInfo=label("",14,MUTED,false);add(clips,libraryInfo,8);
         selection=new Spinner(this);add(clips,selection,3);
         play=button("试听",0xff33545b);export=button("导出 WAV",0xff33545b);
@@ -185,11 +217,15 @@ public final class MainActivity extends Activity implements RecorderSession.List
     @Override public void guide(RecorderSession src,GuideProtocol.Ack state,String detail,boolean busy){
         runOnUiThread(()->{if(alive && src==session){guideHint.setText(detail);renderGuideButtons();}});
     }
+    @Override public void score(RecorderSession src,ScoreProtocol.Ack state,String detail,boolean busy){
+        runOnUiThread(()->{if(alive && src==session){scoreHint.setText(detail);renderGuideButtons();}});
+    }
     private void renderGuideButtons(){
         boolean ready=session!=null && session.phase()==RecorderSession.Phase.READY;
-        boolean busy=session!=null && session.guideBusy();
+        boolean busy=scorePreparing || (session!=null && session.guideBusy());
         boolean available=ready && !busy && session.guideAvailable();
         if(ready && session.guideAvailable())deviceState.setText("已连接 · 录音与 MIDI 屏幕指引");
+        if(ready && session.scoreAvailable())deviceState.setText("已连接 · 录音 / MIDI / PDF");
         for(Button b:new Button[]{guideToggle,guideRestart,guidePrevious,guideNext,guideDemo,guideSpeed}){
             if(b!=null){b.setEnabled(available);b.setAlpha(available?1f:.45f);}
         }
@@ -200,10 +236,68 @@ public final class MainActivity extends Activity implements RecorderSession.List
         if(tracks!=null)tracks.setEnabled(editable && !midiTracks.isEmpty());
         if(record!=null && ready){record.setEnabled(!busy);record.setAlpha(!busy?1f:.48f);}
         if(ready){play.setEnabled(!busy && takes.length>0);export.setEnabled(!busy && takes.length>0);}
+        boolean scoreReady=ready && !busy && session.scoreAvailable();
+        boolean scoreEditable=!busy && !midiImporting && (session==null || ready);
+        if(choosePdf!=null)choosePdf.setEnabled(scoreEditable);
+        if(samplePdf!=null)samplePdf.setEnabled(scoreEditable);
+        if(sendScore!=null)sendScore.setEnabled(scoreReady && scorePage!=null);
+        if(scorePrevious!=null)scorePrevious.setEnabled(scoreReady && scorePage!=null && scorePage.index>0);
+        if(scoreNext!=null)scoreNext.setEnabled(scoreReady && scorePage!=null && scorePage.index+1<scorePage.count);
+        boolean cached=scoreReady && session.scoreState()!=null && session.scoreState().valid();
+        if(scoreShow!=null)scoreShow.setEnabled(cached);
+        if(scoreHide!=null)scoreHide.setEnabled(cached);
+        if(scoreClear!=null)scoreClear.setEnabled(cached);
         if(busy)getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         else if(ready || session==null)getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
     private void guideCommand(int action){if(session!=null)session.guideControl(action);}
+    private String documentName(Uri uri,String fallback){
+        try(Cursor c=getContentResolver().query(uri,new String[]{OpenableColumns.DISPLAY_NAME},null,null,null)){
+            if(c!=null && c.moveToFirst()){String value=c.getString(0);if(value!=null)return value.length()>120?value.substring(0,120):value;}
+        }catch(RuntimeException ignored){}
+        return fallback;
+    }
+    private void loadPdf(Uri uri){
+        scorePreparing=true;scoreInfo.setText("正在读取 PDF…");renderGuideButtons();
+        new Thread(()->{
+            File temporary=null;PdfScore.Rendered rendered=null;
+            try{
+                String title=uri==null?"示例 · 小星星.pdf":documentName(uri,"导入的 PDF");
+                temporary=File.createTempFile("score-",".pdf",getFilesDir());
+                try(InputStream in=uri==null?getAssets().open("score-demo.pdf"):getContentResolver().openInputStream(uri)){
+                    if(in==null)throw new IOException("无法打开 PDF 文件");PdfScore.copy(in,temporary);
+                }
+                rendered=PdfScore.render(temporary,0);
+                File saved=new File(getFilesDir(),"last-score.pdf");
+                if(!temporary.renameTo(saved))throw new IOException("曲谱无法保存到手机，请重试");
+                getPreferences(0).edit().putString("scoreName",title).apply();
+                publishScore(rendered,title,null);rendered=null;
+            }catch(IOException|RuntimeException ex){if(rendered!=null)rendered.preview.recycle();scoreError(ex);}
+            finally{if(temporary!=null)temporary.delete();}
+        },"PDF import").start();
+    }
+    private void prepareScore(int index,boolean send){
+        if(scorePreparing)return;
+        scorePreparing=true;scoreInfo.setText("正在整理第 "+(index+1)+" 页…");renderGuideButtons();
+        final String name=scoreName;final RecorderSession target=send?session:null;
+        new Thread(()->{
+            try{publishScore(PdfScore.render(new File(getFilesDir(),"last-score.pdf"),index),name,target);}
+            catch(IOException|RuntimeException ex){scoreError(ex);}
+        },"PDF page").start();
+    }
+    private void publishScore(PdfScore.Rendered rendered,String name,RecorderSession target){
+        runOnUiThread(()->{
+            if(!alive){rendered.preview.recycle();return;}
+            scorePreparing=false;scorePage=rendered.page;scoreName=name;
+            scorePreview.setImageBitmap(rendered.preview);if(scoreBitmap!=null)scoreBitmap.recycle();scoreBitmap=rendered.preview;
+            scoreInfo.setText(name+"\n第 "+(scorePage.index+1)+" / "+scorePage.count+" 页 · 黑白预览 · "+String.format(Locale.CHINA,"%.1f",scorePage.compressed.length/1024.0)+" KB 待发送");
+            renderGuideButtons();
+            if(target!=null && target==session)target.uploadScore(scorePage);
+        });
+    }
+    private void scoreError(Exception ex){
+        final String why=ex.getMessage();runOnUiThread(()->{if(alive){scorePreparing=false;scoreHint.setText(why==null?"PDF 处理失败，请重新选择":why);renderGuideButtons();}});
+    }
     private void chooseMidi(){
         Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("*/*");
         documentPicker=true;startActivityForResult(i,IMPORT_MIDI);
@@ -300,6 +394,7 @@ public final class MainActivity extends Activity implements RecorderSession.List
     @Override protected void onActivityResult(int code,int result,Intent data){
         super.onActivityResult(code,result,data);
         documentPicker=false;
+        if(code==IMPORT_PDF){if(result==RESULT_OK && data!=null && data.getData()!=null)loadPdf(data.getData());return;}
         if(code==IMPORT_MIDI){
             if(result!=RESULT_OK || data==null || data.getData()==null)return;
             Uri uri=data.getData();midiImporting=true;compiled=null;compileGeneration++;midiInfo.setText("正在读取 MIDI…");renderGuideButtons();
@@ -333,5 +428,5 @@ public final class MainActivity extends Activity implements RecorderSession.List
     }
     @Override protected void onSaveInstanceState(Bundle state){super.onSaveInstanceState(state);if(exporting!=null)state.putString("exporting",exporting.getName());}
     @Override protected void onStop(){super.onStop();stopPlayback();if(session!=null && !documentPicker)session.leave();}
-    @Override protected void onDestroy(){alive=false;if(session!=null && session.phase()!=RecorderSession.Phase.STOPPING)session.close("页面已关闭");super.onDestroy();}
+    @Override protected void onDestroy(){alive=false;if(session!=null && session.phase()!=RecorderSession.Phase.STOPPING)session.close("页面已关闭");if(scoreBitmap!=null)scoreBitmap.recycle();super.onDestroy();}
 }

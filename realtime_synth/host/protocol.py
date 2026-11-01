@@ -14,6 +14,7 @@ PCM_CONTROL, PCM_STATUS, PCM_READ = 21, 22, 23
 FX_CONTROL, FX_STATUS, FX_IMPULSE = 24, 25, 26
 OUTPUT_GAIN_STATUS = 27
 PMOD_TEST, PMOD_STATUS = 28, 29
+SCORE_CONTROL, SCORE_READ = 32, 33
 # H1..H32 on the white-key instrument. Index is independent of the allocated voice.
 WHITE_KEYS = tuple(36 + 12*(i//7) + (0,2,4,5,7,9,11)[i%7] for i in range(32))
 
@@ -77,6 +78,19 @@ class Decoder:
                 continue
             del self.buffer[:28]
             p = frame[6:26]
+            if p[19]==SCORE_CONTROL and p[18]>=31:
+                result.append(dict(seq=frame[3],status=p[0],score_valid=bool(p[1]&1),score_show=bool(p[1]&2),
+                    score_loading=bool(p[1]&4),score_reserved=bool(p[1]&8),score_visible=bool(p[1]&16),
+                    score_page=int.from_bytes(p[2:4],'little'),score_pages=int.from_bytes(p[4:6],'little'),
+                    score_received=int.from_bytes(p[6:10],'little'),score_decoded=int.from_bytes(p[10:14],'little'),
+                    firmware=p[18],opcode=p[19]))
+                continue
+            if p[19]==SCORE_READ and p[18]>=31:
+                count=p[5]
+                if count>6:continue
+                result.append(dict(seq=frame[3],status=p[0],score_page=int.from_bytes(p[1:3],'little'),
+                    offset=int.from_bytes(p[3:5],'little'),count=count,data=p[6:6+2*count].hex(),firmware=p[18],opcode=p[19]))
+                continue
             if p[19]==31 and p[18]>=30:
                 result.append(dict(seq=frame[3],status=p[0],guide_valid=bool(p[1]&1),guide_playing=bool(p[1]&2),
                     guide_loading=bool(p[1]&4),guide_demo=bool(p[1]&8),guide_speed=p[2],

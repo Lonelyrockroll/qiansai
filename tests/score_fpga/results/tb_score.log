@@ -1,0 +1,2 @@
+PASS score:        1658 CRC-checked replies, Java 845 frames including sequence wrap, full 65536-byte dual-clock readback, RLE/CRC/bounds/retry/visibility/capture/UI/timeouts
+F:\codex-project\pcb\tang-score\tests\score_fpga\tb_score.v:215: $finish called at 19612780000 (1ps)

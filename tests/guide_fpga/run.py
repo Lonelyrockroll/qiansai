@@ -23,7 +23,7 @@ def main():
     RESULTS.mkdir(exist_ok=True)
     compiler = shutil.which('iverilog') or 'E:/iverilog/bin/iverilog.exe'
     runtime = shutil.which('vvp') or 'E:/iverilog/bin/vvp.exe'
-    source = [FPGA/'guide_player.v', FPGA/'guide_transport.v']
+    source = [FPGA/'guide_player.v', FPGA/'guide_transport.v', FPGA/'score_store.v']
     reports = {}
     with tempfile.TemporaryDirectory(prefix='tang-guide-') as folder:
         work = Path(folder)

@@ -1,0 +1,43 @@
+{
+  "apk": "dist\\TangRecorder-1.2.apk",
+  "version_code": 3,
+  "version_name": "1.2",
+  "size": 143971,
+  "sha256": "4d434c58ae0c2dec47939e748fe573ac5593d4b8ecdda250f7d4a43c4cd6eb06",
+  "signer_sha256": "0c620b15ad828e47929f6038e118237eea838ef841bfe5918cc16116a2b71581",
+  "same_signer_as_1_1": true,
+  "checks": {
+    "apk_v1_v2_v3_signature": "passed",
+    "manifest_package_version": "cn.tangsynth.recorder / 3 / 1.2",
+    "ScoreTest": "passed",
+    "ScoreSessionTest": "passed",
+    "GuideTest": "passed",
+    "GuideSessionTest": "passed",
+    "ProtocolTest_original_FPGA_recording": "passed",
+    "ScoreAckTest_845_actual_FPGA_TPAK": "passed; 20280 bytes, sequence wrap, op/status/progress/page metadata, decoded65536 and show"
+  },
+  "fpga_fixture": {
+    "raw_bytes": 65536,
+    "compressed_bytes": 13464,
+    "crc32": 3975521942,
+    "frames": 845,
+    "final_sequence": 80
+  },
+  "hardware_phone_confirmation": "Passed: Android 1.2 sent both pages of the demonstration PDF over SPP, user confirmed both displayed fullscreen and page turn worked. FPGA received 13492/13538 compressed bytes; each decoded to 65536 bytes. See tests/score_fpga/board_20261102/acceptance.json.",
+  "fixture_raster_source": "independent PDF rendering of bundled score-demo.pdf page 1; actual Android Java page/RLE/request encoding",
+  "sources": {
+    "src\\main\\java\\cn\\tangsynth\\recorder\\AudioFrame.java": "908949d2635722126787c5e3531c84282ae058f03db2dad167794dbb05def4eb",
+    "src\\main\\java\\cn\\tangsynth\\recorder\\GuideProtocol.java": "8b1e38ba3080c700e30138dab817dc5c4880e3af2ce482e24d54bf24ca4d79ca",
+    "src\\main\\java\\cn\\tangsynth\\recorder\\MainActivity.java": "d06687687b6be5a87f0524ea7d9c49777723bdd8a20bddef3b80ba49b09835ca",
+    "src\\main\\java\\cn\\tangsynth\\recorder\\MidiGuide.java": "7b4f55b67b00a0f9eb12f37b2f039fd0d9bb905b2630b6e837161ddc3d1bef9f",
+    "src\\main\\java\\cn\\tangsynth\\recorder\\PdfScore.java": "e84cf1487c07a4f253d3ec68dbae32e8827db845751abba051159f6225434dad",
+    "src\\main\\java\\cn\\tangsynth\\recorder\\RecorderSession.java": "e152138345f210a0c39303e4e5c2a1cabf8e3f9a032e3498b7216b781305ef96",
+    "src\\main\\java\\cn\\tangsynth\\recorder\\ScoreProtocol.java": "8f0a51e1b40cad2e8e4bf49ea6002be27bf33c63bb6e888b245816d09384f600",
+    "src\\main\\java\\cn\\tangsynth\\recorder\\StreamReader.java": "042a2650ff35a2b803ec8fcefab3ea22ed0c3409685abf6226ffb63e405ebb3d",
+    "src\\main\\java\\cn\\tangsynth\\recorder\\WavTake.java": "072a3ab60274776419163d826f87d08f29d57a760306a8020ae20519550977a5",
+    "build.gradle": "03fa0c9b8db66261ded492869c437942d187fdc0d62e17158adea6c813a7b62f",
+    "build_apk.py": "168a4972d1315af2dae724e077b18e4854c6b7f21ccfe188202f1a18921a5066",
+    "src\\main\\AndroidManifest.xml": "88f69f651b2223c9108d1bb16240c7cdf2e1b1f29403c79c36dc8853e78f23f8",
+    "src\\main\\assets\\score-demo.pdf": "e4e34ef0770000dbf665a32f0fbeb5487c1e58672f3e9feb596cc04406ed2f80"
+  }
+}

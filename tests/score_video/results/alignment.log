@@ -1,0 +1,2 @@
+PASS alignment samples=1202 real_panel_rgb_hs_vs_de_score_select_and_mux
+F:\codex-project\pcb\tang-score\tests\score_video\alignment_tb.v:59: $finish called at 12080000 (1ps)

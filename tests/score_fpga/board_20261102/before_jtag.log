@@ -1,0 +1,8 @@
+ Target Cable: USB Debugger A/0/545/null@2.5MHz
+ Target Device: GW5AT-60B(0x0001481B)
+ Operation "Read Device Codes" for device#1...
+ ID Code is: 0x0001481B
+ User Code is: 0x0000BB8F
+ Status Code is: 0x76026238
+ Finished.
+ Cost 0.09 second(s)

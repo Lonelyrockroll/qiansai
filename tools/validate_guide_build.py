@@ -1,4 +1,4 @@
-"""Validate a routed v30 image against the current sources, IOs and all clocks."""
+"""Validate a routed screen firmware image against its sources, IOs and clocks."""
 import argparse
 import hashlib
 import html
@@ -46,7 +46,9 @@ def validate(build):
         r'^\s*(Logic|Register|BSRAM|DSP)\s*\|\s*([\d.]+)/([\d]+)', report, re.M)}
     assert resources and resources['BSRAM'][0] <= resources['BSRAM'][1] == 118, resources
     assert not re.search(r'ERROR\s+\(', (build/'build.log').read_text(errors='replace'))
-    result = dict(validated=True, firmware=30, resources=resources, frequency=frequency,
+    fw = int(re.search(r'tx_buf\[24\]\s*=\s*(\d+);\s*tx_buf\[25\]=opcode;', (build/'uart_control_display.v').read_text())[1])
+    placement = int(re.search(r'-place_option\s+(\d+)',(build/'build.tcl').read_text())[1])
+    result = dict(validated=True, firmware=fw, place_option=placement, resources=resources, frequency=frequency,
                   slack=slack, pins=pins, source_sha256=built,
                   sha256=hashlib.sha256(bitstream.read_bytes()).hexdigest(),
                   user_code=re.search(r'//UserCode:\s*(\S+)', bitstream.read_text()[:2000])[1],

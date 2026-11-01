@@ -18,6 +18,8 @@ module tb_console;
   .locked(locked),.period(period),.commands(commands),.dropped(dropped),.request(request),.command(command),
   .accept(1'b1),.settled(1'b1),.volume(7'd7),.timbre(3'd4),.fx(3'd0),.lamps(8'd0),
   .guide_ui_valid(1'b0),.guide_ui_action(4'd0),
+  .score_video_visible(1'b0),.capture_busy(1'b0),.capture_ready(1'b0),
+  .score_ui_valid(1'b0),.score_ui_action(2'd0),
   .guide_valid(guide_valid),.guide_playing(guide_playing),.guide_loading(guide_loading),.guide_demo(guide_demo),
   .guide_count(guide_count),.guide_index(guide_index),.guide_time_cs(guide_time),.guide_duration_cs(guide_duration),
   .guide_current(current));

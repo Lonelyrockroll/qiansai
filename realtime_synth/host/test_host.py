@@ -21,13 +21,18 @@ class FirmwareTransport(FakeTransport):
     def write(self,data):
         super().write(data)
         raw=bytearray(self.reply);op=data[4];raw[24]=self.firmware
-        if op in (30,31):
+        if op in (30,31,32,33):
             raw[6:24]=bytes(18)
             if op==30:
                 struct.pack_into('<H',raw,7,1577);raw[9]=2
-            else:
+            elif op==31:
                 raw[7]=3;raw[8]=2
                 struct.pack_into('<HHHHI',raw,9,84,12,125,2400,1<<14)
+            elif op==32:
+                raw[7]=27
+                struct.pack_into('<HHII',raw,8,1,2,13518,65536)
+            else:
+                struct.pack_into('<HHBHH',raw,7,1,32766,2,0x0123,0xcdef)
         raw[26]=0
         for b in raw[2:26]:raw[26]^=b
         self.reply=bytes(raw)
@@ -96,8 +101,8 @@ class Tests(unittest.TestCase):
         with self.assertRaises(OSError):ctl.exchange(1)
         self.assertIsNone(ctl.transport);self.assertTrue(fake.closed)
 
-    def test_v27_to_v30_main_status(self):
-        for version in range(27,31):
+    def test_v27_to_v31_main_status(self):
+        for version in range(27,32):
             ctl=server.Controller();ctl.stop.set();ctl.worker.join();ctl.transport=FirmwareTransport(version)
             try:
                 answer=ctl.exchange(1)
@@ -118,7 +123,7 @@ class Tests(unittest.TestCase):
         finally:ctl.disconnect()
 
     def test_unknown_version_and_bad_rate_still_fail(self):
-        for version in (5,27,31,99):
+        for version in (5,27,32,99):
             ctl=server.Controller();ctl.stop.set();ctl.worker.join();fake=FirmwareTransport(version);ctl.transport=fake
             with self.assertRaises(OSError):ctl.exchange(30)
             self.assertIsNone(ctl.transport);self.assertTrue(fake.closed)
@@ -131,5 +136,17 @@ class Tests(unittest.TestCase):
         fake.write=bad_rate;ctl.transport=fake
         with self.assertRaises(OSError):ctl.exchange(4)
         self.assertIsNone(ctl.transport)
+
+    def test_v31_score_status_and_memory_read(self):
+        ctl=server.Controller();ctl.stop.set();ctl.worker.join();ctl.transport=FirmwareTransport(31)
+        try:
+            main=ctl.exchange(4)
+            score=ctl.exchange(32)
+            self.assertTrue(score['score_valid'] and score['score_show'] and score['score_visible'] and score['score_reserved'])
+            self.assertEqual((score['score_page'],score['score_pages'],score['score_decoded']),(1,2,65536))
+            words=ctl.exchange(33)
+            self.assertEqual((words['score_page'],words['offset'],words['count'],words['data']),(1,32766,2,'2301efcd'))
+            self.assertIs(ctl.feedback,main)
+        finally:ctl.disconnect()
 
 if __name__=='__main__':unittest.main()

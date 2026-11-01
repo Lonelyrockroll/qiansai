@@ -1,0 +1,47 @@
+{
+  "checked_at_utc": "2026-11-01T17:40:58.436746+00:00",
+  "pdf_pages": 2,
+  "pdf_page_sizes": [
+    [
+      1024.0,
+      600.0
+    ],
+    [
+      1024.0,
+      600.0
+    ]
+  ],
+  "chinese_text_extraction": true,
+  "android_asset_identical": true,
+  "total_bars": 12,
+  "total_beats": 48,
+  "white_keys_only": true,
+  "pdf_sha256": "e4e34ef0770000dbf665a32f0fbeb5487c1e58672f3e9feb596cc04406ed2f80",
+  "visual_inspection": {
+    "original_pages": [
+      1,
+      2
+    ],
+    "restored_pages": [
+      1,
+      2
+    ],
+    "result": "No clipping, overlap, missing Chinese glyphs, or black rectangles."
+  },
+  "pages": [
+    {
+      "page": 1,
+      "raw_bytes": 65536,
+      "rle_bytes": 13464,
+      "rle_roundtrip": true,
+      "crc32": "ECF5A696"
+    },
+    {
+      "page": 2,
+      "raw_bytes": 65536,
+      "rle_bytes": 13518,
+      "rle_roundtrip": true,
+      "crc32": "C3C3BF39"
+    }
+  ]
+}

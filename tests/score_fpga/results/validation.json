@@ -1,0 +1,18 @@
+{
+  "result": "passed",
+  "scope": "Actual score_store, transport and shared capture RAM RTL; full Android page checked on both asynchronous pixel and sys ports. No phone/board claim.",
+  "tests": {
+    "tb_score": "PASS score:        1658 CRC-checked replies, Java 845 frames including sequence wrap, full 65536-byte dual-clock readback, RLE/CRC/bounds/retry/visibility/capture/UI/timeouts",
+    "tb_guide": "PASS 179 framed commands: CRC/retry/banks, same-time chords, track colors, sustain, timing, pause, step, speed, 512-event boundary and timeouts",
+    "tb_java_upload": "PASS Android Java's 24 exact binary frames uploaded 84 event words and drove on/off/retrigger timing"
+  },
+  "source_sha256": {
+    "guide_transport.v": "8940a8cb86ca4dc74c8ac27f6dacf37abd5dce839f463db615e21677c5cc9782",
+    "guide_player.v": "7ad85be1d08aa523884407602c810ba08e0c19546e77bdd90cf942823426b1ed",
+    "score_store.v": "95e1498b0ee141b850069093ceac73bc66ac9ea9e6e570b967d80c4c6efc1854",
+    "pcm_capture.v": "38b376b3fd4c23f393fd793cb52c8ebfddf2eee28a2ebefd5af74bc88ddf7c2d",
+    "score_capture_ram.v": "3e940ab2f3f022ade8e9a541139d877c0799b504e1f8e71cb1e35b4033741c89"
+  },
+  "score_fixture_sha256": "480b5ebc9ea04fc3e5d72c7b50489440d04973a15dd98699e18d4adb15618eda",
+  "java_reply_bytes": 20280
+}

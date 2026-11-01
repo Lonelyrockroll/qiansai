@@ -1,0 +1,28 @@
+{
+  "sram_user_code": "0x000063B5",
+  "firmware": 31,
+  "pcm_capture_resume": "128 PCM words, CRC matched; released before upload",
+  "registered_hdmi_pages": [
+    {
+      "page": 1,
+      "compressed": 13492,
+      "decoded": 65536,
+      "observed_seconds": 45.6
+    },
+    {
+      "page": 2,
+      "compressed": 13538,
+      "decoded": 65536,
+      "observed_seconds": 46.6
+    }
+  ],
+  "phone_visual_confirmation": "两页都能全屏显示，翻页正常",
+  "updated_at": "2026-11-02T02:05:43.217449+08:00",
+  "phone_pdf_upload": "passed",
+  "page_two_full_ram_readback": {
+    "bytes": 65536,
+    "crc32": "B2AA6355",
+    "pcm_overwrite_rejected": true,
+    "render": "phone-page-02.png"
+  }
+}

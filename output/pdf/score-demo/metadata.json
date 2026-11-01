@@ -1,0 +1,137 @@
+{
+  "title": "小星星",
+  "provenance": "Traditional public-domain melody; project typesetting, not a reproduced score.",
+  "page_count": 2,
+  "page_size": [
+    1024,
+    600
+  ],
+  "storage_size": [
+    1024,
+    512
+  ],
+  "format": "1bpp, row-major, MSB-left, 1=black, no row padding",
+  "threshold": 180,
+  "luminance": "(77*R + 150*G + 29*B) >> 8",
+  "transform": "fit PDF to 1024x600 without crop, then scale Y by 512/600",
+  "rle": "alternating uint8 count (1..255), uint8 value; no header",
+  "crc32": "IEEE CRC32 of the decoded 65536-byte raw bitmap; hexadecimal",
+  "font_sha256": "d79c55e68b1131eea0cc1c47be4f572d964f28c682e143db2ad09c1e4cb07a3f",
+  "pdf_sha256": "e4e34ef0770000dbf665a32f0fbeb5487c1e58672f3e9feb596cc04406ed2f80",
+  "pages": [
+    {
+      "page": 1,
+      "bars": [
+        1,
+        6
+      ],
+      "raw_file": "page-01.bin",
+      "rle_file": "page-01.rle",
+      "raw_bytes": 65536,
+      "rle_bytes": 13464,
+      "crc32": "ECF5A696",
+      "raw_sha256": "d4c0a213cc54a3031b3856c3a6eacf6ee2d3287187076e9631fb356216c4a677",
+      "rle_sha256": "fb4c605e9187b5de5f123e250cd70623989553403cad453caefa30f1b4a22e21",
+      "black_pixels": 22338
+    },
+    {
+      "page": 2,
+      "bars": [
+        7,
+        12
+      ],
+      "raw_file": "page-02.bin",
+      "rle_file": "page-02.rle",
+      "raw_bytes": 65536,
+      "rle_bytes": 13518,
+      "crc32": "C3C3BF39",
+      "raw_sha256": "00acba70af4e41ea0bc7bbcee0a6e23a70baf93beea85ccb71c8ce444319f7a9",
+      "rle_sha256": "0000b4b526b6304f178489f41724bbd195d54732a54e0a084ea1bf50e3729e26",
+      "black_pixels": 22556
+    }
+  ],
+  "bars": [
+    [
+      "1",
+      "1",
+      "5",
+      "5"
+    ],
+    [
+      "6",
+      "6",
+      "5",
+      "-"
+    ],
+    [
+      "4",
+      "4",
+      "3",
+      "3"
+    ],
+    [
+      "2",
+      "2",
+      "1",
+      "-"
+    ],
+    [
+      "5",
+      "5",
+      "4",
+      "4"
+    ],
+    [
+      "3",
+      "3",
+      "2",
+      "-"
+    ],
+    [
+      "5",
+      "5",
+      "4",
+      "4"
+    ],
+    [
+      "3",
+      "3",
+      "2",
+      "-"
+    ],
+    [
+      "1",
+      "1",
+      "5",
+      "5"
+    ],
+    [
+      "6",
+      "6",
+      "5",
+      "-"
+    ],
+    [
+      "4",
+      "4",
+      "3",
+      "3"
+    ],
+    [
+      "2",
+      "2",
+      "1",
+      "-"
+    ]
+  ],
+  "midi_notes": {
+    "1": 60,
+    "2": 62,
+    "3": 64,
+    "4": 65,
+    "5": 67,
+    "6": 69
+  },
+  "beats_per_bar": 4,
+  "total_beats": 48
+}

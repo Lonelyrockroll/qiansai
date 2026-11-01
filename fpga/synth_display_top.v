@@ -119,9 +119,30 @@ module synth_display_top(
       .reverb_mix(fx_sr),.delay_mix(fx_sd),.chorus_mix(fx_sc),.feedback(fx_sfb),.delay_time(fx_stime),
       .room(fx_sroom),.rate(fx_srate),.depth(fx_sdepth));
     wire cap_cv,cap_arm,cap_trigger,cap_busy,cap_ready;
+    wire score_wr,score_valid,score_show,score_loading,score_reserved,score_ui_valid,score_ui_ready;
+    wire [1:0] score_ui_action;
+    wire [14:0] score_wr_address,score_pixel_address;
+    wire [15:0] score_wr_data,score_pixel_data,score_page_index,score_page_count;
+    wire [31:0] score_received,score_decoded;
+    wire score_visible_pixel;
+    reg [1:0] score_visible_sync=0;
+    // Keep ownership through the forward/return synchronizers after a show
+    // request falls. Otherwise an old show=1 could be sampled at a nearby
+    // frame boundary after the system has already observed visible=0.
+    // 32 cycles at 50 MHz exceed the 49 MHz pixel CDC round trip comfortably.
+    reg [5:0] score_hide_guard=0;
+    always @(posedge sys_clk)begin
+        if(rst)score_hide_guard<=0;
+        else if(score_show)score_hide_guard<=32;
+        else if(score_hide_guard!=0)score_hide_guard<=score_hide_guard-1'b1;
+    end
+    wire score_video_owned=score_visible_sync[1] || score_hide_guard!=0;
+    always @(posedge sys_clk)if(rst)score_visible_sync<=0;else score_visible_sync<={score_visible_sync[0],score_visible_pixel};
     wire [15:0] cap_length,cap_data,cap_id,cap_count,cap_target,cap_capacity;
     wire [31:0] cap_delay,cap_first,cap_crc;wire [14:0] cap_address;wire [7:0] cap_flags;
-    pcm_capture capture(.clk(sys_clk),.rst(rst),.sample_tick(tick),.pcm(pcm),
+    pcm_capture #(.SCORE_SHARED(1)) capture(.clk(sys_clk),.rst(rst),.sample_tick(tick),.pcm(pcm),
+      .score_reserved(score_reserved),.score_write_enable(score_wr),.score_write_address(score_wr_address),.score_write_data(score_wr_data),
+      .pixel_clk(pixel_clk),.pixel_read_address(score_pixel_address),.pixel_read_data(score_pixel_data),
       .command_valid(cap_cv),.command_arm(cap_arm),.trigger_nonzero(cap_trigger),
       .requested_length(cap_length),.requested_delay(cap_delay),.read_address(cap_address),.read_data(cap_data),
       .busy(cap_busy),.ready(cap_ready),.flags(cap_flags),.capture_id(cap_id),.count(cap_count),.target_length(cap_target),
@@ -192,6 +213,11 @@ module synth_display_top(
     wire [15:0] guide_time_cs,guide_duration_cs;wire [9:0] guide_count,guide_index;wire [1:0] guide_speed;
     wire [31:0] guide_current,guide_onset,guide_next;wire [63:0] guide_colors;
     bt_console bluetooth(.guide_ui_valid(guide_ui_valid),.guide_ui_action(guide_ui_action),
+        .score_video_visible(score_video_owned),.capture_busy(cap_busy || (cap_cv && cap_arm)),.capture_ready(cap_ready),
+        .score_ui_valid(score_ui_valid),.score_ui_action(score_ui_action),.score_ui_ready(score_ui_ready),
+        .score_write_enable(score_wr),.score_write_address(score_wr_address),.score_write_data(score_wr_data),
+        .score_valid(score_valid),.score_show_requested(score_show),.score_loading(score_loading),.score_reserved(score_reserved),
+        .score_received_compressed(score_received),.score_decoded_bytes(score_decoded),.score_page_index(score_page_index),.score_page_count(score_page_count),
         .guide_valid(guide_valid),.guide_playing(guide_playing),.guide_loading(guide_loading),.guide_demo(guide_demo),
         .guide_time_cs(guide_time_cs),.guide_duration_cs(guide_duration_cs),.guide_count(guide_count),.guide_index(guide_index),
         .guide_speed(guide_speed),.guide_current(guide_current),.guide_onset(guide_onset),.guide_next(guide_next),.guide_colors(guide_colors),.clk(sys_clk),.rst(rst),.bt_rx(bt_rx),.bt_tx(bt_tx),.audio_tick(tick),.pcm(pcm),.locked(bt_locked),
@@ -205,6 +231,10 @@ module synth_display_top(
     wire [31:0] panel_keys=key_mode==0?pc_key_pressed:key_pressed;
     wire [11:0] pt_bias;wire [1:0] pt_mode;
     uart_control_display controller(.guide_ui_valid(guide_ui_valid),.guide_ui_action(guide_ui_action),
+        .score_ui_valid(score_ui_valid),.score_ui_action(score_ui_action),.score_ui_ready(score_ui_ready),
+        .score_valid(score_valid),.score_show_requested(score_show),.score_visible(score_visible_sync[1]),
+        .score_loading(score_loading),.score_reserved(score_reserved),.score_page_index(score_page_index),.score_page_count(score_page_count),
+        .score_received_compressed(score_received),.score_decoded_bytes(score_decoded),
         .guide_valid(guide_valid),.guide_playing(guide_playing),.guide_loading(guide_loading),.guide_demo(guide_demo),
         .guide_time_cs(guide_time_cs),.guide_duration_cs(guide_duration_cs),.guide_count(guide_count),.guide_index(guide_index),
         .guide_speed(guide_speed),.guide_current(guide_current),.pt_mode(pt_mode),.pt_bias(pt_bias),
@@ -286,7 +316,11 @@ module synth_display_top(
     display_snapshot #(.WIDTH(371)) snapshot(.sys_clk(sys_clk),.sys_rst(rst),.pixel_clk(pixel_clk),.pixel_rst(pixel_rst),
         .frame_start(frame_start),.source({panel_keys,guide_colors,guide_next,guide_onset,guide_current,guide_speed,guide_index,guide_count,guide_duration_cs,guide_time_cs,guide_demo,guide_loading,guide_playing,guide_valid,bend_position,vibrato_depth,fx_status_mask,ui_focus[3],loop_actual_cs,loop_position_cs,loop_layers,loop_duration,loop_playing,loop_recording,loop_pending,loop_notice,loop_progress,drum_mode,ui_focus[2:0],key_wave,ui_volume,active_voices,key_mode,
             key_calibrated,key_fault,PA_EN,amp_ready,uart_amp_hold,ui_pattern,ui_notice,(drum_mode?{20'd0,drum_mask}:panel_keys),peak}),.snapshot(panel_state));
-    wire [23:0] rgb;wire hs_out,vs_out,de_out;
+    wire [23:0] rgb,score_rgb,final_rgb;wire hs_out,vs_out,de_out,score_select;
+    score_renderer score_video(.clk(pixel_clk),.rst(pixel_rst),.show_requested(score_show),
+        .x(x),.y(y),.de(de),.frame_start(frame_start),.read_address(score_pixel_address),.read_data(score_pixel_data),
+        .visible(score_visible_pixel),.select_page(score_select),.rgb(score_rgb));
+    assign final_rgb=score_select?score_rgb:rgb;
     panel_renderer renderer(.actual_keys(panel_state[370:339]),.guide_colors(panel_state[338:275]),
         .guide_next(panel_state[274:243]),.guide_onset(panel_state[242:211]),.guide_target(panel_state[210:179]),
         .guide_speed(panel_state[178:177]),.guide_index(panel_state[176:167]),.guide_count(panel_state[166:157]),
@@ -300,6 +334,6 @@ module synth_display_top(
         .notice(panel_state[43:40]),.pressed(panel_state[39:8]),.peak(panel_state[7:0]),
         .rgb(rgb),.hs_out(hs_out),.vs_out(vs_out),.de_out(de_out));
     DVI_TX_Top video_tx(.I_rst_n(reset_sync[3]),.I_serial_clk(serial_clk),.I_rgb_clk(pixel_clk),
-        .I_rgb_vs(vs_out),.I_rgb_hs(hs_out),.I_rgb_de(de_out),.I_rgb_r(rgb[23:16]),.I_rgb_g(rgb[15:8]),.I_rgb_b(rgb[7:0]),
+        .I_rgb_vs(vs_out),.I_rgb_hs(hs_out),.I_rgb_de(de_out),.I_rgb_r(final_rgb[23:16]),.I_rgb_g(final_rgb[15:8]),.I_rgb_b(final_rgb[7:0]),
         .O_tmds_clk_p(tmds_clk_p),.O_tmds_clk_n(tmds_clk_n),.O_tmds_data_p(tmds_data_p),.O_tmds_data_n(tmds_data_n));
 endmodule

@@ -93,6 +93,12 @@ class ControllerTests(unittest.TestCase):
             c.touch_click(dict(session='test',index=i))
             self.assertEqual(c.touch['last_menu'],i)
         with self.assertRaises(ValueError):c.touch_click(dict(session='test',index=12))
+    def test_v31_score_hides_menu_hit_targets(self):
+        c=self.make();c.feedback={'firmware':31}
+        for flag in ('score_show','score_visible','score_loading'):
+            c.exchange.reset_mock();c.exchange.return_value=dict(score_show=False,score_visible=False,score_loading=False)
+            c.exchange.return_value[flag]=True
+            c.touch_click(dict(session='test',index=0));c.exchange.assert_called_once_with(32)
     def test_focus_loss_mutes(self):
         c=self.make();c.touch_heartbeat(dict(session='test',active=False,reports=20,taps=1))
         c.panic.assert_called_once();self.assertFalse(c.touch['active'])

@@ -13,7 +13,7 @@ PROJECT = HERE.parents[1]
 FPGA = PROJECT/'fpga'
 RESULTS = HERE/'results'
 SOURCES = ['bt_console.v', 'bt_link.v', 'bt_uart_rx.v', 'bt_uart_tx.v',
-           'guide_transport.v', 'guide_player.v', 'record_stream.v', 'record_filter.v', 'ima_encoder.v']
+           'guide_transport.v', 'guide_player.v', 'score_store.v', 'record_stream.v', 'record_filter.v', 'ima_encoder.v']
 
 
 def execute(args, work, timeout=300):

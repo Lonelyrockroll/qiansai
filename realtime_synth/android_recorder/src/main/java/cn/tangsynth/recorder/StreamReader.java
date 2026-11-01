@@ -8,7 +8,9 @@ import java.io.InputStream;
 final class StreamReader {
     final AudioFrame audio=new AudioFrame();
     GuideProtocol.Ack acknowledgement;
+    ScoreProtocol.Ack scoreAcknowledgement;
     boolean read(InputStream in)throws IOException{
+        acknowledgement=null;scoreAcknowledgement=null;
         int signature=0;
         while(true){
             int value=in.read();
@@ -21,6 +23,10 @@ final class StreamReader {
                     if(bad instanceof EOFException)throw bad;
                     signature=0; // A damaged ACK is retried by the sender.
                 }
+            }
+            if(signature==0x5450414b){
+                try{scoreAcknowledgement=ScoreProtocol.readReply(in);return false;}
+                catch(IOException bad){if(bad instanceof EOFException)throw bad;signature=0;}
             }
         }
     }

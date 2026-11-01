@@ -1,0 +1,63 @@
+{
+  "page": {
+    "seq": 1,
+    "status": 0,
+    "score_valid": true,
+    "score_show": true,
+    "score_loading": false,
+    "score_reserved": true,
+    "score_visible": true,
+    "score_page": 1,
+    "score_pages": 2,
+    "score_received": 13538,
+    "score_decoded": 65536,
+    "firmware": 31,
+    "opcode": 32
+  },
+  "after": {
+    "seq": 89,
+    "status": 0,
+    "score_valid": true,
+    "score_show": true,
+    "score_loading": false,
+    "score_reserved": true,
+    "score_visible": true,
+    "score_page": 1,
+    "score_pages": 2,
+    "score_received": 13538,
+    "score_decoded": 65536,
+    "firmware": 31,
+    "opcode": 32
+  },
+  "pcm_overwrite_rejected": true,
+  "seconds": 92.859,
+  "sample_words": [
+    {
+      "address": 0,
+      "words": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "address": 4896,
+      "words": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "raw_bytes": 65536,
+  "raw_crc32": "B2AA6355",
+  "black_pixels": 24014,
+  "reference_pixel_agreement": 0.9858970642089844,
+  "reference_ink_iou": 0.725965458453784
+}

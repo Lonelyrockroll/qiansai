@@ -1,0 +1,2 @@
+PASS Android Java's 24 exact binary frames uploaded 84 event words and drove on/off/retrigger timing
+F:\codex-project\pcb\tang-score\tests\guide_fpga\tb_java_upload.v:55: $finish called at 280520000 (1ps)

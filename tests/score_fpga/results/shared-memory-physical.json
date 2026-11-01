@@ -1,0 +1,13 @@
+{
+  "scope": "Standalone score_capture_ram on GW5AT-LV60PG484AC1/I0, actual place-and-route, no timing or board claim",
+  "tool": "Gowin EDU V1.9.11.03",
+  "physical_bsram": 32,
+  "primitive": "DPB",
+  "depth": 32768,
+  "width": 16,
+  "ports": [
+    "sysclk: common-address read OR write",
+    "pixelclk: synchronous read only"
+  ],
+  "source_sha256": "3e940ab2f3f022ade8e9a541139d877c0799b504e1f8e71cb1e35b4033741c89"
+}

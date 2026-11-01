@@ -1,0 +1,23 @@
+{
+  "scope": "RTL pin-level 8N1 receiver independently decodes bt_console TX, with auto-baud, binary guide and ADPCM recorder arbitration.",
+  "result": "passed",
+  "baud_divisor": 434,
+  "guide_frames": 26,
+  "audio_frames": 4,
+  "finish_frames": 1,
+  "clocks": 7742083,
+  "tested_discard_timeout": false,
+  "wire_bytes": 976,
+  "source_sha256": {
+    "bt_console.v": "c7a9efc937dae9ccdac912dd9bc7c7e7321d790ac86171a217a09c4c807cacce",
+    "bt_link.v": "b06b2ee036bd3ef607dd62888708ffca1211d1bde6058206b84871325ceac252",
+    "bt_uart_rx.v": "0beb0e774e1ad95579bffc6480eb0463e22425699ca372fe96c1e2935b2c7491",
+    "bt_uart_tx.v": "5f0484a00b7a89fb0103f692e4d00d467fa70dfb30fea499b8af8cd8a5f8d069",
+    "guide_transport.v": "8940a8cb86ca4dc74c8ac27f6dacf37abd5dce839f463db615e21677c5cc9782",
+    "guide_player.v": "7ad85be1d08aa523884407602c810ba08e0c19546e77bdd90cf942823426b1ed",
+    "score_store.v": "95e1498b0ee141b850069093ceac73bc66ac9ea9e6e570b967d80c4c6efc1854",
+    "record_stream.v": "96b3cb7a6a39e33b25742e75846d819e13d4c499482b2427fbaf01bc92336921",
+    "record_filter.v": "6b8c3115b0631ccea52ccbb2d5690ea026baa6864482c7a7ada3532287f7554e",
+    "ima_encoder.v": "f3fdf6e7f6ef30bec827c9e68f844c8473d7e5509dd91a5d76c7b592775c1b4f"
+  }
+}

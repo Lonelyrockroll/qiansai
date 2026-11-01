@@ -23,6 +23,10 @@ final class GuideProtocol {
     static int u16(byte[] a,int pos){return (a[pos]&255)|((a[pos+1]&255)<<8);}
     static byte[] request(int seq,int operation,byte[] payload){
         if(payload.length>20 || operation<0 || operation>4)throw new IllegalArgumentException("指引帧参数超限");
+        return frame(seq,operation,payload);
+    }
+    static byte[] frame(int seq,int operation,byte[] payload){
+        if(payload.length>20 || operation<0 || operation>255)throw new IllegalArgumentException("传输帧参数超限");
         byte[] frame=new byte[28];
         frame[0]=(byte)0xa5;frame[1]=0x47;frame[2]=1;frame[3]=(byte)seq;frame[4]=(byte)operation;frame[5]=(byte)payload.length;
         System.arraycopy(payload,0,frame,6,payload.length);

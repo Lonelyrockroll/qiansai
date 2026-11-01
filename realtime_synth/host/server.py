@@ -65,9 +65,9 @@ class Controller:
                 if status['seq']!=seq or status['opcode']!=opcode:continue
                 firmware=status['firmware']
                 rate_free=(opcode in (KEY_STATUS,DISPLAY_STATUS,LED_STATUS,PCM_STATUS,PCM_READ,FX_STATUS)
-                           or (opcode==30 and firmware>=28) or (opcode==31 and firmware>=30))
+                           or (opcode==30 and firmware>=28) or (opcode==31 and firmware>=30) or (opcode in (32,33) and firmware>=31))
                 rate=status.get('sample_rate')
-                if (not 6<=firmware<=30 or (opcode==30 and firmware<28) or (opcode==31 and firmware<30)
+                if (not 6<=firmware<=31 or (opcode==30 and firmware<28) or (opcode==31 and firmware<30) or (opcode in (32,33) and firmware<31)
                     or (not rate_free and (rate is None or not abs(rate-FS)<=0.01))):
                     raise OSError('响应不是匹配的实时合成控制固件')
                 if opcode==DISPLAY_STATUS:
@@ -79,7 +79,7 @@ class Controller:
                 elif opcode==PMOD_STATUS:self.pmod_feedback=status
                 elif opcode==OUTPUT_GAIN_STATUS:self.output_gain_feedback=status
                 elif opcode==PCM_STATUS:self.pcm_feedback=status
-                elif opcode in (PCM_READ,30,31):pass
+                elif opcode in (PCM_READ,30,31,32,33):pass
                 else:self.feedback=status
                 if status['status']:
                     raise OSError({1:'板卡拒绝了校验错误的数据帧',2:'不支持的命令',3:'板卡拒绝了超出范围的参数',4:'当前输入模式不允许此操作，或 ADC 尚未校准／故障'}.get(status['status'],'板卡命令失败'))
@@ -186,6 +186,10 @@ class Controller:
         if self.feedback.get('firmware',0)<11:raise ValueError('当前固件不支持直接触摸菜单')
         index=data.get('index')
         if isinstance(index,bool) or not isinstance(index,int) or not 0<=index<(12 if self.feedback['firmware']>=30 else 9 if self.feedback['firmware']>=22 else 8):raise ValueError('触摸菜单编号无效')
+        if self.feedback['firmware']>=31:
+            page=self.exchange(32)
+            if page['score_show'] or page['score_visible'] or page['score_loading']:
+                return  # A sheet has no synth menu hit targets.
         self.exchange(DISPLAY_ACTION,bytes([5,index]))
         self.exchange(DISPLAY_STATUS);self.exchange(STATUS);self.exchange(KEY_STATUS)
         self.touch['last_menu']=index

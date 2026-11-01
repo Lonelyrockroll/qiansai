@@ -57,5 +57,8 @@
     <File path="record_stream.v" type="file.verilog" enable="1" />
     <File path="white_key_map.v" type="file.verilog" enable="1" />
     <File path="modal32_coeffs.v" type="file.verilog" enable="1" />
+    <File path="score_store.v" type="file.verilog" enable="1" />
+    <File path="score_capture_ram.v" type="file.verilog" enable="1" />
+    <File path="score_renderer.v" type="file.verilog" enable="1" />
   </FileList>
 </Project>

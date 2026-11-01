@@ -52,7 +52,9 @@ v30 每次加载时内置一段 16 秒、56 事件的白键短句。旋钮 B 转
 - UI 生成器：`tools/generate_guide_panel.py`。字库移除全空白的第 16 行，分为三组同步 ROM；画面保持不变。
 - 实板回归：`python tools/check_guide_board.py <记录目录>`，仅用于已载入内置曲目、无演奏和 Loop 的板卡；会保持音频静音。
 
-## PDF 曲谱：可做，尚未实现
+## v30 时的 PDF 曲谱方案
+
+以下是 v30 阶段的容量评估。后续 v31 已完成 PDF 全屏显示和手机翻页，使用方法见 [曲谱验收步骤](FULLSCREEN-SCORE.md)。
 
 推荐手机负责下载/打开 PDF，并用 Android 的 [PdfRenderer](https://developer.android.com/reference/android/graphics/pdf/PdfRenderer) 把所选页转为黑白位图，再通过蓝牙传到 FPGA 全屏显示。FPGA 接收图片，不承担 PDF 字体和页面解析。手机保留原文件，按页发送；来源可以是浏览器下载后在 App 中选文件。
 

@@ -1,0 +1,2 @@
+PASS raster mode=0 frames=5 pixels=3072000 line_edges=6000 last_row_pixels=5120 cycles=4051170
+F:\codex-project\pcb\tang-score\tests\score_video\raster_tb.v:96: $finish called at 40511736000 (1ps)
