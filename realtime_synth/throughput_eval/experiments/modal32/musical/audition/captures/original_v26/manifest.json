@@ -1,0 +1,49 @@
+{
+  "inputs": {
+    "throughput_eval\\experiments\\modal32\\musical\\audition\\tb_tone.v": "6521d53d1206bd747b6c58aa25c8560f8aa247c88bfc8e489f157619fb6565e0",
+    "control_key_gain\\piano_modal_mixed.v": "ed563fad119f1bb4e1213d7293a3813f99fffbb4bc6a2a2d785e556df1b93618",
+    "control_key_gain\\piano_modal_tables_compact.v": "f91e75b30a89f1eaa93ca5c022f8cde807ccb3fd6133e46bacf465091fa79a37"
+  },
+  "notes": {
+    "C4": {
+      "voice": 0,
+      "midi": 60,
+      "step": 23012828,
+      "sha256": "195723cf1c016142fbcf5be46f792616688a574c965ac669082a3fdc28b44d5f",
+      "early_nonzero_mask": "0000ffff",
+      "early_nonzero_count": 16,
+      "active_mask_at_frame2048": "0000ffff",
+      "active_count_at_frame2048": 16
+    },
+    "E4": {
+      "voice": 1,
+      "midi": 64,
+      "step": 28994347,
+      "sha256": "504e4d89cf3a69de5dc1e9951951f22392b8169e6498b67f724688524cc19f23",
+      "early_nonzero_mask": "0000ffff",
+      "early_nonzero_count": 16,
+      "active_mask_at_frame2048": "0000ffff",
+      "active_count_at_frame2048": 16
+    },
+    "G4": {
+      "voice": 2,
+      "midi": 67,
+      "step": 34480283,
+      "sha256": "f25230932958173c2ffb7f5b175f2a64cc700467da8250acdd100830373b7bdb",
+      "early_nonzero_mask": "0000ffff",
+      "early_nonzero_count": 16,
+      "active_mask_at_frame2048": "0000ffff",
+      "active_count_at_frame2048": 16
+    },
+    "C6": {
+      "voice": 3,
+      "midi": 84,
+      "step": 92051312,
+      "sha256": "0523f21721ec78bcca9292991cdb0c6cb5cf4e04ee09da6bcdc8c9e87229db33",
+      "early_nonzero_mask": "0000ffff",
+      "early_nonzero_count": 16,
+      "active_mask_at_frame2048": "0000ffff",
+      "active_count_at_frame2048": 16
+    }
+  }
+}

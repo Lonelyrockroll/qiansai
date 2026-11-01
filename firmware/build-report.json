@@ -1,0 +1,101 @@
+{
+  "place_option": 2,
+  "compact_font": true,
+  "validated": true,
+  "resources": {
+    "Logic": [
+      36780.0,
+      59904
+    ],
+    "Register": [
+      18789.0,
+      60780
+    ],
+    "BSRAM": [
+      115.0,
+      118
+    ],
+    "DSP": [
+      50.5,
+      118
+    ]
+  },
+  "user_code": "0x0000D27F",
+  "sha256": "b2ccb9ee9e8fe20a60e2267abec2f4913f2994658803652ec0804140dfc6a597",
+  "frequency": [
+    [
+      "1",
+      "sys_clk",
+      "50.000(MHz)",
+      "50.246(MHz)",
+      "17",
+      "TOP"
+    ],
+    [
+      "2",
+      "pixel_clk",
+      "49.000(MHz)",
+      "65.843(MHz)",
+      "16",
+      "TOP"
+    ],
+    [
+      "3",
+      "usb_clk",
+      "60.000(MHz)",
+      "64.779(MHz)",
+      "7",
+      "TOP"
+    ]
+  ],
+  "slack": [
+    [
+      "sys_clk",
+      "Setup",
+      "0.000",
+      "0"
+    ],
+    [
+      "sys_clk",
+      "Hold",
+      "0.000",
+      "0"
+    ],
+    [
+      "serial_clk",
+      "Setup",
+      "0.000",
+      "0"
+    ],
+    [
+      "serial_clk",
+      "Hold",
+      "0.000",
+      "0"
+    ],
+    [
+      "pixel_clk",
+      "Setup",
+      "0.000",
+      "0"
+    ],
+    [
+      "pixel_clk",
+      "Hold",
+      "0.000",
+      "0"
+    ],
+    [
+      "usb_clk",
+      "Setup",
+      "0.000",
+      "0"
+    ],
+    [
+      "usb_clk",
+      "Hold",
+      "0.000",
+      "0"
+    ]
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "schema": 1,
+  "device": "1189:8840",
+  "layout": "3x4",
+  "name": "默认控制布局",
+  "bindings": {
+    "K01": {
+      "action": "play_toggle",
+      "step": 1
+    },
+    "K02": {
+      "action": "mute",
+      "step": 1
+    },
+    "K03": {
+      "action": "tone_next",
+      "step": 1
+    },
+    "K04": {
+      "action": "tone_prev",
+      "step": 1
+    },
+    "K05": {
+      "action": "confirm",
+      "step": 1
+    },
+    "K06": {
+      "action": "scan_toggle",
+      "step": 1
+    },
+    "K07": {
+      "action": "calibrate",
+      "step": 1
+    },
+    "K08": {
+      "action": "pattern",
+      "step": 1
+    },
+    "K09": {
+      "action": "none",
+      "step": 1
+    },
+    "K10": {
+      "action": "menu_prev",
+      "step": 1
+    },
+    "K11": {
+      "action": "menu_next",
+      "step": 1
+    },
+    "K12": {
+      "action": "mute",
+      "step": 1
+    },
+    "A_CW": {
+      "action": "volume_up",
+      "step": 2
+    },
+    "A_CCW": {
+      "action": "volume_down",
+      "step": 2
+    },
+    "A_PRESS": {
+      "action": "mute",
+      "step": 1
+    },
+    "B_CW": {
+      "action": "menu_next",
+      "step": 1
+    },
+    "B_CCW": {
+      "action": "menu_prev",
+      "step": 1
+    },
+    "B_PRESS": {
+      "action": "confirm",
+      "step": 1
+    }
+  }
+}

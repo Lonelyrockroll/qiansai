@@ -1,0 +1,247 @@
+{
+  "scope": "Tone-core RTL sample output. Chord is linear superposition, before limiter, FX and analog playback.",
+  "sample_rate": 48828.125,
+  "wav_rate": 48828,
+  "dds_level": 16384,
+  "attack": 672,
+  "release": 8,
+  "key_down_frames": 24000,
+  "shared_linear_listening_gain": 2,
+  "comparison_order": [
+    "original_v26",
+    "bright_demo32",
+    "musical32"
+  ],
+  "spectral_windows": {
+    "early": "frames 256..2303 (5.24..47.17 ms)",
+    "late": "frames 10800..14895 (221.18..305.05 ms)"
+  },
+  "high_band": "4 kHz to Nyquist",
+  "models": {
+    "original_v26": {
+      "tones": {
+        "C4": {
+          "early": {
+            "high_to_total_db": -68.32914192425872,
+            "centroid_hz": 490.11865746936644,
+            "rms_pcm": 1692.9740099999044
+          },
+          "late": {
+            "high_to_total_db": -66.8851715511809,
+            "centroid_hz": 435.2040290748982,
+            "rms_pcm": 1126.2646713198817
+          },
+          "peak_pcm": 3369,
+          "contributing": 16,
+          "alive_at_2048": 16
+        },
+        "E4": {
+          "early": {
+            "high_to_total_db": -51.49202811131249,
+            "centroid_hz": 617.4301508103107,
+            "rms_pcm": 1699.0083325177789
+          },
+          "late": {
+            "high_to_total_db": -65.9543108893062,
+            "centroid_hz": 535.4267023935721,
+            "rms_pcm": 1098.6844350371807
+          },
+          "peak_pcm": 3392,
+          "contributing": 16,
+          "alive_at_2048": 16
+        },
+        "G4": {
+          "early": {
+            "high_to_total_db": -40.37788373823319,
+            "centroid_hz": 733.8705007546966,
+            "rms_pcm": 1677.7008016867812
+          },
+          "late": {
+            "high_to_total_db": -47.60780903064475,
+            "centroid_hz": 622.2822288616065,
+            "rms_pcm": 1081.627901243328
+          },
+          "peak_pcm": 3470,
+          "contributing": 16,
+          "alive_at_2048": 16
+        },
+        "C6": {
+          "early": {
+            "high_to_total_db": -11.714889195625876,
+            "centroid_hz": 1931.108079659261,
+            "rms_pcm": 1608.0560071310676
+          },
+          "late": {
+            "high_to_total_db": -12.986318225341854,
+            "centroid_hz": 1773.1147791113337,
+            "rms_pcm": 575.9973913769461
+          },
+          "peak_pcm": 4064,
+          "contributing": 16,
+          "alive_at_2048": 16
+        }
+      },
+      "phrase_wav": {
+        "peak_pcm": 18720,
+        "clipped_samples": 0,
+        "sha256": "43d9991a47e24dbedeb115ccab49b27e8bfc933e8026551c89898938c17f3880"
+      }
+    },
+    "bright_demo32": {
+      "tones": {
+        "C4": {
+          "early": {
+            "high_to_total_db": -11.504743387875116,
+            "centroid_hz": 1360.7900307295838,
+            "rms_pcm": 809.3237269594481,
+            "high_to_total_delta_vs_original_db": 56.824398536383605
+          },
+          "late": {
+            "high_to_total_db": -12.02959987571571,
+            "centroid_hz": 1319.1413487886139,
+            "rms_pcm": 728.0591881134969,
+            "high_to_total_delta_vs_original_db": 54.85557167546519
+          },
+          "peak_pcm": 2484,
+          "contributing": 32,
+          "alive_at_2048": 32
+        },
+        "E4": {
+          "early": {
+            "high_to_total_db": -9.828304615769696,
+            "centroid_hz": 1714.3728860477481,
+            "rms_pcm": 810.8996968549038
+          },
+          "late": {
+            "high_to_total_db": -10.17354417309807,
+            "centroid_hz": 1661.8618950718735,
+            "rms_pcm": 727.8525038316378
+          },
+          "peak_pcm": 2509,
+          "contributing": 32,
+          "alive_at_2048": 32
+        },
+        "G4": {
+          "early": {
+            "high_to_total_db": -8.66806292362049,
+            "centroid_hz": 2038.472178743019,
+            "rms_pcm": 802.4774048853727
+          },
+          "late": {
+            "high_to_total_db": -9.023194758541411,
+            "centroid_hz": 1976.5845401443967,
+            "rms_pcm": 732.0218085703842
+          },
+          "peak_pcm": 2491,
+          "contributing": 32,
+          "alive_at_2048": 32
+        },
+        "C6": {
+          "early": {
+            "high_to_total_db": -3.7545155385867552,
+            "centroid_hz": 4643.822773120043,
+            "rms_pcm": 789.850977959015,
+            "high_to_total_delta_vs_original_db": 7.960373657039121
+          },
+          "late": {
+            "high_to_total_db": -3.7080169648824857,
+            "centroid_hz": 4731.27127131557,
+            "rms_pcm": 680.9768811753543,
+            "high_to_total_delta_vs_original_db": 9.278301260459369
+          },
+          "peak_pcm": 2328,
+          "contributing": 20,
+          "alive_at_2048": 20
+        }
+      },
+      "phrase_wav": {
+        "peak_pcm": 10896,
+        "clipped_samples": 0,
+        "sha256": "b52524aa0987c9c962dbf74045b3788a5a558f895b16da9378a6d6794fa26b7a"
+      }
+    },
+    "musical32": {
+      "tones": {
+        "C4": {
+          "early": {
+            "high_to_total_db": -30.69808318749164,
+            "centroid_hz": 495.291548234861,
+            "rms_pcm": 1550.9149753426805,
+            "high_to_total_delta_vs_original_db": 37.63105873676708
+          },
+          "late": {
+            "high_to_total_db": -39.40727063206797,
+            "centroid_hz": 450.4307402864783,
+            "rms_pcm": 1123.1721123648595,
+            "high_to_total_delta_vs_original_db": 27.477900919112933
+          },
+          "peak_pcm": 3218,
+          "contributing": 32,
+          "alive_at_2048": 32
+        },
+        "E4": {
+          "early": {
+            "high_to_total_db": -29.78715771008938,
+            "centroid_hz": 624.0707027336205,
+            "rms_pcm": 1556.5871803090065
+          },
+          "late": {
+            "high_to_total_db": -38.25088634038657,
+            "centroid_hz": 567.3837304459217,
+            "rms_pcm": 1120.198674918455
+          },
+          "peak_pcm": 3320,
+          "contributing": 32,
+          "alive_at_2048": 32
+        },
+        "G4": {
+          "early": {
+            "high_to_total_db": -29.46808041887737,
+            "centroid_hz": 741.9225697607451,
+            "rms_pcm": 1537.6786287874613
+          },
+          "late": {
+            "high_to_total_db": -37.963279853948045,
+            "centroid_hz": 674.9305589214125,
+            "rms_pcm": 1129.6806250871375
+          },
+          "peak_pcm": 3389,
+          "contributing": 32,
+          "alive_at_2048": 32
+        },
+        "C6": {
+          "early": {
+            "high_to_total_db": -11.656250492791017,
+            "centroid_hz": 1943.8343961565772,
+            "rms_pcm": 1494.716246881463,
+            "high_to_total_delta_vs_original_db": 0.05863870283485895
+          },
+          "late": {
+            "high_to_total_db": -15.778933166915227,
+            "centroid_hz": 1660.2504555934252,
+            "rms_pcm": 796.359934645015,
+            "high_to_total_delta_vs_original_db": -2.7926149415733725
+          },
+          "peak_pcm": 3790,
+          "contributing": 19,
+          "alive_at_2048": 19
+        }
+      },
+      "phrase_wav": {
+        "peak_pcm": 17270,
+        "clipped_samples": 0,
+        "sha256": "af811a2c732852500b37118ac90ddbe8030167300d5ec1adc15e6fc52fd14545"
+      }
+    }
+  },
+  "C4_compare.wav": {
+    "peak_pcm": 6738,
+    "clipped_samples": 0,
+    "sha256": "40e65dff4b3251de5eb262d35eace577ed029022890c61140316df729b203ea1"
+  },
+  "phrase_compare.wav": {
+    "peak_pcm": 18720,
+    "clipped_samples": 0,
+    "sha256": "f9db07dedf6f3f5143aa2d96db98052eba1980a64d9923d202ded030280d0ada"
+  }
+}

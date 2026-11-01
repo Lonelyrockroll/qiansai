@@ -1,0 +1,611 @@
+{
+  "date": "2026-10-27T00:39:23",
+  "app_version": 4,
+  "test_mode": false,
+  "device_filter": "VID_1189&PID_8840",
+  "capture_scope": "explicit trials, Windows foreground-delivery only; non-target devices discarded; no INPUTSINK or global hooks",
+  "layout": "3行 × 4列",
+  "rows": 3,
+  "columns": 4,
+  "complete": true,
+  "steps_recorded": 18,
+  "received_count": 18,
+  "records": [
+    {
+      "step": 0,
+      "physical_action": "按键 K01：第1行第1键",
+      "status": "received",
+      "events": [
+        {
+          "type": "keyboard",
+          "vkey": 70,
+          "key": "F",
+          "scan_code": 33,
+          "flags": 0,
+          "down": true,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 9032,
+          "session": "20261027_003701_981671"
+        },
+        {
+          "type": "keyboard",
+          "vkey": 70,
+          "key": "F",
+          "scan_code": 33,
+          "flags": 1,
+          "down": false,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 9157,
+          "session": "20261027_003701_981671"
+        }
+      ],
+      "source_session": "20261027_003701_981671",
+      "original_status": "received"
+    },
+    {
+      "step": 1,
+      "physical_action": "按键 K02：第1行第2键",
+      "status": "received",
+      "events": [
+        {
+          "type": "keyboard",
+          "vkey": 75,
+          "key": "K",
+          "scan_code": 37,
+          "flags": 0,
+          "down": true,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 11438,
+          "session": "20261027_003701_981671"
+        },
+        {
+          "type": "keyboard",
+          "vkey": 75,
+          "key": "K",
+          "scan_code": 37,
+          "flags": 1,
+          "down": false,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 11563,
+          "session": "20261027_003701_981671"
+        }
+      ],
+      "source_session": "20261027_003701_981671",
+      "original_status": "received"
+    },
+    {
+      "step": 2,
+      "physical_action": "按键 K03：第1行第3键",
+      "status": "received",
+      "events": [
+        {
+          "type": "keyboard",
+          "vkey": 88,
+          "key": "X",
+          "scan_code": 45,
+          "flags": 0,
+          "down": true,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 13422,
+          "session": "20261027_003701_981671"
+        },
+        {
+          "type": "keyboard",
+          "vkey": 88,
+          "key": "X",
+          "scan_code": 45,
+          "flags": 1,
+          "down": false,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 13500,
+          "session": "20261027_003701_981671"
+        }
+      ],
+      "source_session": "20261027_003701_981671",
+      "original_status": "received"
+    },
+    {
+      "step": 3,
+      "physical_action": "按键 K04：第1行第4键",
+      "status": "received",
+      "events": [
+        {
+          "type": "keyboard",
+          "vkey": 32,
+          "key": "Space",
+          "scan_code": 57,
+          "flags": 0,
+          "down": true,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 15125,
+          "session": "20261027_003701_981671"
+        },
+        {
+          "type": "keyboard",
+          "vkey": 32,
+          "key": "Space",
+          "scan_code": 57,
+          "flags": 1,
+          "down": false,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 15219,
+          "session": "20261027_003701_981671"
+        }
+      ],
+      "source_session": "20261027_003701_981671",
+      "original_status": "received"
+    },
+    {
+      "step": 4,
+      "physical_action": "按键 K05：第2行第1键",
+      "status": "received",
+      "events": [
+        {
+          "type": "keyboard",
+          "vkey": 13,
+          "key": "Enter",
+          "scan_code": 28,
+          "flags": 0,
+          "down": true,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 17094,
+          "session": "20261027_003701_981671"
+        },
+        {
+          "type": "keyboard",
+          "vkey": 13,
+          "key": "Enter",
+          "scan_code": 28,
+          "flags": 1,
+          "down": false,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 17188,
+          "session": "20261027_003701_981671"
+        }
+      ],
+      "source_session": "20261027_003701_981671",
+      "original_status": "received"
+    },
+    {
+      "step": 5,
+      "physical_action": "按键 K06：第2行第2键",
+      "status": "received",
+      "events": [
+        {
+          "type": "keyboard",
+          "vkey": 68,
+          "key": "D",
+          "scan_code": 32,
+          "flags": 0,
+          "down": true,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 18828,
+          "session": "20261027_003701_981671"
+        },
+        {
+          "type": "keyboard",
+          "vkey": 68,
+          "key": "D",
+          "scan_code": 32,
+          "flags": 1,
+          "down": false,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 18922,
+          "session": "20261027_003701_981671"
+        }
+      ],
+      "source_session": "20261027_003701_981671",
+      "original_status": "received"
+    },
+    {
+      "step": 6,
+      "physical_action": "按键 K07：第2行第3键",
+      "status": "received",
+      "events": [
+        {
+          "type": "keyboard",
+          "vkey": 83,
+          "key": "S",
+          "scan_code": 31,
+          "flags": 0,
+          "down": true,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 20657,
+          "session": "20261027_003701_981671"
+        },
+        {
+          "type": "keyboard",
+          "vkey": 83,
+          "key": "S",
+          "scan_code": 31,
+          "flags": 1,
+          "down": false,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 20735,
+          "session": "20261027_003701_981671"
+        }
+      ],
+      "source_session": "20261027_003701_981671",
+      "original_status": "received"
+    },
+    {
+      "step": 7,
+      "physical_action": "按键 K08：第2行第4键",
+      "status": "received",
+      "events": [
+        {
+          "type": "keyboard",
+          "vkey": 65,
+          "key": "A",
+          "scan_code": 30,
+          "flags": 0,
+          "down": true,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 22407,
+          "session": "20261027_003701_981671"
+        },
+        {
+          "type": "keyboard",
+          "vkey": 65,
+          "key": "A",
+          "scan_code": 30,
+          "flags": 1,
+          "down": false,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 22532,
+          "session": "20261027_003701_981671"
+        }
+      ],
+      "source_session": "20261027_003701_981671",
+      "original_status": "received"
+    },
+    {
+      "step": 8,
+      "physical_action": "按键 K09：第3行第1键",
+      "status": "received",
+      "events": [
+        {
+          "type": "keyboard",
+          "vkey": 255,
+          "key": "VK_FF",
+          "scan_code": 42,
+          "flags": 2,
+          "down": true,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 24235,
+          "session": "20261027_003701_981671"
+        },
+        {
+          "type": "keyboard",
+          "vkey": 44,
+          "key": "PrintScreen",
+          "scan_code": 55,
+          "flags": 3,
+          "down": false,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 24235,
+          "session": "20261027_003701_981671"
+        },
+        {
+          "type": "keyboard",
+          "vkey": 255,
+          "key": "VK_FF",
+          "scan_code": 42,
+          "flags": 3,
+          "down": false,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 24235,
+          "session": "20261027_003701_981671"
+        }
+      ],
+      "source_session": "20261027_003701_981671",
+      "original_status": "received"
+    },
+    {
+      "step": 9,
+      "physical_action": "按键 K10：第3行第2键",
+      "status": "received",
+      "events": [
+        {
+          "type": "keyboard",
+          "vkey": 8,
+          "key": "Backspace",
+          "scan_code": 14,
+          "flags": 0,
+          "down": true,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 34157,
+          "session": "20261027_003701_981671"
+        },
+        {
+          "type": "keyboard",
+          "vkey": 8,
+          "key": "Backspace",
+          "scan_code": 14,
+          "flags": 1,
+          "down": false,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 34250,
+          "session": "20261027_003701_981671"
+        }
+      ],
+      "source_session": "20261027_003701_981671",
+      "original_status": "received"
+    },
+    {
+      "step": 10,
+      "physical_action": "按键 K11：第3行第3键",
+      "status": "received",
+      "events": [
+        {
+          "type": "keyboard",
+          "vkey": 87,
+          "key": "W",
+          "scan_code": 17,
+          "flags": 0,
+          "down": true,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 98203,
+          "session": "20261027_003701_981671"
+        },
+        {
+          "type": "keyboard",
+          "vkey": 87,
+          "key": "W",
+          "scan_code": 17,
+          "flags": 1,
+          "down": false,
+          "modifier": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 98282,
+          "session": "20261027_003701_981671"
+        }
+      ],
+      "source_session": "20261027_003701_981671",
+      "original_status": "received"
+    },
+    {
+      "step": 11,
+      "physical_action": "按键 K12：第3行第4键",
+      "status": "received",
+      "events": [
+        {
+          "type": "keyboard",
+          "vkey": 17,
+          "key": "Ctrl",
+          "scan_code": 29,
+          "flags": 0,
+          "down": true,
+          "modifier": true,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 102672,
+          "session": "20261027_003701_981671"
+        },
+        {
+          "type": "keyboard",
+          "vkey": 17,
+          "key": "Ctrl",
+          "scan_code": 29,
+          "flags": 1,
+          "down": false,
+          "modifier": true,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 102719,
+          "session": "20261027_003701_981671"
+        }
+      ],
+      "source_session": "20261027_003701_981671",
+      "original_status": "no_response",
+      "review_note": "Both Ctrl down and Ctrl up were present. Original no_response was caused by excluding all modifier keys."
+    },
+    {
+      "step": 12,
+      "physical_action": "旋钮A：顺时针转一格",
+      "status": "received",
+      "events": [
+        {
+          "type": "keyboard",
+          "vkey": 17,
+          "key": "Ctrl",
+          "scan_code": 29,
+          "flags": 0,
+          "down": true,
+          "modifier": true,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 117766,
+          "session": "20261027_003701_981671"
+        },
+        {
+          "type": "wheel",
+          "axis": "vertical",
+          "delta": 120,
+          "collection": "VID_1189&PID_8840&MI_01&COL02",
+          "elapsed_ms": 117766,
+          "session": "20261027_003701_981671"
+        },
+        {
+          "type": "keyboard",
+          "vkey": 17,
+          "key": "Ctrl",
+          "scan_code": 29,
+          "flags": 1,
+          "down": false,
+          "modifier": true,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 117766,
+          "session": "20261027_003701_981671"
+        }
+      ],
+      "source_session": "20261027_003701_981671",
+      "original_status": "received"
+    },
+    {
+      "step": 13,
+      "physical_action": "旋钮A：逆时针转一格",
+      "status": "received",
+      "events": [
+        {
+          "type": "keyboard",
+          "vkey": 17,
+          "key": "Ctrl",
+          "scan_code": 29,
+          "flags": 0,
+          "down": true,
+          "modifier": true,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 120907,
+          "session": "20261027_003701_981671"
+        },
+        {
+          "type": "wheel",
+          "axis": "vertical",
+          "delta": -120,
+          "collection": "VID_1189&PID_8840&MI_01&COL02",
+          "elapsed_ms": 120969,
+          "session": "20261027_003701_981671"
+        },
+        {
+          "type": "keyboard",
+          "vkey": 17,
+          "key": "Ctrl",
+          "scan_code": 29,
+          "flags": 1,
+          "down": false,
+          "modifier": true,
+          "collection": "VID_1189&PID_8840&MI_01&COL01",
+          "elapsed_ms": 120969,
+          "session": "20261027_003701_981671"
+        }
+      ],
+      "source_session": "20261027_003701_981671",
+      "original_status": "received"
+    },
+    {
+      "step": 14,
+      "physical_action": "旋钮A：按压一次",
+      "status": "received",
+      "events": [
+        {
+          "type": "mouse_button",
+          "button": "Right",
+          "down": true,
+          "collection": "VID_1189&PID_8840&MI_01&COL02",
+          "elapsed_ms": 123313,
+          "session": "20261027_003701_981671"
+        },
+        {
+          "type": "mouse_button",
+          "button": "Right",
+          "down": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL02",
+          "elapsed_ms": 123469,
+          "session": "20261027_003701_981671"
+        }
+      ],
+      "source_session": "20261027_003701_981671",
+      "original_status": "received"
+    },
+    {
+      "step": 15,
+      "physical_action": "旋钮B：顺时针转一格",
+      "status": "received",
+      "events": [
+        {
+          "type": "wheel",
+          "axis": "vertical",
+          "delta": 120,
+          "collection": "VID_1189&PID_8840&MI_01&COL02",
+          "elapsed_ms": 126719,
+          "session": "20261027_003701_981671"
+        }
+      ],
+      "source_session": "20261027_003701_981671",
+      "original_status": "received"
+    },
+    {
+      "step": 16,
+      "physical_action": "旋钮B：逆时针转一格",
+      "status": "received",
+      "events": [
+        {
+          "type": "wheel",
+          "axis": "vertical",
+          "delta": -120,
+          "collection": "VID_1189&PID_8840&MI_01&COL02",
+          "elapsed_ms": 128860,
+          "session": "20261027_003701_981671"
+        }
+      ],
+      "source_session": "20261027_003701_981671",
+      "original_status": "received"
+    },
+    {
+      "step": 17,
+      "physical_action": "旋钮B：按压一次",
+      "status": "received",
+      "events": [
+        {
+          "type": "mouse_button",
+          "button": "Left",
+          "down": true,
+          "collection": "VID_1189&PID_8840&MI_01&COL02",
+          "elapsed_ms": 130672,
+          "session": "20261027_003701_981671"
+        },
+        {
+          "type": "mouse_button",
+          "button": "Left",
+          "down": false,
+          "collection": "VID_1189&PID_8840&MI_01&COL02",
+          "elapsed_ms": 130813,
+          "session": "20261027_003701_981671"
+        }
+      ],
+      "source_session": "20261027_003701_981671",
+      "original_status": "received"
+    }
+  ],
+  "pending_events": [],
+  "resumed_from": null,
+  "focus_transitions": [
+    {
+      "elapsed_ms": 24407,
+      "state": "focus"
+    },
+    {
+      "elapsed_ms": 26953,
+      "state": "running"
+    }
+  ],
+  "capture_requested": false,
+  "capture_active": false,
+  "pause_reason": "closed",
+  "session_disposition": "open",
+  "previous_round": "F:\\codex-project\\pcb\\usb_keypad_1189_8840_check_2026-10-26\\physical_test_20261027_000115_909223.json",
+  "reviewed_at": "2026-10-27T00:52:41",
+  "evidence_source": "F:\\codex-project\\pcb\\usb_keypad_1189_8840_check_2026-10-26\\physical_test_20261027_003701_981671.json",
+  "evidence_sha256": "c8d92ebf09272241fe4309e8209355f9ec0b9955534bf60e91cca865ba907bb1",
+  "review_kind": "Reclassification of real recorded events; no new hardware trial and no fabricated input."
+}

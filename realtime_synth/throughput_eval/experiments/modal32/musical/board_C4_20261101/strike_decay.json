@@ -1,0 +1,25 @@
+{
+  "scope": "FPGA final PCM, two matched C4 strikes sampled at different delays, each 4096 frames",
+  "gain_mode": 1,
+  "input_level": 0.25,
+  "windows": {
+    "c4": {
+      "delay_ms": 5.24288,
+      "capture_id": 2,
+      "rms": 753.8426326785651,
+      "high_power": 1318.7981438610693,
+      "high_to_total_db": -31.10553462303102,
+      "centroid_hz": 490.65623085929644
+    },
+    "c4_tail": {
+      "delay_ms": 221.184,
+      "capture_id": 4,
+      "rms": 561.5841637272358,
+      "high_power": 108.89484299161461,
+      "high_to_total_db": -39.4148066066293,
+      "centroid_hz": 450.4294198269378
+    }
+  },
+  "high_band_power_change_db": -10.831710141662827,
+  "high_to_total_change_db": -8.30927198359828
+}

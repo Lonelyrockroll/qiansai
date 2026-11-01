@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Project>
+  <Template>FPGA</Template>
+  <Version>5</Version>
+  <Device name="GW5AT-60B" pn="GW5AT-LV60PG484AC1/I0">gw5at60b-002</Device>
+  <FileList>
+    <File path="synth_display_top.v" type="file.verilog" enable="1" />
+    <File path="uart_control_display.v" type="file.verilog" enable="1" />
+    <File path="keyboard_input.v" type="file.verilog" enable="1" />
+    <File path="keyboard_adc.v" type="file.verilog" enable="1" />
+    <File path="note_rom.v" type="file.verilog" enable="1" />
+    <File path="audio_output_limited.v" type="file.verilog" enable="1" />
+    <File path="uart_rx.v" type="file.verilog" enable="1" />
+    <File path="uart_tx.v" type="file.verilog" enable="1" />
+    <File path="synth_engine_shared.v" type="file.verilog" enable="1" />
+    <File path="audio_tx.v" type="file.verilog" enable="1" />
+    <File path="waveform_rom.v" type="file.verilog" enable="1" />
+    <File path="piano_rom.v" type="file.verilog" enable="1" />
+    <File path="modal32.v" type="file.verilog" enable="1" />
+    <File path="piano_modal_tables_compact.v" type="file.verilog" enable="1" />
+    <File path="display.cst" type="file.cst" enable="1" />
+    <File path="timing.sdc" type="file.sdc" enable="1" />
+    <File path="panel_buttons.v" type="file.verilog" enable="1" />
+    <File path="display_snapshot.v" type="file.verilog" enable="1" />
+    <File path="panel_renderer.v" type="file.verilog" enable="1" />
+    <File path="video_timing.v" type="file.verilog" enable="1" />
+    <File path="display_pll.v" type="file.verilog" enable="1" />
+    <File path="DVI_TX_Top.v" type="file.verilog" enable="1" />
+    <File path="native_usb_bridge.v" type="file.verilog" enable="1" />
+    <File path="usb_host_pll.v" type="file.verilog" enable="1" />
+    <File path="usb_hid_host_1189.v" type="file.verilog" enable="1" />
+    <File path="usb_hid_host_rom.v" type="file.verilog" enable="1" />
+    <File path="usb_packet_check.v" type="file.verilog" enable="1" />
+    <File path="usb_profile_check.v" type="file.verilog" enable="1" />
+    <File path="native_keypad_drums.v" type="file.verilog" enable="1" />
+    <File path="drum_engine.v" type="file.verilog" enable="1" />
+    <File path="drum_parameters.v" type="file.verilog" enable="1" />
+    <File path="performance_looper.v" type="file.verilog" enable="1" />
+    <File path="performance_router.v" type="file.verilog" enable="1" />
+    <File path="keyboard_lights.v" type="file.verilog" enable="1" />
+    <File path="ws2812b_4020_chain.v" type="file.verilog" enable="1" />
+    <File path="led_pin_diagnostic.v" type="file.verilog" enable="1" />
+    <File path="pcm_capture.v" type="file.verilog" enable="1" />
+    <File path="audio_effects.v" type="file.verilog" enable="1" />
+    <File path="chorus_lfo.v" type="file.verilog" enable="1" />
+    <File path="pcm_peak_limiter.v" type="file.verilog" enable="1" />
+    <File path="bt_console.v" type="file.verilog" enable="1" />
+    <File path="bt_link.v" type="file.verilog" enable="1" />
+    <File path="bt_uart_tx.v" type="file.verilog" enable="1" />
+    <File path="bt_uart_rx.v" type="file.verilog" enable="1" />
+    <File path="pmod_indicators.v" type="file.verilog" enable="1" />
+    <File path="record_filter.v" type="file.verilog" enable="1" />
+    <File path="ima_encoder.v" type="file.verilog" enable="1" />
+    <File path="record_stream.v" type="file.verilog" enable="1" />
+    <File path="white_key_map.v" type="file.verilog" enable="1" />
+    <File path="modal32_coeffs.v" type="file.verilog" enable="1" />
+  </FileList>
+</Project>

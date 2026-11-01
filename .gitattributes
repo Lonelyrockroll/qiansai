@@ -1,0 +1,6 @@
+fpga/** -text
+*.zip binary
+*.pcm binary
+*.fs binary
+*.eprj2 binary
+*.epro2 binary

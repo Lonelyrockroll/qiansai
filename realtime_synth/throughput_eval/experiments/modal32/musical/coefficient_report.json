@@ -1,0 +1,84 @@
+{
+  "scope": "Coefficient ROM and analytic model; not RTL, hardware or acoustic measurements.",
+  "x": "C4; 25% velocity. Relative model energy for individual partials >= 2500 Hz versus total.",
+  "sample_rate_hz": 48828.125,
+  "first12_ratios": "identical to v26 in all six registers",
+  "C4_time_constants": {
+    "v26": {
+      "tau_n1_s": 0.632,
+      "tau_n12_s": 0.112
+    },
+    "demo": {
+      "tau_n1_s": 2.147,
+      "tau_n12_s": 1.342,
+      "tau_n32_s": 0.895
+    },
+    "musical": {
+      "tau_n1_s": 0.895,
+      "tau_n12_s": 0.112,
+      "tau_n32_s": 0.112
+    }
+  },
+  "C4_high_band_db": {
+    "v26": {
+      "0.0": -34.32,
+      "0.05": -36.64,
+      "0.15": -41.25,
+      "0.3": -48.11,
+      "0.5": -57.23
+    },
+    "demo": {
+      "0.0": -8.01,
+      "0.05": -8.11,
+      "0.15": -8.31,
+      "0.3": -8.61,
+      "0.5": -9.01
+    },
+    "musical": {
+      "0.0": -28.18,
+      "0.05": -30.81,
+      "0.15": -35.98,
+      "0.3": -43.58,
+      "0.5": -53.47
+    }
+  },
+  "predicted_C4_4096_gain1": {
+    "peak_count": 32,
+    "min_peak_pcm": 4.301,
+    "min_contrast_db": 18.69
+  },
+  "allowed_partials_by_white_key_midi": {
+    "36": 32,
+    "38": 32,
+    "40": 32,
+    "41": 32,
+    "43": 32,
+    "45": 32,
+    "47": 32,
+    "48": 32,
+    "50": 32,
+    "52": 32,
+    "53": 32,
+    "55": 32,
+    "57": 32,
+    "59": 32,
+    "60": 32,
+    "62": 32,
+    "64": 32,
+    "65": 32,
+    "67": 32,
+    "69": 32,
+    "71": 32,
+    "72": 32,
+    "74": 32,
+    "76": 31,
+    "77": 29,
+    "79": 26,
+    "81": 23,
+    "83": 21,
+    "84": 19,
+    "86": 17,
+    "88": 15,
+    "89": 14
+  }
+}

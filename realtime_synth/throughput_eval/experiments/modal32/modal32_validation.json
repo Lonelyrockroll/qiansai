@@ -1,0 +1,423 @@
+{
+  "scope": "Icarus RTL simulation: v26 melody engine and original output gain/limiter, bypassed effects, PCM at actual audio_tx frame ticks. No board or acoustic measurement.",
+  "sample_rate": 48828.125,
+  "system_hz": 50000000,
+  "frame_clocks": 1024,
+  "single_root_hz": 262.26043701171875,
+  "single_active_modes": 32,
+  "single_spectrum": [
+    {
+      "expected_hz": 262.26043701171875,
+      "fft_bin": 11,
+      "fitted_hz": 262.26118076414593,
+      "amplitude_pcm": 297.2747956891523,
+      "local_contrast_db": 75.43266523148891
+    },
+    {
+      "expected_hz": 524.5288775768131,
+      "fft_bin": 22,
+      "fitted_hz": 524.5398202958472,
+      "amplitude_pcm": 235.7659791491444,
+      "local_contrast_db": 70.42530133291523
+    },
+    {
+      "expected_hz": 786.8173270253465,
+      "fft_bin": 33,
+      "fitted_hz": 786.819794427358,
+      "amplitude_pcm": 193.7011730241779,
+      "local_contrast_db": 72.22015548934222
+    },
+    {
+      "expected_hz": 1049.1377906873822,
+      "fft_bin": 44,
+      "fitted_hz": 1049.1416018632328,
+      "amplitude_pcm": 164.2164515588778,
+      "local_contrast_db": 68.42703629378074
+    },
+    {
+      "expected_hz": 1311.4902685629204,
+      "fft_bin": 55,
+      "fitted_hz": 1311.5075913583667,
+      "amplitude_pcm": 141.42076865621218,
+      "local_contrast_db": 68.34012338730358
+    },
+    {
+      "expected_hz": 1573.8947695354,
+      "fft_bin": 66,
+      "fitted_hz": 1573.9197625555964,
+      "amplitude_pcm": 125.31088263977459,
+      "local_contrast_db": 63.56563770290553
+    },
+    {
+      "expected_hz": 1836.351293604821,
+      "fft_bin": 77,
+      "fitted_hz": 1836.3919938873746,
+      "amplitude_pcm": 111.30491335787889,
+      "local_contrast_db": 59.854500666560696
+    },
+    {
+      "expected_hz": 2098.8758478779346,
+      "fft_bin": 88,
+      "fitted_hz": 2098.92968778302,
+      "amplitude_pcm": 99.84146089499089,
+      "local_contrast_db": 54.61126474220368
+    },
+    {
+      "expected_hz": 2361.4764359081164,
+      "fft_bin": 99,
+      "fitted_hz": 2361.568834216261,
+      "amplitude_pcm": 90.35109950973938,
+      "local_contrast_db": 53.663590805643544
+    },
+    {
+      "expected_hz": 2624.161061248742,
+      "fft_bin": 110,
+      "fitted_hz": 2624.287434090449,
+      "amplitude_pcm": 81.5831314180937,
+      "local_contrast_db": 51.21508647339118
+    },
+    {
+      "expected_hz": 2886.941729229875,
+      "fft_bin": 121,
+      "fitted_hz": 2887.1149015554947,
+      "amplitude_pcm": 74.88560124232882,
+      "local_contrast_db": 48.6700302849582
+    },
+    {
+      "expected_hz": 3149.822441628203,
+      "fft_bin": 132,
+      "fitted_hz": 3150.0445455719205,
+      "amplitude_pcm": 69.09133236609146,
+      "local_contrast_db": 46.054424792772764
+    },
+    {
+      "expected_hz": 3412.819205550477,
+      "fft_bin": 143,
+      "fitted_hz": 3413.0856164937,
+      "amplitude_pcm": 64.10512407865363,
+      "local_contrast_db": 42.509673793533544
+    },
+    {
+      "expected_hz": 3675.940024550073,
+      "fft_bin": 154,
+      "fitted_hz": 3676.2516854667833,
+      "amplitude_pcm": 60.5030330753629,
+      "local_contrast_db": 41.06537217967605
+    },
+    {
+      "expected_hz": 3939.1889004036784,
+      "fft_bin": 165,
+      "fitted_hz": 3939.5315440670065,
+      "amplitude_pcm": 56.4868021373269,
+      "local_contrast_db": 38.98991176132742
+    },
+    {
+      "expected_hz": 4202.581840218045,
+      "fft_bin": 176,
+      "fitted_hz": 4202.963150066347,
+      "amplitude_pcm": 53.30588989042439,
+      "local_contrast_db": 37.19493548260273
+    },
+    {
+      "expected_hz": 4466.126847546548,
+      "fft_bin": 187,
+      "fitted_hz": 4466.490348510565,
+      "amplitude_pcm": 50.2414006451668,
+      "local_contrast_db": 35.286371019732385
+    },
+    {
+      "expected_hz": 4729.827924165875,
+      "fft_bin": 198,
+      "fitted_hz": 4730.134884686204,
+      "amplitude_pcm": 47.6040189773177,
+      "local_contrast_db": 34.257886117017485
+    },
+    {
+      "expected_hz": 4993.701077182777,
+      "fft_bin": 209,
+      "fitted_hz": 4993.867226180067,
+      "amplitude_pcm": 45.43944016148007,
+      "local_contrast_db": 32.99186947347073
+    },
+    {
+      "expected_hz": 5257.750308373943,
+      "fft_bin": 221,
+      "fitted_hz": 5257.650880637524,
+      "amplitude_pcm": 43.123698900370655,
+      "local_contrast_db": 32.67150938964039
+    },
+    {
+      "expected_hz": 5521.987623069435,
+      "fft_bin": 232,
+      "fitted_hz": 5521.678143883984,
+      "amplitude_pcm": 40.520304457390466,
+      "local_contrast_db": 34.14063719047054
+    },
+    {
+      "expected_hz": 5786.425026599318,
+      "fft_bin": 243,
+      "fitted_hz": 5786.057633148543,
+      "amplitude_pcm": 38.21718770056658,
+      "local_contrast_db": 35.7825453825819
+    },
+    {
+      "expected_hz": 6051.070522516966,
+      "fft_bin": 254,
+      "fitted_hz": 6050.74392079088,
+      "amplitude_pcm": 36.03964935836163,
+      "local_contrast_db": 39.83050185017248
+    },
+    {
+      "expected_hz": 6315.928112599067,
+      "fft_bin": 265,
+      "fitted_hz": 6315.754419012748,
+      "amplitude_pcm": 34.23878714206718,
+      "local_contrast_db": 46.40467141218457
+    },
+    {
+      "expected_hz": 6581.013803952374,
+      "fft_bin": 276,
+      "fitted_hz": 6581.059123560405,
+      "amplitude_pcm": 32.71835922203221,
+      "local_contrast_db": 55.639272556284325
+    },
+    {
+      "expected_hz": 6846.331598353572,
+      "fft_bin": 287,
+      "fitted_hz": 6846.6072222155335,
+      "amplitude_pcm": 31.319735978811153,
+      "local_contrast_db": 43.22299236955012
+    },
+    {
+      "expected_hz": 7111.893501132727,
+      "fft_bin": 298,
+      "fitted_hz": 7112.257873605322,
+      "amplitude_pcm": 30.330591028276558,
+      "local_contrast_db": 37.14625778811931
+    },
+    {
+      "expected_hz": 7377.7115176199,
+      "fft_bin": 309,
+      "fitted_hz": 7377.900263342044,
+      "amplitude_pcm": 29.5820793680511,
+      "local_contrast_db": 33.54177106549423
+    },
+    {
+      "expected_hz": 7643.789649591781,
+      "fft_bin": 321,
+      "fitted_hz": 7643.495223286723,
+      "amplitude_pcm": 28.229409276760148,
+      "local_contrast_db": 34.57293668182056
+    },
+    {
+      "expected_hz": 7910.135900601745,
+      "fft_bin": 332,
+      "fitted_hz": 7909.767943178122,
+      "amplitude_pcm": 26.666303742966058,
+      "local_contrast_db": 39.538292775184004
+    },
+    {
+      "expected_hz": 8176.766277756542,
+      "fft_bin": 343,
+      "fitted_hz": 8176.670865356598,
+      "amplitude_pcm": 25.58323004993125,
+      "local_contrast_db": 52.0766316259018
+    },
+    {
+      "expected_hz": 8443.688784609549,
+      "fft_bin": 354,
+      "fitted_hz": 8443.950693843199,
+      "amplitude_pcm": 24.551186577763616,
+      "local_contrast_db": 42.409123998235685
+    }
+  ],
+  "cases": {
+    "32_white_keys": {
+      "frame_count": 4096,
+      "pcm_peak": 8807,
+      "rms": 3005.079551336916,
+      "max_tick_to_engine_valid_clocks": 577,
+      "limited_frames_entire_run": 0,
+      "steady_latency_minmax": [
+        577,
+        577
+      ],
+      "per_voice_active_count": [
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        30,
+        27,
+        24,
+        21,
+        20,
+        18,
+        16,
+        15
+      ],
+      "active_model_states": 939,
+      "pcm_sha256": "4bbd220105401856e5cfd339d6c6870e2555810c51e35fc877bf026f84de7500"
+    },
+    "32_white_keys_max_pc_level_gain2": {
+      "frame_count": 512,
+      "pcm_peak": 27999,
+      "rms": 11185.340376313292,
+      "max_tick_to_engine_valid_clocks": 577,
+      "limited_frames_entire_run": 614,
+      "steady_latency_minmax": [
+        577,
+        577
+      ],
+      "per_voice_active_count": [
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        30,
+        27,
+        24,
+        21,
+        20,
+        18,
+        16,
+        15
+      ],
+      "active_model_states": 939,
+      "pcm_sha256": "1de13f248a905b12f451c980431de7814595470b30254db76aa7ccdaf5b73136"
+    },
+    "one_note": {
+      "frame_count": 2048,
+      "pcm_peak": 1232,
+      "rms": 403.59484066345084,
+      "max_tick_to_engine_valid_clocks": 174,
+      "limited_frames_entire_run": 0,
+      "steady_latency_minmax": [
+        174,
+        174
+      ],
+      "per_voice_active_count": [
+        32
+      ],
+      "active_model_states": 32,
+      "pcm_sha256": "075055884e33a9da8366fea5e24374d9281e7fa1f68e71f05bea3d1615ff282a"
+    },
+    "one_note_mode12_muted": {
+      "frame_count": 2048,
+      "pcm_peak": 1211,
+      "rms": 400.5867431275419,
+      "max_tick_to_engine_valid_clocks": 174,
+      "limited_frames_entire_run": 0,
+      "steady_latency_minmax": [
+        174,
+        174
+      ],
+      "per_voice_active_count": [
+        31
+      ],
+      "active_model_states": 31,
+      "pcm_sha256": "86da682d15b35b9341f72c81afdf9e5a59d037ac5bbc0e596608372e90adf5e3"
+    },
+    "one_note_mode12_retuned": {
+      "frame_count": 2048,
+      "pcm_peak": 1266,
+      "rms": 403.6080294125106,
+      "max_tick_to_engine_valid_clocks": 174,
+      "limited_frames_entire_run": 0,
+      "steady_latency_minmax": [
+        174,
+        174
+      ],
+      "per_voice_active_count": [
+        32
+      ],
+      "active_model_states": 32,
+      "pcm_sha256": "77bc7a11cf41701474d7061c55017a87055eda0f05ac40171001f3aeaefc5f40"
+    }
+  },
+  "min_single_mode_amplitude_pcm": 24.551186577763616,
+  "min_single_mode_contrast_db": 32.67150938964039,
+  "selected": {
+    "number": 12,
+    "old_hz": 3149.822441628203,
+    "new_hz": 3221.346196369268,
+    "drop_db": 80.68011348777335,
+    "new_peak": {
+      "expected_hz": 3221.346196369268,
+      "fft_bin": 135,
+      "fitted_hz": 3221.5507474012306,
+      "amplitude_pcm": 69.08420175941494,
+      "local_contrast_db": 43.87810015879241
+    },
+    "unselected_peak_max_delta_pcm": 0.028827055866710083,
+    "ab_delta": {
+      "fitted_center_amplitude_pcm": 68.93031252603218,
+      "residual_rejection_db": 41.48337091578042
+    },
+    "retuned_ab_delta": {
+      "fitted_center_amplitude_pcm": 68.9209420874197,
+      "residual_rejection_db": 41.485877131462054
+    }
+  },
+  "full_distinct_DDS_increments": 939,
+  "full_active_per_frame": 939,
+  "full_occupied_nearest_fft_bins": 528,
+  "full_fft_bin_hz": 11.920928955078125,
+  "full_fft_max_amplitude_pcm": 974.9948451458671,
+  "full_state_updates_s": 45849609.375,
+  "limit": "32x32 is register capacity only. Cutoff removes modes above 7Fs/16. Overlapping/very close partials from different notes are not separately demonstrated as audible by state counts.",
+  "source_hashes": {
+    "F:\\codex-project\\pcb\\realtime_synth\\control_key_gain\\synth_engine_shared.v": "9590e6b86408d1d888caff1b2ebd6134d4f0de429f9e7ff0d2c4fda2cd3a87ed",
+    "F:\\codex-project\\pcb\\realtime_synth\\control_key_gain\\piano_modal_tables_compact.v": "f91e75b30a89f1eaa93ca5c022f8cde807ccb3fd6133e46bacf465091fa79a37",
+    "F:\\codex-project\\pcb\\realtime_synth\\control_key_gain\\audio_output_limited.v": "87f76c43331c52448a13b02e78deade6580639bbd8b36b6931a03877d2c2482a",
+    "F:\\codex-project\\pcb\\realtime_synth\\control_key_gain\\pcm_peak_limiter.v": "a6da50235153e764007c315701bf1bd4b8282e150b301d68f8467d0bae932319",
+    "F:\\codex-project\\pcb\\realtime_synth\\control_key_gain\\audio_effects.v": "a5185f0f760cf5da5583e9ec4d0647d784798202fb065530bdbd082f43dfd7eb",
+    "F:\\codex-project\\pcb\\realtime_synth\\control_key_gain\\chorus_lfo.v": "abab9c25c5950f30088fb44fef7f9cf69ecb190bb0aa08e9a9a4f3832334b2c2",
+    "F:\\codex-project\\pcb\\realtime_synth\\rtl\\audio_tx.v": "ff40e2148e86a0703c8159f01a9a49fdbdf32f1803ba2200a749fa5f6cf32570",
+    "F:\\codex-project\\pcb\\realtime_synth\\rtl\\waveform_rom.v": "8e91eabf93ebd95d50af6c6f6cd30ae28f5d7ff5407d35c431b4d25e9fc7a9d9",
+    "F:\\codex-project\\pcb\\realtime_synth\\throughput_eval\\experiments\\modal32\\modal32.v": "598499b06e64626ee286d4acb12200d1028cc593c4a0290043844c2a817f8c1c",
+    "F:\\codex-project\\pcb\\realtime_synth\\throughput_eval\\experiments\\modal32\\tb_modal32.v": "033be3b08366003e7e9ef0d9e2d42eaf4ab3c5b362d51c07ce283f597ccf13eb",
+    "F:\\codex-project\\pcb\\realtime_synth\\throughput_eval\\experiments\\modal32\\modal32_coeffs.v": "53fdc20ea4bea0b3888aebc0fdaf16d26cdb5ef7334b0e75ccbd2083379adf04",
+    "F:\\codex-project\\pcb\\realtime_synth\\throughput_eval\\experiments\\modal32\\evidence\\retuned_coeffs.v": "eb05055de3cdca6613a8264be605b133deda44ff3c7a9d992760dda88a8a37f2"
+  }
+}
