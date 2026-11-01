@@ -46,6 +46,9 @@ final class AudioFrame {
             int b=next(in);
             matched=b==MAGIC[matched]? matched+1 : b==MAGIC[0]?1:0;
         }
+        readBody(in);
+    }
+    void readBody(InputStream in) throws IOException {
         fill(in,0,10);
         type=body[1]&255;
         int count=body[6]&255;

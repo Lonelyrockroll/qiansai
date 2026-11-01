@@ -4,20 +4,40 @@ module bt_console(input wire clk,rst,bt_rx,output wire bt_tx,input wire audio_ti
  output wire [15:0] period,output reg [15:0] commands,dropped,
  output wire request,output reg [7:0] command,input wire accept,input wire settled,
  input wire [6:0] volume,input wire [2:0] timbre,fx,input wire [7:0] lamps,
+ input wire guide_ui_valid,input wire [3:0] guide_ui_action,
+ output wire guide_valid,guide_playing,guide_loading,guide_demo,
+ output wire [15:0] guide_time_cs,guide_duration_cs,
+ output wire [9:0] guide_count,guide_index,output wire [1:0] guide_speed,
+ output wire [31:0] guide_current,guide_onset,guide_next,output wire [63:0] guide_colors,
  output wire trace_valid,output wire [7:0] trace_data);
  wire received,tx_ready,frame_error;wire [7:0] data;
  reg send;reg [7:0] reply;
  wire stream_send,stream_owned;wire [7:0] stream_byte;
+ wire guide_send,guide_owned,guide_receiving;wire [7:0] guide_byte;
+ reg [4:0] discard_left;
+ reg [23:0] discard_timeout;
+ wire binary_start=received && data==8'ha5 && !prefix;
+ wire blocked_start=binary_start && discard_left==0 && (stream_owned || state!=IDLE);
+ wire discarding=discard_left!=0 || blocked_start;
  reg prefix;
  wire extension=received && prefix;
  bt_link link(.clk(clk),.rst(rst),.rx(bt_rx),.tx(bt_tx),.locked(locked),.period(period),.received(received),
-  .data(data),.send(stream_send || send),.reply(stream_send?stream_byte:reply),.ready(tx_ready),.framing_error(frame_error));
+  .data(data),.send(guide_send || stream_send || send),.reply(guide_send?guide_byte:(stream_send?stream_byte:reply)),.ready(tx_ready),.framing_error(frame_error));
  assign trace_valid=send;assign trace_data=reply;
  localparam IDLE=0,REQUEST=1,APPLY=2,SETTLE=3,REPLY=4;
  reg [2:0] state;reg [4:0] index;reg [6:0] v;reg [2:0] t,f;reg [7:0] lights;reg invalid;
  record_stream recorder(.clk(clk),.rst(rst),.audio_tick(audio_tick),.pcm(pcm),.period(period),
-  .extension(extension && state==IDLE),.operation(data),.ready(tx_ready && !send),
+  .extension(extension && data!="G" && state==IDLE && !guide_owned && !discarding),.operation(data),.ready(tx_ready && !send && !guide_owned),
   .send(stream_send),.out_byte(stream_byte),.owned(stream_owned));
+ guide_transport guide(.clk(clk),.rst(rst),.audio_tick(audio_tick),
+  .rx_valid(received && state==IDLE && !stream_owned && !discarding),.rx_data(data),
+  .probe(extension && data=="G" && state==IDLE && !guide_owned && !stream_owned && !discarding),
+  .recorder_active(stream_owned),.ui_valid(guide_ui_valid),.ui_action(guide_ui_action),
+  .tx_ready(tx_ready && !send && !stream_owned && state==IDLE),.tx_valid(guide_send),.tx_data(guide_byte),
+  .owned(guide_owned),.receiving(guide_receiving),
+  .guide_valid(guide_valid),.guide_playing(guide_playing),.guide_loading(guide_loading),.guide_demo(guide_demo),
+  .guide_time_cs(guide_time_cs),.guide_duration_cs(guide_duration_cs),.guide_count(guide_count),.guide_index(guide_index),
+  .guide_speed(guide_speed),.guide_current(guide_current),.guide_onset(guide_onset),.guide_next(guide_next),.guide_colors(guide_colors));
  assign request=state==REQUEST;
  function [7:0] hexchar(input [3:0] n);begin hexchar=n<10?"0"+n:"A"+(n-10);end endfunction
  function [7:0] message(input [4:0] i);
@@ -30,12 +50,18 @@ module bt_console(input wire clk,rst,bt_rx,output wire bt_tx,input wire audio_ti
   endcase end
  endfunction
  always @(posedge clk)begin
-  if(rst)begin prefix<=0;state<=IDLE;index<=0;command<=0;commands<=0;dropped<=0;send<=0;reply<=0;invalid<=0;v<=0;t<=0;f<=0;lights<=0;end
+  if(rst)begin discard_left<=0;discard_timeout<=0;prefix<=0;state<=IDLE;index<=0;command<=0;commands<=0;dropped<=0;send<=0;reply<=0;invalid<=0;v<=0;t<=0;f<=0;lights<=0;end
   else begin
    send<=0;
-   if(received)prefix<=data=="~";
+   if(discard_left!=0)begin
+    if(discard_timeout==0)discard_left<=0;else discard_timeout<=discard_timeout-1'b1;
+    if(received)begin discard_left<=discard_left-1'b1;discard_timeout<=24'd12500000;end
+   end
+   if(blocked_start)begin discard_left<=27;discard_timeout<=24'd12500000;end
+   if(frame_error || discarding || guide_owned)prefix<=0;
+   else if(received)prefix<=data=="~";
    if(frame_error)dropped<=dropped+1'b1;
-   if(received && !prefix && !stream_owned && data!="~" && data!="U" && data!=13 && data!=10 && data!=" ")begin
+   if(received && !prefix && !stream_owned && !guide_owned && !discarding && data!="~" && data!="U" && data!=13 && data!=10 && data!=" ")begin
     if(state!=IDLE)dropped<=dropped+1'b1;
     else begin command<=data;commands<=commands+1'b1;
      case(data)

@@ -2,7 +2,7 @@
     <uses-feature android:name="android.hardware.bluetooth" android:required="true" />
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <application android:label="Tang 演奏录音" android:icon="@drawable/ic_recorder"
+    <application android:label="Tang 演奏助手" android:icon="@drawable/ic_recorder"
         android:theme="@android:style/Theme.Material.NoActionBar" android:allowBackup="false">
         <activity android:name=".MainActivity" android:exported="true" android:configChanges="orientation|screenSize|keyboardHidden">
             <intent-filter>

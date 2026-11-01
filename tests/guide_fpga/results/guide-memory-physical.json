@@ -1,0 +1,14 @@
+{
+  "scope": "Standalone guide_transport plus guide_player place-and-route; physical memory mapping only. No clock constraint or board verification claim.",
+  "tool": "Gowin Education V1.9.11.03",
+  "device": "GW5AT-LV60PG484AC1/I0",
+  "physical_bsram": 2,
+  "logical_event_banks": 2,
+  "events_per_bank": 512,
+  "event_word_bits": 32,
+  "layout": "1024x32 with bank in address MSB, implemented using two 1024x16 physical SDPB memories",
+  "source_sha256": {
+    "guide_player.v": "7ad85be1d08aa523884407602c810ba08e0c19546e77bdd90cf942823426b1ed",
+    "guide_transport.v": "4137fed5ace730e6c6867cd9d5e4b51d58bfe704475fe932d2523071d77bc03e"
+  }
+}

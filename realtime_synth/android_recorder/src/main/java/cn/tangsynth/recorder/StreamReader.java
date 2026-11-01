@@ -1,0 +1,27 @@
+package cn.tangsynth.recorder;
+
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+
+/** Recognizes frame signatures only between complete frames, never inside audio payloads. */
+final class StreamReader {
+    final AudioFrame audio=new AudioFrame();
+    GuideProtocol.Ack acknowledgement;
+    boolean read(InputStream in)throws IOException{
+        int signature=0;
+        while(true){
+            int value=in.read();
+            if(value<0)throw new EOFException("蓝牙连接已关闭");
+            signature=(signature<<8)|value;
+            if(signature==0x54524543){audio.readBody(in);return true;}
+            if(signature==0x5447414b){
+                try{acknowledgement=GuideProtocol.readReply(in);return false;}
+                catch(IOException bad){
+                    if(bad instanceof EOFException)throw bad;
+                    signature=0; // A damaged ACK is retried by the sender.
+                }
+            }
+        }
+    }
+}

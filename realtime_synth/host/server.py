@@ -63,7 +63,12 @@ class Controller:
         while time.monotonic()<deadline:
             for status in self.decoder.feed(self.transport.read()):
                 if status['seq']!=seq or status['opcode']!=opcode:continue
-                if status['firmware'] not in (6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26) or (opcode not in (KEY_STATUS,DISPLAY_STATUS,LED_STATUS,PCM_STATUS,PCM_READ,FX_STATUS) and abs(status['sample_rate']-FS)>0.01):
+                firmware=status['firmware']
+                rate_free=(opcode in (KEY_STATUS,DISPLAY_STATUS,LED_STATUS,PCM_STATUS,PCM_READ,FX_STATUS)
+                           or (opcode==30 and firmware>=28) or (opcode==31 and firmware>=30))
+                rate=status.get('sample_rate')
+                if (not 6<=firmware<=30 or (opcode==30 and firmware<28) or (opcode==31 and firmware<30)
+                    or (not rate_free and (rate is None or not abs(rate-FS)<=0.01))):
                     raise OSError('响应不是匹配的实时合成控制固件')
                 if opcode==DISPLAY_STATUS:
                     self.display_feedback=status
@@ -74,7 +79,7 @@ class Controller:
                 elif opcode==PMOD_STATUS:self.pmod_feedback=status
                 elif opcode==OUTPUT_GAIN_STATUS:self.output_gain_feedback=status
                 elif opcode==PCM_STATUS:self.pcm_feedback=status
-                elif opcode==PCM_READ:pass
+                elif opcode in (PCM_READ,30,31):pass
                 else:self.feedback=status
                 if status['status']:
                     raise OSError({1:'板卡拒绝了校验错误的数据帧',2:'不支持的命令',3:'板卡拒绝了超出范围的参数',4:'当前输入模式不允许此操作，或 ADC 尚未校准／故障'}.get(status['status'],'板卡命令失败'))
@@ -180,7 +185,7 @@ class Controller:
             raise ValueError('触摸接收窗口未激活')
         if self.feedback.get('firmware',0)<11:raise ValueError('当前固件不支持直接触摸菜单')
         index=data.get('index')
-        if isinstance(index,bool) or not isinstance(index,int) or not 0<=index<(9 if self.feedback['firmware']>=22 else 8):raise ValueError('触摸菜单编号无效')
+        if isinstance(index,bool) or not isinstance(index,int) or not 0<=index<(12 if self.feedback['firmware']>=30 else 9 if self.feedback['firmware']>=22 else 8):raise ValueError('触摸菜单编号无效')
         self.exchange(DISPLAY_ACTION,bytes([5,index]))
         self.exchange(DISPLAY_STATUS);self.exchange(STATUS);self.exchange(KEY_STATUS)
         self.touch['last_menu']=index
@@ -199,7 +204,7 @@ class Controller:
                 raise ValueError('当前为打击垫模式；请先切回控制模式，再操作琴键扫描或钢琴音色')
             amount=step*count
             if action in ('menu_next','menu_prev'):
-                target=(f['focus']+(amount if action=='menu_next' else -amount))%8
+                target=(f['focus']+(amount if action=='menu_next' else -amount))%(12 if f.get('firmware',0)>=30 else 9 if f.get('firmware',0)>=22 else 8)
                 self.exchange(DISPLAY_ACTION,bytes([6,target]))
             elif action.startswith('volume_'):
                 delta=round(amount*65535/100)*(1 if action=='volume_up' else -1)

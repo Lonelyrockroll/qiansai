@@ -17,6 +17,15 @@ class GestureTests(unittest.TestCase):
         self.assertIsNone(hit_test(992,140));self.assertIsNone(hit_test(800,157))
         self.assertEqual(hit_test(800,480),7);self.assertIsNone(hit_test(800,500))
         with self.assertRaises(ValueError):to_pixel(contact(1050,0))
+    def test_v30_two_columns(self):
+        for i in range(12):
+            x,y=512+(i//6)*240,332+(i%6)*32
+            self.assertEqual(hit_test(x,y,rows=12),i)
+            self.assertEqual(hit_test(x+231,y+27,rows=12),i)
+            self.assertIsNone(hit_test(x+232,y+14,rows=12))
+            self.assertIsNone(hit_test(x+20,y+28,rows=12))
+        self.assertIsNone(hit_test(800,240,rows=12))
+        self.assertIsNone(hit_test(512,524,rows=12))
     def test_release_once(self):
         t=TapDetector()
         for i in range(30):self.assertIsNone(t.feed([contact()],i*.02))
@@ -78,6 +87,12 @@ class ControllerTests(unittest.TestCase):
         with self.assertRaises(ValueError):c.touch_click(dict(session='old',index=0))
         c.touch['active']=False
         with self.assertRaises(ValueError):c.touch_click(dict(session='test',index=0))
+    def test_v30_guide_actions(self):
+        c=self.make();c.feedback={'firmware':30}
+        for i in (9,10,11):
+            c.touch_click(dict(session='test',index=i))
+            self.assertEqual(c.touch['last_menu'],i)
+        with self.assertRaises(ValueError):c.touch_click(dict(session='test',index=12))
     def test_focus_loss_mutes(self):
         c=self.make();c.touch_heartbeat(dict(session='test',active=False,reports=20,taps=1))
         c.panic.assert_called_once();self.assertFalse(c.touch['active'])

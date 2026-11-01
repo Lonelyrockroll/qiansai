@@ -31,6 +31,10 @@ module uart_control_display #(
     input wire signed [15:0] pcm,input wire overrun,clipped,
     output reg [11:0] pt_bias,output reg [1:0] pt_mode,
     input wire amp_muted,amp_ready,output reg [1:0] gain_mode,output reg amp_hold,
+    output reg guide_ui_valid,output reg [3:0] guide_ui_action,
+    input wire guide_valid,guide_playing,guide_loading,guide_demo,
+    input wire [15:0] guide_time_cs,guide_duration_cs,input wire [9:0] guide_count,guide_index,
+    input wire [1:0] guide_speed,input wire [31:0] guide_current,
     input wire ui_valid,input wire [3:0] ui_action,input wire [15:0] ui_value,
     output reg express_adjust,express_depth,express_up,
     input wire [3:0] bend_position,input wire [2:0] vibrato_depth,
@@ -58,7 +62,7 @@ module uart_control_display #(
     output reg [31:0] cfg_step,output reg [2:0] cfg_wave,
     output reg [15:0] cfg_level,cfg_attack,cfg_decay,cfg_sustain,cfg_release
 );
-    localparam COLLECT=0,APPLY=1,BUILD=2,SEND=3,DRAIN=4,CLEAR=5,PAD_APPLY=6,CAP_ADDR=7,CAP_WAIT=8,CAP_LATCH=9;
+    localparam COLLECT=0,APPLY=1,BUILD=2,SEND=3,DRAIN=4,CLEAR=5,PAD_APPLY=6,CAP_ADDR=7,CAP_WAIT=8,CAP_LATCH=9,CHECKSUM=10;
     wire [7:0] rx_data;wire rx_valid,rx_error,tx_ready;
     reg [7:0] tx_data;reg tx_valid;
     uart_rx #(.CLK_HZ(CLK_HZ),.BAUD(BAUD)) receiver(
@@ -146,7 +150,7 @@ module uart_control_display #(
             state<=COLLECT;rx_index<=0;tx_index<=0;checksum<=0;crc_ok<=0;
             seq<=0;opcode<=0;result_code<=0;gate_mask<=0;command_count<=0;frame_count<=0;
             watchdog<=0;rx_timeout<=0;armed<=0;timed_out<=0;panic<=0;tx_data<=0;tx_valid<=0;gain_mode<=1;amp_hold<=0;
-            pt_bias<=DEFAULT_PT_BIAS;pt_mode<=2;express_adjust<=0;express_depth<=0;express_up<=0;
+            guide_ui_valid<=0;guide_ui_action<=0;pt_bias<=DEFAULT_PT_BIAS;pt_mode<=2;express_adjust<=0;express_depth<=0;express_up<=0;
             key_mode<=0;key_test<=12;key_wave<=4;key_recalibrate<=0;
             key_level<=4588;key_press<=256;key_release<=128;key_attack<=672;
             key_decay<=2;key_sustain<=0;key_tail<=13;key_scale<=64;
@@ -161,7 +165,7 @@ module uart_control_display #(
             capture_command_valid<=0;
             led_command_valid<=0;
             diag_command_valid<=0;
-            express_adjust<=0;panic<=0;tx_valid<=0;key_recalibrate<=0;live_piano_flush<=0;loop_command_valid<=0;
+            guide_ui_valid<=0;express_adjust<=0;panic<=0;tx_valid<=0;key_recalibrate<=0;live_piano_flush<=0;loop_command_valid<=0;
             if(sample_tick) frame_count<=frame_count+1'b1;
             if(armed && !ui_local && watchdog<WATCHDOG_CYCLES) watchdog<=watchdog+1'b1;
             if(armed && !ui_local && watchdog==WATCHDOG_CYCLES-1) begin
@@ -248,7 +252,7 @@ module uart_control_display #(
                                 9: begin result_code<=0;state<=BUILD;end
                                 10: begin
                                     if((rx_buf[6]>8 && rx_buf[6]!=11 && rx_buf[6]!=12 && rx_buf[6]!=13 && rx_buf[6]!=14 && rx_buf[6]!=15) ||
-                                       ((rx_buf[6]==13 || rx_buf[6]==15) && {rx_buf[8],rx_buf[7]}>1) || ((rx_buf[6]==5 || rx_buf[6]==6) && rx_buf[7]>8) ||
+                                       ((rx_buf[6]==13 || rx_buf[6]==15) && {rx_buf[8],rx_buf[7]}>1) || ((rx_buf[6]==5 || rx_buf[6]==6) && rx_buf[7]>11) ||
                                        (rx_buf[6]==7 && {rx_buf[8],rx_buf[7]}>16384) ||
                                        (rx_buf[6]==8 && rx_buf[7]>4)) result_code<=3;
                                     else if(ui_pending) result_code<=4;
@@ -272,6 +276,14 @@ module uart_control_display #(
                                         result_code<=0;
                                     end
                                     state<=BUILD;
+                                end
+                                31:begin
+                                    if(rx_buf[6]>9)result_code<=3;
+                                    else begin
+                                        if(rx_buf[6]!=0)begin guide_ui_valid<=1;guide_ui_action<=rx_buf[6]-1'b1;end
+                                        result_code<=0;
+                                    end
+                                    state<=CLEAR;
                                 end
                                 28:begin
                                     if(rx_buf[6]!=1 && (rx_buf[6]!=2 || rx_buf[7]>7))result_code<=3;
@@ -387,8 +399,8 @@ module uart_control_display #(
                         tx_buf[22]={6'd0,drum_mode,native_connected};tx_buf[23]={3'd0,native_last_event};
                     end
                     if(opcode==30) begin tx_buf[7]=pt_bias[7:0];tx_buf[8]={4'b0,pt_bias[11:8]};tx_buf[9]={6'b0,pt_mode};end
-                    tx_buf[24]=29;tx_buf[25]=opcode;
-                    response_xor=0;
+                    tx_buf[24]=30;tx_buf[25]=opcode;
+
                     if(opcode==12)begin
                         tx_buf[7]={7'd0,native_connected};tx_buf[8]={3'd0,native_last_event};tx_buf[9]={1'b1,vibrato_depth,bend_position};
                         for(i=0;i<8;i=i+1)tx_buf[10+i]=native_diagnostic[i*8 +: 8];
@@ -464,9 +476,21 @@ module uart_control_display #(
                         tx_buf[17]=8'h60;tx_buf[18]=8'h6d;
                         tx_buf[19]=key_level[7:0];tx_buf[20]=key_level[15:8];tx_buf[21]=drum_level[7:0];tx_buf[22]=drum_level[15:8];tx_buf[23]=0;
                     end
-                    for(i=2;i<26;i=i+1) response_xor=response_xor^tx_buf[i];
-                    tx_buf[26]=response_xor;tx_buf[27]=8'h0d;
-                    tx_index<=0;state<=SEND;
+                    if(opcode==31)begin
+                        tx_buf[7]={4'b0,guide_demo,guide_loading,guide_playing,guide_valid};tx_buf[8]={6'b0,guide_speed};
+                        tx_buf[9]=guide_count[7:0];tx_buf[10]={6'b0,guide_count[9:8]};
+                        tx_buf[11]=guide_index[7:0];tx_buf[12]={6'b0,guide_index[9:8]};
+                        tx_buf[13]=guide_time_cs[7:0];tx_buf[14]=guide_time_cs[15:8];
+                        tx_buf[15]=guide_duration_cs[7:0];tx_buf[16]=guide_duration_cs[15:8];
+                        for(i=0;i<4;i=i+1)tx_buf[17+i]=guide_current[i*8 +:8];
+                        tx_buf[21]=0;tx_buf[22]=0;tx_buf[23]=0;
+                    end
+                    tx_buf[27]=8'h0d;tx_index<=0;state<=CHECKSUM;
+                end
+                CHECKSUM:begin
+                    response_xor=0;
+                    for(i=2;i<26;i=i+1)response_xor=response_xor^tx_buf[i];
+                    tx_buf[26]<=response_xor;state<=SEND;
                 end
                 SEND: if(tx_ready && !tx_valid) begin
                     tx_data<=tx_buf[tx_index];tx_valid<=1;
@@ -483,8 +507,8 @@ module uart_control_display #(
             if(ui_pending && state==COLLECT && rx_index==0 && !rx_valid) begin
                 ui_pending<=0;ui_notice<=0;
                 case(pending_action)
-                1:ui_focus<=ui_focus==8?0:ui_focus+1'b1;
-                9:ui_focus<=ui_focus==0?8:ui_focus-1'b1;
+                1:ui_focus<=ui_focus==11?0:ui_focus+1'b1;
+                9:ui_focus<=ui_focus==0?11:ui_focus-1'b1;
                 10:change_timbre(key_wave==0?3'd4:key_wave-1'b1);
                 11:scan_toggle();
                 12:calibrate_keys();
@@ -512,6 +536,9 @@ module uart_control_display #(
                     6:begin panic<=1;amp_hold<=0;armed<=0;gate_mask<=0;ui_local<=0;end
                     7:switch_input_mode();
                     8:next_effect();
+                    9:begin guide_ui_valid<=1;guide_ui_action<=4;end
+                    10:begin guide_ui_valid<=1;guide_ui_action<=5;end
+                    11:begin guide_ui_valid<=1;guide_ui_action<=3;end
                 endcase
                 end
                 endcase

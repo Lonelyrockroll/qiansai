@@ -15,6 +15,23 @@ class FakeTransport:
         result=self.reply[:3];self.reply=self.reply[3:];return result
     def close(self):self.closed=True
 
+class FirmwareTransport(FakeTransport):
+    def __init__(self,firmware):
+        super().__init__();self.firmware=firmware
+    def write(self,data):
+        super().write(data)
+        raw=bytearray(self.reply);op=data[4];raw[24]=self.firmware
+        if op in (30,31):
+            raw[6:24]=bytes(18)
+            if op==30:
+                struct.pack_into('<H',raw,7,1577);raw[9]=2
+            else:
+                raw[7]=3;raw[8]=2
+                struct.pack_into('<HHHHI',raw,9,84,12,125,2400,1<<14)
+        raw[26]=0
+        for b in raw[2:26]:raw[26]^=b
+        self.reply=bytes(raw)
+
 class Tests(unittest.TestCase):
     def test_keyboard_payload_and_source_exclusion(self):
         values=struct.unpack('<BBB8H',keyboard_payload(2,31,params=dict(timbre=4,level=.9,attack_ms=1,decay_ms=1000,sustain=0,release_ms=110)))
@@ -78,5 +95,41 @@ class Tests(unittest.TestCase):
         fake.write=wrong;ctl.transport=fake
         with self.assertRaises(OSError):ctl.exchange(1)
         self.assertIsNone(ctl.transport);self.assertTrue(fake.closed)
+
+    def test_v27_to_v30_main_status(self):
+        for version in range(27,31):
+            ctl=server.Controller();ctl.stop.set();ctl.worker.join();ctl.transport=FirmwareTransport(version)
+            try:
+                answer=ctl.exchange(1)
+                self.assertEqual(answer['firmware'],version);self.assertEqual(answer['sample_rate'],FS)
+            finally:ctl.disconnect()
+
+    def test_actual_v30_decoded_trim_and_guide_status_without_rate(self):
+        ctl=server.Controller();ctl.stop.set();ctl.worker.join();ctl.transport=FirmwareTransport(30)
+        try:
+            main=ctl.exchange(4)
+            trim=ctl.exchange(30)
+            self.assertEqual((trim['pt_bias'],trim['pt_mode']),(1577,2));self.assertNotIn('sample_rate',trim)
+            guide=ctl.exchange(31)
+            self.assertTrue(guide['guide_valid'] and guide['guide_playing'])
+            self.assertEqual((guide['guide_count'],guide['guide_index'],guide['guide_time_cs'],guide['guide_duration_cs']),(84,12,125,2400))
+            self.assertEqual(guide['guide_mask'],1<<14);self.assertNotIn('sample_rate',guide)
+            self.assertIs(ctl.feedback,main)
+        finally:ctl.disconnect()
+
+    def test_unknown_version_and_bad_rate_still_fail(self):
+        for version in (5,27,31,99):
+            ctl=server.Controller();ctl.stop.set();ctl.worker.join();fake=FirmwareTransport(version);ctl.transport=fake
+            with self.assertRaises(OSError):ctl.exchange(30)
+            self.assertIsNone(ctl.transport);self.assertTrue(fake.closed)
+        ctl=server.Controller();ctl.stop.set();ctl.worker.join();fake=FirmwareTransport(30)
+        normal=fake.write
+        def bad_rate(data):
+            normal(data);raw=bytearray(fake.reply);raw[20:24]=bytes(4);raw[26]=0
+            for b in raw[2:26]:raw[26]^=b
+            fake.reply=bytes(raw)
+        fake.write=bad_rate;ctl.transport=fake
+        with self.assertRaises(OSError):ctl.exchange(4)
+        self.assertIsNone(ctl.transport)
 
 if __name__=='__main__':unittest.main()

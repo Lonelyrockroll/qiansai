@@ -188,7 +188,13 @@ module synth_display_top(
     assign debug_sample=tick;
     wire bt_request,bt_accept,bt_locked,pmod_test,pmod_testing,pmod_single;wire [2:0] pmod_select;
     wire [7:0] bt_command,pmod_lamps;wire [15:0] bt_period,bt_count,bt_dropped;
-    bt_console bluetooth(.clk(sys_clk),.rst(rst),.bt_rx(bt_rx),.bt_tx(bt_tx),.audio_tick(tick),.pcm(pcm),.locked(bt_locked),
+    wire guide_ui_valid,guide_valid,guide_playing,guide_loading,guide_demo;wire [3:0] guide_ui_action;
+    wire [15:0] guide_time_cs,guide_duration_cs;wire [9:0] guide_count,guide_index;wire [1:0] guide_speed;
+    wire [31:0] guide_current,guide_onset,guide_next;wire [63:0] guide_colors;
+    bt_console bluetooth(.guide_ui_valid(guide_ui_valid),.guide_ui_action(guide_ui_action),
+        .guide_valid(guide_valid),.guide_playing(guide_playing),.guide_loading(guide_loading),.guide_demo(guide_demo),
+        .guide_time_cs(guide_time_cs),.guide_duration_cs(guide_duration_cs),.guide_count(guide_count),.guide_index(guide_index),
+        .guide_speed(guide_speed),.guide_current(guide_current),.guide_onset(guide_onset),.guide_next(guide_next),.guide_colors(guide_colors),.clk(sys_clk),.rst(rst),.bt_rx(bt_rx),.bt_tx(bt_tx),.audio_tick(tick),.pcm(pcm),.locked(bt_locked),
         .period(bt_period),.commands(bt_count),.dropped(bt_dropped),.request(bt_request),.command(bt_command),
         .accept(bt_accept),.settled(!fx_cv && !fx_pending),.volume(ui_volume),.timbre(key_wave),.fx(fx_status_mask),.lamps(pmod_lamps));
     wire [15:0] magnitude=pcm[15]?-pcm:pcm;
@@ -198,7 +204,10 @@ module synth_display_top(
     wire [31:0] pc_key_pressed;
     wire [31:0] panel_keys=key_mode==0?pc_key_pressed:key_pressed;
     wire [11:0] pt_bias;wire [1:0] pt_mode;
-    uart_control_display controller(.pt_mode(pt_mode),.pt_bias(pt_bias),
+    uart_control_display controller(.guide_ui_valid(guide_ui_valid),.guide_ui_action(guide_ui_action),
+        .guide_valid(guide_valid),.guide_playing(guide_playing),.guide_loading(guide_loading),.guide_demo(guide_demo),
+        .guide_time_cs(guide_time_cs),.guide_duration_cs(guide_duration_cs),.guide_count(guide_count),.guide_index(guide_index),
+        .guide_speed(guide_speed),.guide_current(guide_current),.pt_mode(pt_mode),.pt_bias(pt_bias),
         .pc_key_pressed(pc_key_pressed),
         .bt_request(bt_request),.bt_command(bt_command),.bt_accept(bt_accept),.bt_period(bt_period),.bt_locked(bt_locked),
         .bt_count(bt_count),.bt_dropped(bt_dropped),.pmod_test(pmod_test),.pmod_single(pmod_single),.pmod_select(pmod_select),.pmod_testing(pmod_testing),.pmod_lamps(pmod_lamps),
@@ -273,12 +282,16 @@ module synth_display_top(
             else if(peak_div==0 && peak!=0) peak<=peak-1'b1;
         end
     end
-    wire [120:0] panel_state;
-    display_snapshot #(.WIDTH(121)) snapshot(.sys_clk(sys_clk),.sys_rst(rst),.pixel_clk(pixel_clk),.pixel_rst(pixel_rst),
-        .frame_start(frame_start),.source({bend_position,vibrato_depth,fx_status_mask,ui_focus[3],loop_actual_cs,loop_position_cs,loop_layers,loop_duration,loop_playing,loop_recording,loop_pending,loop_notice,loop_progress,drum_mode,ui_focus[2:0],key_wave,ui_volume,active_voices,key_mode,
+    wire [370:0] panel_state;
+    display_snapshot #(.WIDTH(371)) snapshot(.sys_clk(sys_clk),.sys_rst(rst),.pixel_clk(pixel_clk),.pixel_rst(pixel_rst),
+        .frame_start(frame_start),.source({panel_keys,guide_colors,guide_next,guide_onset,guide_current,guide_speed,guide_index,guide_count,guide_duration_cs,guide_time_cs,guide_demo,guide_loading,guide_playing,guide_valid,bend_position,vibrato_depth,fx_status_mask,ui_focus[3],loop_actual_cs,loop_position_cs,loop_layers,loop_duration,loop_playing,loop_recording,loop_pending,loop_notice,loop_progress,drum_mode,ui_focus[2:0],key_wave,ui_volume,active_voices,key_mode,
             key_calibrated,key_fault,PA_EN,amp_ready,uart_amp_hold,ui_pattern,ui_notice,(drum_mode?{20'd0,drum_mask}:panel_keys),peak}),.snapshot(panel_state));
     wire [23:0] rgb;wire hs_out,vs_out,de_out;
-    panel_renderer renderer(.clk(pixel_clk),.rst(pixel_rst),.x(x),.y(y),.hs(hs),.vs(vs),.de(de),
+    panel_renderer renderer(.actual_keys(panel_state[370:339]),.guide_colors(panel_state[338:275]),
+        .guide_next(panel_state[274:243]),.guide_onset(panel_state[242:211]),.guide_target(panel_state[210:179]),
+        .guide_speed(panel_state[178:177]),.guide_index(panel_state[176:167]),.guide_count(panel_state[166:157]),
+        .guide_duration_cs(panel_state[156:141]),.guide_time_cs(panel_state[140:125]),.guide_demo(panel_state[124]),
+        .guide_loading(panel_state[123]),.guide_playing(panel_state[122]),.guide_valid(panel_state[121]),.clk(pixel_clk),.rst(pixel_rst),.x(x),.y(y),.hs(hs),.vs(vs),.de(de),
         .loop_actual_cs(panel_state[109:100]),.loop_position_cs(panel_state[99:90]),.loop_layers(panel_state[89:87]),.loop_duration(panel_state[86:85]),.loop_playing(panel_state[84]),
         .loop_recording(panel_state[83]),.loop_pending(panel_state[82]),.loop_notice(panel_state[81:79]),.loop_progress(panel_state[78:72]),
         .bend_position(panel_state[120:117]),.vibrato_depth(panel_state[116:114]),.drum_mode(panel_state[71]),.focus({panel_state[110],panel_state[70:68]}),.fx(panel_state[113:111]),.timbre(panel_state[67:65]),.volume(panel_state[64:58]),

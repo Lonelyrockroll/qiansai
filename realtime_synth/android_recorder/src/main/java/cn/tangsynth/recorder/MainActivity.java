@@ -2,6 +2,7 @@ package cn.tangsynth.recorder;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothDevice;
@@ -14,6 +15,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.provider.OpenableColumns;
+import android.database.Cursor;
 import android.view.View;
 import android.view.WindowInsets;
 import android.view.WindowManager;
@@ -23,7 +26,7 @@ import java.util.Arrays;
 import java.util.Locale;
 
 public final class MainActivity extends Activity implements RecorderSession.Listener {
-    private static final int PERMISSION=101, EXPORT=102;
+    private static final int PERMISSION=101, EXPORT=102, IMPORT_MIDI=103;
     private static final int BG=0xff102226,PANEL=0xff1c3338,TEXT=0xffecf5f1,MUTED=0xffa7bfbe,MINT=0xff94ebca;
     private RecorderSession session;
     private MediaPlayer player;
@@ -33,7 +36,15 @@ public final class MainActivity extends Activity implements RecorderSession.List
     private ProgressBar meter;
     private Button link,record,play,export;
     private Spinner selection;
-    private boolean alive=true;
+    private boolean alive=true,documentPicker,midiImporting;
+    private MidiGuide.Song midi;
+    private MidiGuide.Compiled compiled;
+    private java.util.List<MidiGuide.Track> midiTracks=java.util.Collections.emptyList();
+    private String midiName="";
+    private TextView midiInfo,guideHint;
+    private Spinner tracks;
+    private Button chooseMidi,sampleMidi,sendMidi,guideToggle,guideRestart,guidePrevious,guideNext,guideDemo,guideSpeed;
+    private int compileGeneration;
 
     @Override public void onCreate(Bundle saved){
         super.onCreate(saved);
@@ -42,6 +53,8 @@ public final class MainActivity extends Activity implements RecorderSession.List
         layout();
         try {WavTake.recover(library);}catch(IOException ex){hint.setText(ex.getMessage());}
         reloadTakes(null);render(null,"等待连接",0,0);
+        File remembered=new File(getFilesDir(),"last-guide.mid");
+        if(remembered.isFile())loadMidi(remembered,getPreferences(0).getString("midiName","上次导入的 MIDI"));
     }
     private int dp(int value){return Math.round(value*getResources().getDisplayMetrics().density);}
     private GradientDrawable panel(int color,int radius){
@@ -72,9 +85,9 @@ public final class MainActivity extends Activity implements RecorderSession.List
                 v.setPadding(b.left,b.top,b.right,b.bottom);return i;});
         }
         LinearLayout root=column();root.setPadding(dp(20),dp(24),dp(20),dp(24));scroll.addView(root);setContentView(scroll);
-        add(root,label("TANG   /   AUDIO",13,MINT,true),0);
-        add(root,label("演奏录音",32,TEXT,true),5);
-        add(root,label("从开发板收取效果器后的声音",15,MUTED,false),4);
+        add(root,label("TANG   /   PLAY",13,MINT,true),0);
+        add(root,label("演奏助手",32,TEXT,true),5);
+        add(root,label("MIDI 屏幕指引 · 演奏录音",15,MUTED,false),4);
         LinearLayout device=card(root);
         add(device,label("01    蓝牙设备",13,MINT,true),0);
         add(device,label("=BTNU1  ·  JDY-31",21,TEXT,true),8);
@@ -83,8 +96,40 @@ public final class MainActivity extends Activity implements RecorderSession.List
         TextView settings=label("打开系统蓝牙设置  ↗",14,MINT,false);
         settings.setPadding(0,dp(8),0,dp(8));add(device,settings,4);
         settings.setOnClickListener(v->startActivity(new Intent(Settings.ACTION_BLUETOOTH_SETTINGS)));
+        LinearLayout guide=card(root);add(guide,label("02    MIDI 屏幕指引",13,MINT,true),0);
+        add(guide,label("把旋律带到琴上",23,TEXT,true),7);
+        add(guide,label("选择一条 MIDI 音轨。C2～F6 的 32 个白键可演示，屏幕按原音轨颜色显示新弹音与延音。",13,MUTED,false),5);
+        LinearLayout files=new LinearLayout(this);add(guide,files,12);
+        chooseMidi=button("选择 MIDI",0xff33545b);sampleMidi=button("示例 MIDI",0xff33545b);
+        files.addView(chooseMidi,new LinearLayout.LayoutParams(0,-2,1));
+        LinearLayout.LayoutParams sp=new LinearLayout.LayoutParams(0,-2,1);sp.leftMargin=dp(8);files.addView(sampleMidi,sp);
+        chooseMidi.setOnClickListener(v->chooseMidi());sampleMidi.setOnClickListener(v->loadSample());
+        midiInfo=label("尚未选择曲目",14,MUTED,false);add(guide,midiInfo,10);
+        tracks=new Spinner(this);add(guide,tracks,5);
+        tracks.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            @Override public void onItemSelected(AdapterView<?> p,View v,int pos,long id){compileTrack(pos);}
+            @Override public void onNothingSelected(AdapterView<?> p){}
+        });
+        sendMidi=button("发送曲目到板卡",MINT);add(guide,sendMidi,9);sendMidi.setOnClickListener(v->sendMidi());
+        guideHint=label("连接支持指引的板卡后，可传曲目并控制播放。",14,MUTED,false);add(guide,guideHint,10);
+        LinearLayout row1=new LinearLayout(this);add(guide,row1,10);
+        guideToggle=button("播放 / 暂停",0xff33545b);guideRestart=button("回到开头",0xff33545b);
+        pair(row1,guideToggle,guideRestart);
+        LinearLayout row2=new LinearLayout(this);add(guide,row2,8);
+        guidePrevious=button("上一组音",0xff33545b);guideNext=button("下一组音",0xff33545b);
+        pair(row2,guidePrevious,guideNext);
+        LinearLayout row3=new LinearLayout(this);add(guide,row3,8);
+        guideDemo=button("板载示范曲",0xff33545b);guideSpeed=button("切换速度",0xff33545b);
+        pair(row3,guideDemo,guideSpeed);
+        guideToggle.setOnClickListener(v->guideCommand(GuideProtocol.TOGGLE));
+        guideRestart.setOnClickListener(v->guideCommand(GuideProtocol.RESTART));
+        guidePrevious.setOnClickListener(v->guideCommand(GuideProtocol.PREVIOUS));
+        guideNext.setOnClickListener(v->guideCommand(GuideProtocol.NEXT));
+        guideDemo.setOnClickListener(v->guideCommand(GuideProtocol.DEMO));
+        guideSpeed.setOnClickListener(v->guideCommand(GuideProtocol.SPEED));
+        add(guide,label("传完后可断开手机，由 FPGA 自行计时。导入曲目保存在板内 SRAM，断电后需重传。指引显示与录音传输分时操作。",12,MUTED,false),10);
         LinearLayout capture=card(root);
-        add(capture,label("02    录音",13,MINT,true),0);
+        add(capture,label("03    录音",13,MINT,true),0);
         clock=label("00:00.0",37,TEXT,true);clock.setTypeface(Typeface.MONOSPACE);add(capture,clock,6);
         meter=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);meter.setMax(32768);
         meter.setProgressTintList(android.content.res.ColorStateList.valueOf(MINT));add(capture,meter,4);
@@ -92,13 +137,17 @@ public final class MainActivity extends Activity implements RecorderSession.List
         record=button("开始录音",MINT);add(capture,record,14);
         record.setOnClickListener(v->{if(session==null)return;stopPlayback();if(session.phase()==RecorderSession.Phase.READY)session.start();else session.stop();});
         add(capture,label("单声道 WAV · 16.28 kHz · 最长 10 分钟。请保持 App 在前台，先在板上开始演奏。",13,MUTED,false),10);
-        LinearLayout clips=card(root);add(clips,label("03    手机录音",13,MINT,true),0);
+        LinearLayout clips=card(root);add(clips,label("04    手机录音",13,MINT,true),0);
         libraryInfo=label("",14,MUTED,false);add(clips,libraryInfo,8);
         selection=new Spinner(this);add(clips,selection,3);
         play=button("试听",0xff33545b);export=button("导出 WAV",0xff33545b);
         LinearLayout row=new LinearLayout(this);add(clips,row,10);
         row.addView(play,new LinearLayout.LayoutParams(0,-2,1));LinearLayout.LayoutParams ep=new LinearLayout.LayoutParams(0,-2,1);ep.leftMargin=dp(8);row.addView(export,ep);
         play.setOnClickListener(v->playSelected());export.setOnClickListener(v->chooseExport());
+    }
+    private void pair(LinearLayout row,Button a,Button b){
+        row.addView(a,new LinearLayout.LayoutParams(0,-2,1));
+        LinearLayout.LayoutParams right=new LinearLayout.LayoutParams(0,-2,1);right.leftMargin=dp(8);row.addView(b,right);
     }
     private void connect(){
         if(Build.VERSION.SDK_INT>=31 && checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)!=PackageManager.PERMISSION_GRANTED){
@@ -127,10 +176,95 @@ public final class MainActivity extends Activity implements RecorderSession.List
         if(taking)getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         deviceState.setText(offline?"未连接 · 经典蓝牙 SPP":p==RecorderSession.Phase.CONNECTING || p==RecorderSession.Phase.PROBING?"正在握手…":"已连接 · 音频协议 v1");
         link.setText(offline?"连接板卡":"断开连接");hint.setText(message);
-        record.setEnabled(p==RecorderSession.Phase.READY || p==RecorderSession.Phase.STARTING || p==RecorderSession.Phase.RECORDING);
+        record.setEnabled((p==RecorderSession.Phase.READY && (session==null || !session.guideBusy())) || p==RecorderSession.Phase.STARTING || p==RecorderSession.Phase.RECORDING);
         record.setAlpha(record.isEnabled()?1f:.48f);record.setText(taking?(p==RecorderSession.Phase.STOPPING?"正在保存…":"停止并保存"):"开始录音");
         long tenth=samples*10/AudioFrame.RATE;clock.setText(String.format(Locale.US,"%02d:%02d.%d",tenth/600,(tenth/10)%60,tenth%10));
         meter.setProgress(peak);play.setEnabled(!taking && takes.length>0);export.setEnabled(!taking && takes.length>0);
+        renderGuideButtons();
+    }
+    @Override public void guide(RecorderSession src,GuideProtocol.Ack state,String detail,boolean busy){
+        runOnUiThread(()->{if(alive && src==session){guideHint.setText(detail);renderGuideButtons();}});
+    }
+    private void renderGuideButtons(){
+        boolean ready=session!=null && session.phase()==RecorderSession.Phase.READY;
+        boolean busy=session!=null && session.guideBusy();
+        boolean available=ready && !busy && session.guideAvailable();
+        if(ready && session.guideAvailable())deviceState.setText("已连接 · 录音与 MIDI 屏幕指引");
+        for(Button b:new Button[]{guideToggle,guideRestart,guidePrevious,guideNext,guideDemo,guideSpeed}){
+            if(b!=null){b.setEnabled(available);b.setAlpha(available?1f:.45f);}
+        }
+        if(sendMidi!=null){sendMidi.setEnabled(available && compiled!=null);sendMidi.setAlpha(sendMidi.isEnabled()?1f:.45f);}
+        boolean editable=!midiImporting && (session==null || (session.phase()==RecorderSession.Phase.READY && !busy));
+        if(chooseMidi!=null)chooseMidi.setEnabled(editable);
+        if(sampleMidi!=null)sampleMidi.setEnabled(editable);
+        if(tracks!=null)tracks.setEnabled(editable && !midiTracks.isEmpty());
+        if(record!=null && ready){record.setEnabled(!busy);record.setAlpha(!busy?1f:.48f);}
+        if(ready){play.setEnabled(!busy && takes.length>0);export.setEnabled(!busy && takes.length>0);}
+        if(busy)getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        else if(ready || session==null)getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+    private void guideCommand(int action){if(session!=null)session.guideControl(action);}
+    private void chooseMidi(){
+        Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("*/*");
+        documentPicker=true;startActivityForResult(i,IMPORT_MIDI);
+    }
+    private void loadSample(){
+        midiImporting=true;compiled=null;compileGeneration++;midiInfo.setText("正在读取示例 MIDI…");renderGuideButtons();
+        new Thread(()->{
+            try(InputStream in=getAssets().open("guide-demo.mid")){importMidi(in,"示例 · 小星星.mid");}
+            catch(IOException ex){runOnUiThread(()->{if(alive){midiImporting=false;midiInfo.setText("示例 MIDI 读取失败");renderGuideButtons();}});}
+        },"MIDI sample").start();
+    }
+    private void loadMidi(File file,String name){
+        midiImporting=true;renderGuideButtons();
+        new Thread(()->{
+            try(InputStream in=new FileInputStream(file)){MidiGuide.Song song=MidiGuide.read(in);showMidi(song,name);}
+            catch(IOException ex){runOnUiThread(()->{if(alive){midiImporting=false;midiInfo.setText("上次曲目无法加载，请重新选择 MIDI");renderGuideButtons();}});}
+        },"MIDI restore").start();
+    }
+    private void importMidi(InputStream in,String name)throws IOException{
+        ByteArrayOutputStream buffer=new ByteArrayOutputStream();byte[] bytes=new byte[8192];int n;
+        while((n=in.read(bytes))!=-1){if(buffer.size()+n>MidiGuide.MAX_BYTES)throw new IOException("MIDI 文件超过 2 MB");buffer.write(bytes,0,n);}
+        byte[] data=buffer.toByteArray();MidiGuide.Song song=MidiGuide.parse(data);
+        if(song.musicalTracks().isEmpty())throw new IOException("这份 MIDI 没有音符音轨");
+        File saved=new File(getFilesDir(),"last-guide.mid"),temporary=File.createTempFile("midi-",".tmp",getFilesDir());
+        try{
+            try(OutputStream out=new FileOutputStream(temporary)){out.write(data);}
+            if(!temporary.renameTo(saved))throw new IOException("MIDI 无法保存到应用目录");
+        }finally{temporary.delete();}
+        getPreferences(0).edit().putString("midiName",name).apply();showMidi(song,name);
+    }
+    private void showMidi(MidiGuide.Song song,String name){
+        runOnUiThread(()->{
+            if(!alive)return;
+            midiImporting=false;midi=song;midiName=name;compiled=null;midiTracks=song.musicalTracks();compileGeneration++;
+            ArrayAdapter<MidiGuide.Track> adapter=new ArrayAdapter<>(this,android.R.layout.simple_spinner_item,midiTracks);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);tracks.setAdapter(adapter);
+            midiInfo.setText(name);renderGuideButtons();
+        });
+    }
+    private void compileTrack(int position){
+        if(midi==null || position<0 || position>=midiTracks.size())return;
+        final MidiGuide.Song selectedSong=midi;final int track=midiTracks.get(position).index;final int generation=++compileGeneration;
+        compiled=null;midiInfo.setText(midiName+"\n正在整理音符…");renderGuideButtons();
+        new Thread(()->{
+            MidiGuide.Compiled result=null;String error=null;
+            try{result=MidiGuide.compile(selectedSong,track);}catch(IOException|RuntimeException ex){error=ex.getMessage();}
+            final MidiGuide.Compiled done=result;final String why=error;
+            runOnUiThread(()->{if(alive && generation==compileGeneration){
+                compiled=done;midiInfo.setText(midiName+"\n"+(done==null?why:done.summary()));renderGuideButtons();
+            }});
+        },"MIDI compile").start();
+    }
+    private void sendMidi(){
+        MidiGuide.Compiled selected=compiled;RecorderSession target=session;
+        if(selected==null || target==null)return;
+        String body="发送 "+midiName+" 的音轨 "+(selected.trackIndex+1)+"。\n"+selected.summary()+"\n传入成功后，屏幕可播放、暂停及逐组指引。";
+        if(selected.skipped()>0){
+            new AlertDialog.Builder(this).setTitle("确认可演奏的白键")
+                .setMessage(body).setNegativeButton("取消",null)
+                .setPositiveButton("按此发送",(d,w)->{if(session==target && compiled==selected)target.uploadGuide(selected);}).show();
+        }else target.uploadGuide(selected);
     }
     @Override public void saved(RecorderSession src,File file,boolean partial){
         runOnUiThread(()->{if(alive)reloadTakes(file);});
@@ -161,10 +295,29 @@ public final class MainActivity extends Activity implements RecorderSession.List
     private void chooseExport(){
         exporting=selected();if(exporting==null)return;stopPlayback();
         Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.setType("audio/wav");i.addCategory(Intent.CATEGORY_OPENABLE);
-        i.putExtra(Intent.EXTRA_TITLE,exporting.getName());startActivityForResult(i,EXPORT);
+        i.putExtra(Intent.EXTRA_TITLE,exporting.getName());documentPicker=true;startActivityForResult(i,EXPORT);
     }
     @Override protected void onActivityResult(int code,int result,Intent data){
         super.onActivityResult(code,result,data);
+        documentPicker=false;
+        if(code==IMPORT_MIDI){
+            if(result!=RESULT_OK || data==null || data.getData()==null)return;
+            Uri uri=data.getData();midiImporting=true;compiled=null;compileGeneration++;midiInfo.setText("正在读取 MIDI…");renderGuideButtons();
+            new Thread(()->{
+                try{
+                    String title="导入的 MIDI";
+                    try(Cursor c=getContentResolver().query(uri,new String[]{OpenableColumns.DISPLAY_NAME},null,null,null)){
+                        if(c!=null && c.moveToFirst()){String value=c.getString(0);if(value!=null)title=value.length()>120?value.substring(0,120):value;}
+                    }
+                    try(InputStream in=getContentResolver().openInputStream(uri)){
+                        if(in==null)throw new IOException("无法打开 MIDI 文件");importMidi(in,title);
+                    }
+                }catch(IOException|RuntimeException ex){
+                    final String why=ex.getMessage();runOnUiThread(()->{if(alive){midiImporting=false;midiInfo.setText(why==null?"MIDI 导入失败":why);renderGuideButtons();}});
+                }
+            },"MIDI import").start();
+            return;
+        }
         if(code!=EXPORT)return;
         File src=exporting;exporting=null;
         if(result!=RESULT_OK || data==null || data.getData()==null || src==null)return;
@@ -179,6 +332,6 @@ public final class MainActivity extends Activity implements RecorderSession.List
         },"WAV export").start();
     }
     @Override protected void onSaveInstanceState(Bundle state){super.onSaveInstanceState(state);if(exporting!=null)state.putString("exporting",exporting.getName());}
-    @Override protected void onStop(){super.onStop();stopPlayback();if(session!=null)session.leave();}
+    @Override protected void onStop(){super.onStop();stopPlayback();if(session!=null && !documentPicker)session.leave();}
     @Override protected void onDestroy(){alive=false;if(session!=null && session.phase()!=RecorderSession.Phase.STOPPING)session.close("页面已关闭");super.onDestroy();}
 }

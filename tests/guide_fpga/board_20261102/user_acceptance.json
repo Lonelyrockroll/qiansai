@@ -1,0 +1,9 @@
+{
+  "screen": "passed",
+  "screen_confirmation": "32 键、跟奏变色和实按边框都正常",
+  "phone_upload": "passed",
+  "updated_at": "2026-11-02T01:25:39.336283+08:00",
+  "phone_confirmation": "上传成功，断开手机后仍继续指引",
+  "phone_uploaded_count": 84,
+  "phone_uploaded_duration_cs": 2400
+}

@@ -15,7 +15,7 @@ if not TOOLS.is_dir():
 ANDROID = SDK / 'platforms/android-35/android.jar'
 KEYDIR = Path(os.environ.get('LOCALAPPDATA') or Path.home()) / 'TangRecorder'
 KEY = KEYDIR / 'test-signing.p12'
-OUT = ROOT / 'dist/TangRecorder-1.0.apk'
+OUT = ROOT / 'dist/TangRecorder-1.1.apk'
 
 def java(name):
     return str(Path(JAVA) / 'bin' / (name + ('.exe' if os.name=='nt' else '')))
@@ -38,7 +38,8 @@ def main():
         manifest.write_text((SRC/'AndroidManifest.xml').read_text(encoding='utf8').replace('<manifest ','<manifest package="cn.tangsynth.recorder" ',1),encoding='utf8')
         run(sdk('aapt2'),'compile','--dir',SRC/'res','-o',b/'res.zip')
         run(sdk('aapt2'),'link','-o',b/'app.apk','-I',ANDROID,'--manifest',manifest,
-            '--min-sdk-version','23','--target-sdk-version','35','--version-code','1','--version-name','1.0',b/'res.zip')
+            '--min-sdk-version','23','--target-sdk-version','35','--version-code','2','--version-name','1.1',
+            '-A',SRC/'assets',b/'res.zip')
         boot_classpath=os.pathsep.join((str(TOOLS/'core-lambda-stubs.jar'),str(ANDROID)))
         run(java('javac'),'-encoding','UTF-8','-source','8','-target','8','-bootclasspath',boot_classpath,
             '-d',classes,*sorted((SRC/'java').rglob('*.java')))

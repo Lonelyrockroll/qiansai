@@ -77,6 +77,13 @@ class Decoder:
                 continue
             del self.buffer[:28]
             p = frame[6:26]
+            if p[19]==31 and p[18]>=30:
+                result.append(dict(seq=frame[3],status=p[0],guide_valid=bool(p[1]&1),guide_playing=bool(p[1]&2),
+                    guide_loading=bool(p[1]&4),guide_demo=bool(p[1]&8),guide_speed=p[2],
+                    guide_count=int.from_bytes(p[3:5],'little'),guide_index=int.from_bytes(p[5:7],'little'),
+                    guide_time_cs=int.from_bytes(p[7:9],'little'),guide_duration_cs=int.from_bytes(p[9:11],'little'),
+                    guide_mask=int.from_bytes(p[11:15],'little'),firmware=p[18],opcode=p[19]))
+                continue
             if p[19]==30 and p[18]>=28:
                 result.append(dict(seq=frame[3],status=p[0],pt_bias=int.from_bytes(p[1:3],'little'),pt_mode=p[3] if p[18]>=29 else 0,firmware=p[18],opcode=p[19]))
                 continue

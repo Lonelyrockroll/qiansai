@@ -45,6 +45,8 @@
     <File path="audio_effects.v" type="file.verilog" enable="1" />
     <File path="chorus_lfo.v" type="file.verilog" enable="1" />
     <File path="pcm_peak_limiter.v" type="file.verilog" enable="1" />
+    <File path="guide_player.v" type="file.verilog" enable="1" />
+    <File path="guide_transport.v" type="file.verilog" enable="1" />
     <File path="bt_console.v" type="file.verilog" enable="1" />
     <File path="bt_link.v" type="file.verilog" enable="1" />
     <File path="bt_uart_tx.v" type="file.verilog" enable="1" />

@@ -1,0 +1,28 @@
+{
+  "apk": "dist\\TangRecorder-1.1.apk",
+  "version_code": 2,
+  "version_name": "1.1",
+  "sha256": "ce504560efba242d524f5acab4561e899ca63c8f63228cae7fe78df67f67b532",
+  "size": 82464,
+  "tests": {
+    "MidiGuide_and_mixed_decoder": "passed",
+    "real_RecorderSession_fake_SPP_retries_and_legacy_recording": "passed",
+    "previous_FPGA_TREC_golden_PCM": "passed",
+    "FPGA_24_TGAK_reply_cross_decode": "passed",
+    "integrated_FPGA_UART_TGAK_TREC_and_ASCII_demux": "passed; 27 ACKs, INFO, four DATA, FINISH; fragmented input"
+  },
+  "hardware_phone_confirmation": "Passed on v30 / SRAM 0x0000BB8F: user imported bundled MIDI, sent over Bluetooth and confirmed guidance continued after phone disconnection; board readback verified 84 events / 2400 cs / non-demo.",
+  "sources": {
+    "src\\main\\java\\cn\\tangsynth\\recorder\\AudioFrame.java": "908949d2635722126787c5e3531c84282ae058f03db2dad167794dbb05def4eb",
+    "src\\main\\java\\cn\\tangsynth\\recorder\\GuideProtocol.java": "0fae4b550c6ab413f37de4845f83099b7aa52de70ba28e0d8d588951bccbaf8f",
+    "src\\main\\java\\cn\\tangsynth\\recorder\\MainActivity.java": "aeef2229c7783f33d4e0fa5860e453a318584f2ffdbfb414104755e923d8930a",
+    "src\\main\\java\\cn\\tangsynth\\recorder\\MidiGuide.java": "7b4f55b67b00a0f9eb12f37b2f039fd0d9bb905b2630b6e837161ddc3d1bef9f",
+    "src\\main\\java\\cn\\tangsynth\\recorder\\RecorderSession.java": "441f7ed30bbe524377eb1ec29f7dab949d5552cfbec1fa08578b913ba978a182",
+    "src\\main\\java\\cn\\tangsynth\\recorder\\StreamReader.java": "482751bf784a3d20dee50c36fda473cc067004b2b034ea37d156ac843eeae464",
+    "src\\main\\java\\cn\\tangsynth\\recorder\\WavTake.java": "072a3ab60274776419163d826f87d08f29d57a760306a8020ae20519550977a5",
+    "build.gradle": "cffe2151cfc7fe0001c9c62fd9b3afcf57e55646407a3b27aa07edb0a8a00c8b",
+    "build_apk.py": "67d0cb0d368202df661dc6a62e69e455f4461deaa4ec6a7993e31d367b782cf9",
+    "src\\main\\AndroidManifest.xml": "88f69f651b2223c9108d1bb16240c7cdf2e1b1f29403c79c36dc8853e78f23f8",
+    "src\\main\\assets\\guide-demo.mid": "8413e33207d0e89b53b46e63f14242ca89cde86845bb9c24820596d51912618d"
+  }
+}
