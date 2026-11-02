@@ -35,10 +35,10 @@ def publish(folder, label, criteria, config):
     output=np.convolve(a['ch2_v'],weights,mode='valid')
     cutoff=criteria['falling_threshold_v']
     audio_cutoff=criteria['speaker_deviation_v']
-    def measure(quiet_start_ms,quiet_end_ms,audio_v):
+    def measure(quiet_start_ms,quiet_end_ms,audio_v,hall_cutoff=cutoff):
         base=(times[0]+quiet_start_ms,times[0]+quiet_end_ms)
         hall_zero=float(np.median(hall[(times>=base[0])&(times<=base[1])]))
-        settings=Settings('time_s','ch1_v','ch2_v','ms',base,hall_zero-cutoff,'falling',
+        settings=Settings('time_s','ch1_v','ch2_v','ms',base,hall_zero-hall_cutoff,'falling',
                           audio_v,confirm,confirm,50,'comma')
         result=measure_samples(raw,settings,times,hall,output)
         result['strict_order_resolved']=bool(result['strict_order_resolved'])
@@ -82,6 +82,16 @@ def publish(folder, label, criteria, config):
     write_json(dest/'record.json',trial)
     summary={k:trial[k] for k in ('name','delay_ms','csv_sha256','sequence','board_us','c4_harmonic_fit_fraction','alternate_baseline_ms','sensitivity_ms')}
     summary['capture']=label
+    # The midpoint illustrates an earlier electrical start; it does not replace the gate criterion.
+    sensitivity_levels=(0.140,cutoff,0.160,(criteria['idle_v']+criteria['held_v'])/2)
+    summary['hall_threshold_checks']=[]
+    for voltage in sensitivity_levels:
+        try:
+            check=measure(.1,5,audio_cutoff,voltage)
+            entry={'threshold_v':voltage,'delay_ms':check['latency_ms']}
+        except ValueError as exc:
+            entry={'threshold_v':voltage,'reason':str(exc)}
+        summary['hall_threshold_checks'].append(entry)
     return summary
 
 

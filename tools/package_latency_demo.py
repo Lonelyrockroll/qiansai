@@ -78,6 +78,12 @@ def members():
             capture=trial['capture']
             for suffix in ('.csv','.json','_association.json'):
                 add(summary.parent/(capture+suffix))
+        for log in summary.parent.glob('strike*_association.json'):
+            if json.loads(log.read_text(encoding='utf8'))['delta'] != [1,1,1]:
+                add(log)
+                prefix=log.name.removesuffix('_association.json')
+                add(summary.parent/(prefix+'.csv'))
+                add(summary.parent/(prefix+'.json'))
     return sorted(files)
 
 
