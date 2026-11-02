@@ -1,0 +1,15 @@
+{
+  "result": "passed",
+  "scope": "Isolated mock API in headless Chromium / Edge. No device connection.",
+  "tests": [
+    "token on GET and both POSTs",
+    "deduplicated board reads",
+    "same-segment/same-configuration CSV stats",
+    "single/dual waveform markers and zoom",
+    "existing WAV playback link",
+    "two-channel and MARK-only form dispatch",
+    "400 error retains form",
+    "390 px viewport"
+  ],
+  "browser": "156.0.4314.50"
+}

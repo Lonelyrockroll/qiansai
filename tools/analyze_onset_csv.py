@@ -83,7 +83,10 @@ def crossing_runs(values, begin, qualifies, needed):
 
 
 def measure(path, settings):
-    times, trigger, audio = read_capture(path, settings)
+    return measure_samples(path, settings, *read_capture(path, settings))
+
+
+def measure_samples(path, settings, times, trigger, audio):
     factor = TIME_TO_MS[settings.time_unit]
     start, end = (v * factor for v in settings.baseline)
     if start < times[0] or end > times[-1]:

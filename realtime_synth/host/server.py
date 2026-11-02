@@ -1,6 +1,7 @@
 """Local browser control panel. All sound synthesis remains on the FPGA."""
 import argparse
 import audio_web
+import latency_web
 import json
 from pathlib import Path
 import secrets
@@ -416,15 +417,17 @@ class Controller:
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--port',type=int,default=8765)
     parser.add_argument('--no-browser',action='store_true');parser.add_argument('--diagnose',action='store_true')
+    parser.add_argument('--latency-page',action='store_true',help='Open the latency results on startup')
     args=parser.parse_args()
     if args.diagnose:
         devices,warnings=list_devices();print(json.dumps(dict(devices=devices,warnings=warnings),ensure_ascii=False,indent=2));return
     origin=f'http://127.0.0.1:{args.port}'
+    start_url=origin+('/latency-monitor' if args.latency_page else '/')
     try:
         with urllib.request.urlopen(origin,timeout=0.5) as response:
             existing=response.read().decode('utf-8')
         if '<title>Tang Mega 合成器控制台</title>' in existing:
-            if not args.no_browser:webbrowser.open(origin)
+            if not args.no_browser:webbrowser.open(start_url)
             print('上位机已在运行，已复用现有控制页面。',flush=True)
             return
     except (OSError,ValueError):pass
@@ -443,6 +446,7 @@ def main():
                     self.headers.get('Origin',origin)==origin)
         def do_GET(self):
             if self.headers.get('Host')!=f'127.0.0.1:{args.port}':self.send({'error':'invalid host'},403);return
+            if latency_web.serve_get(self,token):return
             if audio_web.serve(self,token,origin):return
             pages={'/':'index.html','/keypad':'keypad.html'}
             if self.path in pages:
@@ -467,6 +471,7 @@ def main():
                         controller.ui_seen=time.monotonic();self.send(controller.snapshot())
             else:self.send({'error':'not found'},404)
         def do_POST(self):
+            if latency_web.serve_post(self,controller):return
             if not self.authorized() or self.path!='/api/action':self.send({'error':'forbidden'},403);return
             try:
                 length=int(self.headers.get('Content-Length','0'))
@@ -484,12 +489,12 @@ def main():
             with urllib.request.urlopen(origin,timeout=1) as response:
                 text=response.read().decode('utf-8')
             if '<title>Tang Mega 合成器控制台</title>' not in text:raise ValueError('port occupied')
-            if not args.no_browser:webbrowser.open(origin)
+            if not args.no_browser:webbrowser.open(start_url)
             print('上位机已在运行，已复用现有控制页面。',flush=True)
             return
         except Exception:raise OSError(f'端口 {args.port} 已被占用；可用 --port 指定其他端口')
     print(f'合成器上位机：{origin}，115200 baud；关闭窗口前可先断开连接。',flush=True)
-    if not args.no_browser:webbrowser.open(origin)
+    if not args.no_browser:webbrowser.open(start_url)
     try:server.serve_forever()
     except KeyboardInterrupt:pass
     finally:
