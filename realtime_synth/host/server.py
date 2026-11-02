@@ -19,10 +19,15 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from protocol import WHITE_KEYS, CONFIG, PING, PANIC, STATUS, GAIN, ARM, Decoder, packet, voice_payload, FS, KEY_CONFIG, KEY_CALIBRATE, KEY_STATUS, keyboard_payload
 from transports import list_devices, open_device
 from protocol import DISPLAY_ACTION, DISPLAY_STATUS, LED_CONTROL, LED_STATUS, LED_PIN_CONTROL, PCM_CONTROL, PCM_STATUS, PCM_READ, FX_CONTROL, FX_STATUS, FX_IMPULSE
-from protocol import OUTPUT_GAIN_STATUS, PMOD_TEST, PMOD_STATUS
+from protocol import OUTPUT_GAIN_STATUS, PMOD_TEST, PMOD_STATUS, NAVIGATION
+from touch_logic import navigation_enabled, menu_names
 from keypad_config import MappingStore,INPUTS,CATALOG,LABELS,defaults,BY_ACTION,DRUM_NAMES
 
 ROOT=Path(__file__).resolve().parent
+
+
+class NavigationChanged(ValueError):
+    """A queued menu action lost its expected UI generation or found the UI busy."""
 
 
 class Controller:
@@ -35,10 +40,11 @@ class Controller:
         self.keyboard=dict(mode=0,key=12,press=256,release=128,sensitivity=64)
         self.key_feedback={}
         self.display_feedback={}
+        self.navigation_feedback={}
         self.led_feedback={}
         self.fx_feedback={};self.pcm_feedback={};self.pcm_job={};self.pcm_context={};self.pcm_files={}
         self.output_gain_feedback={};self.pmod_feedback={}
-        self.touch=dict(enabled=False,active=False,reports=0,taps=0,last_point=None,last_menu=None,error='')
+        self.touch=dict(enabled=False,active=False,reports=0,taps=0,last_point=None,last_menu=None,last_page=None,last_name=None,error='')
         self.touch_process=None;self.touch_seen=0;self.touch_session=''
         self.keypad=dict(enabled=False,active=False,connected=False,events=0,actions=0,last_input=None,last_action='',error='')
         self.keypad_store=MappingStore(ROOT/'control_keypad_mapping.json');self.keypad_seq=0
@@ -67,9 +73,9 @@ class Controller:
                 if status['seq']!=seq or status['opcode']!=opcode:continue
                 firmware=status['firmware']
                 rate_free=(opcode in (KEY_STATUS,DISPLAY_STATUS,LED_STATUS,PCM_STATUS,PCM_READ,FX_STATUS)
-                           or (opcode==30 and firmware>=28) or (opcode==31 and firmware>=30) or (opcode in (32,33) and firmware>=31) or (opcode in (34,35) and firmware>=32))
+                           or (opcode==30 and firmware>=28) or (opcode==31 and firmware>=30) or (opcode in (32,33) and firmware>=31) or (opcode in (34,35,NAVIGATION) and firmware>=32))
                 rate=status.get('sample_rate')
-                if (not 6<=firmware<=32 or (opcode==30 and firmware<28) or (opcode==31 and firmware<30) or (opcode in (32,33) and firmware<31) or (opcode in (34,35) and firmware<32)
+                if (not 6<=firmware<=32 or (opcode==30 and firmware<28) or (opcode==31 and firmware<30) or (opcode in (32,33) and firmware<31) or (opcode in (34,35,NAVIGATION) and firmware<32)
                     or (not rate_free and (rate is None or not abs(rate-FS)<=0.01))):
                     raise OSError('响应不是匹配的实时合成控制固件')
                 if opcode==DISPLAY_STATUS:
@@ -81,9 +87,20 @@ class Controller:
                 elif opcode==PMOD_STATUS:self.pmod_feedback=status
                 elif opcode==OUTPUT_GAIN_STATUS:self.output_gain_feedback=status
                 elif opcode==PCM_STATUS:self.pcm_feedback=status
+                elif opcode==NAVIGATION:
+                    if status['status']==0 or (status['status']==2 and not any(payload)):
+                        self.navigation_feedback=status
                 elif opcode in (PCM_READ,30,31,32,33,34,35):pass
                 else:self.feedback=status
                 if status['status']:
+                    # Only this optional, read-only capability probe accepts an
+                    # unsupported reply. An old v32 remains fully connected.
+                    if opcode==NAVIGATION and status['status']==2 and not any(payload):
+                        self.last_poll=time.monotonic();return status
+                    if opcode==NAVIGATION and status['status']==4:
+                        raise NavigationChanged('菜单状态已变化或操作未就绪，请重试')
+                    if opcode==NAVIGATION and status['status'] in (2,3):
+                        raise ValueError('菜单状态已变化或操作未就绪，请重试')
                     if opcode==PCM_CONTROL and status['status']==4:
                         raise ValueError('抓取缓存已被占用，已保留连接及现有数据')
                     raise OSError({1:'板卡拒绝了校验错误的数据帧',2:'不支持的命令',3:'板卡拒绝了超出范围的参数',4:'当前输入模式不允许此操作，或 ADC 尚未校准／故障'}.get(status['status'],'板卡命令失败'))
@@ -94,6 +111,7 @@ class Controller:
     def connect(self,identifier):
         self.disconnect()
         self.display_feedback={}
+        self.navigation_feedback={}
         self.led_feedback={}
         devices,_=list_devices()
         self.output_gain_feedback={};self.pmod_feedback={}
@@ -107,6 +125,7 @@ class Controller:
                 display=self.exchange(DISPLAY_STATUS);output=self.exchange(OUTPUT_GAIN_STATUS)
                 self.params.update(timbre=display['timbre'],level=output['keyboard_level']/65535)
                 self.exchange(KEY_STATUS);self.exchange(FX_STATUS);self.exchange(PMOD_STATUS)
+                if hello['firmware']>=32:self.exchange(NAVIGATION)
             else:
                 self.exchange(PANIC);self.keyboard['mode']=0;self.set_keyboard(self.keyboard);self.set_gain(self.gain_mode)
             self.error='';self.ui_seen=time.monotonic()
@@ -162,7 +181,7 @@ class Controller:
         if running:return
         self.touch_session=secrets.token_hex(12);self.touch_seen=time.monotonic()
         self.keypad_seq=0
-        self.touch.update(active=False,reports=0,taps=0,last_point=None,last_menu=None,error='')
+        self.touch.update(active=False,reports=0,taps=0,last_point=None,last_menu=None,last_page=None,last_name=None,error='')
         self.keypad.update(active=False,events=0,actions=0,last_input=None,last_action='',error='')
         try:
             with (ROOT/'touch_bridge.log').open('a',encoding='utf8') as log:
@@ -190,6 +209,34 @@ class Controller:
             raise ValueError('触摸接收窗口未激活')
         if self.feedback.get('firmware',0)<11:raise ValueError('当前固件不支持直接触摸菜单')
         index=data.get('index')
+        if navigation_enabled(getattr(self,'navigation_feedback',{})):
+            nav=self.exchange(NAVIGATION)
+            if not navigation_enabled(nav):return
+            if isinstance(index,bool) or not isinstance(index,int):raise ValueError('触摸菜单编号无效')
+            f=self.exchange(DISPLAY_STATUS)
+            if data.get('pattern'):
+                if index==7 and f.get('pattern'):
+                    self.exchange(DISPLAY_ACTION,bytes([4]));self.exchange(DISPLAY_STATUS)
+                return
+            if not 0<=index<len(menu_names(f,nav)):raise ValueError('触摸菜单编号无效')
+            if type(data.get('page')) is not int or type(data.get('epoch')) is not int:
+                raise ValueError('触摸菜单已更新，请重新开启触摸转发')
+            # A physical knob or another controller may have changed pages
+            # since touch-down. Never execute the row underneath a stale tap.
+            if data['page']!=nav['page'] or data['epoch']!=nav['epoch'] or bool(data.get('confirm'))!=nav['confirm']:return
+            if f.get('pattern') or nav['monitor_open'] or nav['score_visible'] or nav['pending']:return
+            sheet=self.exchange(32)
+            if sheet['score_show'] or sheet['score_visible'] or sheet['score_loading']:return
+            selected=self._navigation_request(bytes([1,nav['page'],index,1,nav['epoch']]))
+            if selected is None:return
+            if (not navigation_enabled(selected) or selected['pending'] or selected['monitor_open']
+                    or selected['score_visible'] or selected['page']!=nav['page'] or selected['cursor']!=index):
+                self.exchange(NAVIGATION)
+                return
+            if self._navigation_request(bytes([2,1,selected['epoch']])) is None:return
+            self.exchange(DISPLAY_STATUS);self.exchange(STATUS);self.exchange(KEY_STATUS)
+            self.touch.update(last_menu=index,last_page=nav['page'],last_name=menu_names(f,nav)[index])
+            return
         if isinstance(index,bool) or not isinstance(index,int) or not 0<=index<(13 if self.feedback['firmware']>=32 else 12 if self.feedback['firmware']>=30 else 9 if self.feedback['firmware']>=22 else 8):raise ValueError('触摸菜单编号无效')
         if self.feedback['firmware']>=31:
             page=self.exchange(32)
@@ -199,6 +246,25 @@ class Controller:
         self.exchange(DISPLAY_ACTION,bytes([5,index]))
         self.exchange(DISPLAY_STATUS);self.exchange(STATUS);self.exchange(KEY_STATUS)
         self.touch['last_menu']=index
+
+    def _navigation_request(self,payload):
+        """Refresh after a stale guarded action without replaying that action."""
+        try:
+            return self.exchange(NAVIGATION,payload)
+        except NavigationChanged:
+            self.exchange(NAVIGATION)
+            return None
+
+    def _confirm_display(self):
+        if not navigation_enabled(getattr(self,'navigation_feedback',{})):
+            return self.exchange(DISPLAY_ACTION,bytes([2]))
+        nav=self.exchange(NAVIGATION)
+        if nav['pending']:
+            return None
+        if nav['score_visible'] or (nav['page']==4 and nav['cursor']==4):
+            if self.exchange(32)['score_loading']:
+                return None
+        return self._navigation_request(bytes([2,1,nav['epoch']]))
 
     def control_function(self,action,step=1,count=1):
         """Apply existing product functions; volume is physical-key level, not PC note level."""
@@ -214,8 +280,16 @@ class Controller:
                 raise ValueError('当前为打击垫模式；请先切回控制模式，再操作琴键扫描或钢琴音色')
             amount=step*count
             if action in ('menu_next','menu_prev'):
-                target=(f['focus']+(amount if action=='menu_next' else -amount))%(13 if f.get('firmware',0)>=32 else 12 if f.get('firmware',0)>=30 else 9 if f.get('firmware',0)>=22 else 8)
-                self.exchange(DISPLAY_ACTION,bytes([6,target]))
+                if navigation_enabled(getattr(self,'navigation_feedback',{})):
+                    nav=self.exchange(NAVIGATION)
+                    if nav['monitor_open'] or nav['score_visible'] or nav['confirm'] or f.get('pattern'):
+                        for _ in range(amount):self.exchange(DISPLAY_ACTION,bytes([1 if action=='menu_next' else 9]))
+                    else:
+                        target=(nav['cursor']+(amount if action=='menu_next' else -amount))%nav['row_count']
+                        self._navigation_request(bytes([1,nav['page'],target,1,nav['epoch']]))
+                else:
+                    target=(f['focus']+(amount if action=='menu_next' else -amount))%(13 if f.get('firmware',0)>=32 else 12 if f.get('firmware',0)>=30 else 9 if f.get('firmware',0)>=22 else 8)
+                    self.exchange(DISPLAY_ACTION,bytes([6,target]))
             elif action.startswith('volume_'):
                 delta=round(amount*65535/100)*(1 if action=='volume_up' else -1)
                 limit=16384 if f.get('drum_mode') else self.output_gain_feedback.get('keyboard_limit',16384)
@@ -226,7 +300,10 @@ class Controller:
                 self.exchange(DISPLAY_ACTION,bytes([8,target]))
             elif action.startswith('tone_'):
                 self.exchange(DISPLAY_ACTION,bytes([8,int(action[-1])]))
-            elif action=='confirm':self.exchange(DISPLAY_ACTION,bytes([2]))
+            elif action=='confirm':self._confirm_display()
+            elif action=='play_toggle' and navigation_enabled(getattr(self,'navigation_feedback',{})):
+                if f.get('amp_hold'):self.panic()
+                else:self.exchange(ARM)
             elif action=='pattern':self.exchange(DISPLAY_ACTION,bytes([4]))
             elif f.get('firmware',0)>=16 and action in ('scan_toggle','calibrate'):
                 self.exchange(DISPLAY_ACTION,bytes([11 if action=='scan_toggle' else 12]))
@@ -234,6 +311,7 @@ class Controller:
                 index={'play_toggle':0,'scan_toggle':4,'calibrate':5,'pattern':7}[action]
                 self.exchange(DISPLAY_ACTION,bytes([5,index]))
         self.exchange(DISPLAY_STATUS);self.exchange(STATUS)
+        if navigation_enabled(getattr(self,'navigation_feedback',{})):self.exchange(NAVIGATION)
         if self.keyboard['mode']:self.exchange(KEY_STATUS)
 
     def keypad_event(self,data):
@@ -367,7 +445,10 @@ class Controller:
                 if self.feedback.get('firmware',0)<10:raise ValueError('请先临时下载 HDMI 界面固件')
                 command=int(data['command'])
                 if command not in (1,2,3,4):raise ValueError('屏幕操作无效')
-                self.exchange(DISPLAY_ACTION,bytes([command]));self.exchange(DISPLAY_STATUS)
+                if command==2:self._confirm_display()
+                else:self.exchange(DISPLAY_ACTION,bytes([command]))
+                self.exchange(DISPLAY_STATUS)
+                if navigation_enabled(getattr(self,'navigation_feedback',{})):self.exchange(NAVIGATION)
                 self.exchange(STATUS);self.exchange(KEY_STATUS)
             elif action=='led':
                 if not self.transport or self.feedback.get('firmware',0)<17:raise ValueError('请先连接 v17 灯光固件')
@@ -385,7 +466,7 @@ class Controller:
 
     def snapshot(self):
         return dict(connected=self.transport is not None,device=self.device,
-                    notes=list(self.notes.values()),params=self.params,gain_mode=self.gain_mode,feedback=self.feedback,keyboard=self.keyboard,key_feedback=self.key_feedback,display_feedback=self.display_feedback,led_feedback=self.led_feedback,effects=self.fx_feedback,pmod=self.pmod_feedback,output_gain=self.output_gain_feedback,pcm_capture=self.pcm_feedback,pcm_export=self.pcm_job.copy(),touch=self.touch.copy(),
+                    notes=list(self.notes.values()),params=self.params,gain_mode=self.gain_mode,feedback=self.feedback,keyboard=self.keyboard,key_feedback=self.key_feedback,display_feedback=self.display_feedback,navigation=self.navigation_feedback,led_feedback=self.led_feedback,effects=self.fx_feedback,pmod=self.pmod_feedback,output_gain=self.output_gain_feedback,pcm_capture=self.pcm_feedback,pcm_export=self.pcm_job.copy(),touch=self.touch.copy(),
                     keypad=dict(self.keypad,revision=self.keypad_store.revision,config=self.keypad_store.snapshot(),config_error=self.keypad_store.error),error=self.error)
 
     def monitor(self):
@@ -407,6 +488,7 @@ class Controller:
                         if self.feedback.get('firmware',0)>=20:self.exchange(FX_STATUS)
                         if self.feedback.get('firmware',0)>=21:self.exchange(OUTPUT_GAIN_STATUS)
                         if self.feedback.get('firmware',0)>=22:self.exchange(PMOD_STATUS)
+                        if navigation_enabled(getattr(self,'navigation_feedback',{})):self.exchange(NAVIGATION)
                         if self.keyboard['mode']:self.exchange(KEY_STATUS)
                 except Exception as error:
                     self.error=str(error)

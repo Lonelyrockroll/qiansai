@@ -1,37 +1,44 @@
-# HDMI 指引界面验证
+# HDMI 分层界面验证
 
-这些测试直接仿真 `fpga/panel_renderer.v` 的 RGB 输出，不使用绘图程序重画界面，也不会重新生成或改写稳定 RTL/ROM。
+这些测试直接仿真 `fpga/panel_renderer.v` 的 RGB 输出，不使用绘图程序重画界面。屏幕为 1024×600，像素输出固定延迟 3 个时钟，保留三块 1024×16 位字体 ROM。
 
 ## 运行
 
-需要 Python 3、Pillow（`python -m pip install Pillow`）和 Icarus Verilog（`iverilog`、`vvp`）。从仓库根目录运行：
+需要 Python 3、Pillow 和 Icarus Verilog。在仓库根目录执行：
 
 ```powershell
 python tests/guide_ui/run.py --check-only
 python tests/guide_ui/run.py --render-only
 ```
 
-省略两个选项会依次执行回归与整帧渲染。若 Icarus 不在 PATH，可指定 `--iverilog <编译器路径> --vvp <运行时路径>`，或设置 `IVERILOG` / `VVP` 环境变量。脚本按自身位置查找仓库和 `fpga/`，不依赖原开发者的盘符、临时目录或字体安装路径。
+省略两个选项会先执行回归，再复现全部七帧。Icarus 不在 PATH 时可用 `--iverilog <路径> --vvp <路径>`，或 `IVERILOG` / `VVP` 环境变量。脚本按自身位置定位仓库，运行测试不需要安装字体。
 
-默认输出至已忽略的 `tests/guide_ui/.work/`；可用 `--output-dir` 改变位置。`.vvp` 和中间 PPM 不作为版本化证据提交；PPM 默认在转换 PNG 后删除。每页需要仿真 614,402 个像素时钟。
+默认输出到被 Git 忽略的 `.work/`，可用 `--output-dir` 指定其他位置。每帧为真实 RTL 的 614,400 个有效像素；中间 PPM 默认自动删除。
 
 ## 覆盖范围
 
-- `check_tb.v`：BCD 上界 65535、更新到 0/1、事件数 512、索引 511、Loop 时长 800；新弹/延音配色、下一组提示、真实琴键正确/偏离边框、鼓组页保持独立琴键反馈；菜单第 10 项（focus 9）高亮。
-- `render_tb.v`：分别输出琴键页和鼓组页的真实 1024×600 RGB。固定场景包含 C4/E4/G4 目标、D4 偏离实按、下一组提示、时间 `012.34 / 048.20 秒` 及 focus 9。
-- `verify.py`：检查 3 个字体银行分别为 1024×16 位，2970 个有效字逐行等价于保留的旧打包字体表，省略的第 16 行全零；将新 PNG 与已验收 PNG 逐像素比较。
+- `check_tb.v`：BCD 数值 65535、0/1、事件数 512、索引 511、Loop 800；新弹/延音、下一组预告、正确/偏离实按边框；六页统一焦点区域、音色与效果的已生效标记、Loop 清空确认和曲目页的第五行边界。
+- `render_tb.v`：`PAGE` / `CURSOR` / `CONFIRM` / `DRUMS` 参数驱动完整真实渲染。场景是首页、音色、效果、循环清空确认、曲目、设置和循环鼓组状态。
+- `verify.py`：三块字体 ROM 的长度、3030 个有效字与保留的 16 行格式参考逐字相同、省略行全零；七帧与 `results/hierarchical/` 参考帧逐像素比较。
 
-`fpga/compact_ui_font.hex` 仅作为旧 16 行打包参考；当前 renderer 实际加载 `compact_ui_font0.hex`、`compact_ui_font1.hex`、`compact_ui_font2.hex`。字符串 ROM 和三周期像素流水线保持不变。
+参考帧由本次分层界面 RTL 生成并检查。正式 `run.py --render-only` 已独立复现七帧并逐像素对比，合计 4,300,800 像素，差异为 0；结果见 `results/hierarchical/reproduction.json`。这些渲染检查不能替代实物屏幕验收。`results/` 根目录保留上一代双栏界面的历史帧与报告，当前回归使用其 `hierarchical/` 子目录。
 
-## 已验收证据
+## 页面与触摸几何
 
-`results/guide.png`、`results/drums.png` 是 2026-11-02（UTC+08:00）的真实 RTL 仿真输出，非示意图。两页各比较 614,400 像素，差异都是 **0**。原始生成时间、逐页 RGB 哈希和字体/字符串验证见 `results/verification.json`。
+`ui_page[2:0]`：0 首页、1 音色、2 效果、3 循环、4 曲目、5 设置。`ui_cursor[3:0]` 是当前零起始行号；`ui_confirm` 为循环清空二次确认。`focus` 为旧接口保留，不再参与菜单高亮。
 
-- 压缩前 renderer SHA256：`c779969a4e78134992cf61ad40a664d3ebd3b40ee514ee5b9018221b7d794ded`
-- 3-bank renderer SHA256：`508ccd186332959cf61bd8972edbf555cc50b03ff4f82f0976c96a9b5152b591`
+右侧菜单点击区域：`672 <= x < 1000`；行 i 的 `330+36*i <= y < 366+36*i`。首页及音色、效果、循环、设置各 6 行，曲目页只有 5 行。子页第 0 行返回首页。实际选中底色 `680 <= x < 992`、`334+36*i <= y < 366+36*i`。菜单文字从 `(704,333+36*i)` 开始，以两倍字号显示。
 
-旧 baseline RTL 和大体积 PPM 没有复制进测试目录；无损检查时的 baseline hash 与零差异结果已记录。日后复现以这两张已验收 PNG 的像素为基准，输出新的报告到 `.work/verification.json`，不要覆盖 `results/`。
+上方 32 白键：每键宽 32 像素，范围 `128 <= y < 268`；下一组提示在 `118 <= y < 124`。琴键反馈和当前菜单页互不影响。
 
-## 资产生成器
+左侧内容区：`24 <= x < 640`、`324 <= y < 552`。显示当前页状态、音色/效果、音量对象与数值、声部数及上下文提示。清空待确认使用琥珀色；生效音色和效果用菜单右侧青绿小方点表示，不与光标高亮混淆。
 
-`tools/generate_guide_panel.py` 的输入只有代码内的文案/布局和 Microsoft YaHei 字体 `C:/Windows/Fonts/msyh.ttc`；临时目录仅由 `tempfile` 在可选预览期间自动创建，并非必需的外部输入。要逐字节再生成相同 ROM，应使用相同字体文件；运行本目录的渲染/回归测试不需要安装该字体，因为测试直接读取仓库内已生成 ROM。
+## 生成资产
+
+```powershell
+python tools/generate_guide_panel.py --preview-dir tests/guide_ui/.work/generated
+```
+
+生成器使用 Microsoft YaHei：`C:/Windows/Fonts/msyh.ttc`。若要生成逐字节相同的字形，需要同一字体；回归测试直接读取已提交的 ROM，不依赖字体安装。
+
+当前 127 条字符串、202 个字形、3030/3072 个字体有效字；字符串 ROM 为 4096 字节。生成器对字形预算和每条 32 字符上限有断言，不增加帧缓存，不影响音频合成或采样率。

@@ -10,6 +10,10 @@ from PIL import Image
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 FPGA = ROOT / 'fpga'
+# Name, hierarchical page, focused row, confirmation, drum volume target.
+CASES = [('home',0,1,0,0), ('tones',1,1,0,0), ('effects',2,2,0,0),
+         ('loop_confirm',3,5,1,1), ('guide',4,1,0,0), ('settings',5,2,0,0),
+         ('drums',3,1,0,1)]
 
 
 def sha256(path):
@@ -36,7 +40,7 @@ def verify_font():
 
 
 def verify_frames(frames, report_path=None):
-    golden = HERE / 'results'
+    golden = HERE / 'results' / 'hierarchical'
     original = json.loads((golden / 'verification.json').read_text(encoding='utf8'))
     result = verify_font()
     result.update({
@@ -46,7 +50,7 @@ def verify_frames(frames, report_path=None):
         'pixel_latency_cycles': 3,
         'pages': {},
     })
-    for name in ('guide', 'drums'):
+    for name, *_ in CASES:
         with Image.open(golden / f'{name}.png') as expected, Image.open(frames / f'{name}.png') as actual:
             assert expected.size == actual.size == (1024, 600)
             expected_bytes = expected.convert('RGB').tobytes()
@@ -64,7 +68,7 @@ def verify_frames(frames, report_path=None):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--frames', type=Path, required=True, help='Directory containing newly rendered guide.png and drums.png')
+    parser.add_argument('--frames', type=Path, required=True, help='Directory containing the seven newly rendered hierarchical pages')
     parser.add_argument('--report', type=Path, help='Optional result JSON; keep the accepted results/verification.json unchanged')
     args = parser.parse_args()
     print(json.dumps(verify_frames(args.frames.resolve(), args.report), indent=2))

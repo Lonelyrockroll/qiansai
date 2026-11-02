@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "scope": "Production RTL, injected UART receive bytes, independently decoded physical TX pin",
+  "stdout": "PASS hierarchy navigation 671 checks, 124 UART replies: pages, presets, confirmation, legacy, overlays and packet boundaries\nC:\\Users\\ASUS\\AppData\\Local\\Temp\\navigation-controller-jaoxg9sa\\tb.v:272: $finish called at 3620486000 (1ps)\n",
+  "source_sha256": {
+    "uart_control_display.v": "1b932923700e48cd2ffed6df424c501c2ab8e71d0147f4fa3b1387fa1d00a70c",
+    "uart_rx.v": "c71e15a282dd81457defeb9acd888d50a571de846128fdba9307f4c89698f56c",
+    "uart_tx.v": "562df067d22ee3bb571ac1ad13bb08a92542d139a2abd5261103ec606fd18bbc"
+  }
+}

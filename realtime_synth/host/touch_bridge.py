@@ -6,7 +6,7 @@ import argparse,ctypes as C,json,queue,re,threading,time,tkinter as tk,urllib.re
 from ctypes import wintypes as W
 from pathlib import Path
 from touch_hid import RawTouchReader,user32
-from touch_logic import ContactFrames,TapDetector,MENU,menu_names
+from touch_logic import ContactFrames,TapDetector,MENU,menu_names,menu_rect,navigation_enabled,NAVIGATION_TITLES
 from keypad_input import KeypadReceiver
 from keypad_config import KeypadInterpreter,INPUTS,LABELS,BY_ACTION
 
@@ -38,6 +38,7 @@ def main():
     tk.Label(app,text='使用已启用的小键盘或触摸屏控制。\n保持此窗口在前台；按 Esc 停止转发并静音。',fg='#e9edf2',bg='#0c1623',font=('Microsoft YaHei',20)).pack(pady=10)
     headline=tk.Label(app,text='正在连接触摸屏…',fg='#e9edf2',bg='#0c1623',font=('Microsoft YaHei',22));headline.pack(pady=20)
     canvas=tk.Canvas(app,width=820,height=480,bg='#172737',highlightthickness=0);canvas.pack()
+    canvas.create_text(538,239,text='',anchor='w',fill='#55dfbd',font=('Microsoft YaHei',15),tags='page_title')
     for i,name in enumerate(MENU+['效果切换','播放 / 暂停指引','指引下一组','指引重来','声谱观察']):
         y=112+i*48;canvas.create_rectangle(632*.8,y*.8,992*.8,(y+44)*.8,outline='#436176',tags=f'row{i}')
         canvas.create_text(646*.8,(y+22)*.8,text=f'{i+1}  {name}',anchor='w',fill='#e9edf2',font=('Microsoft YaHei',13),tags=f'menu_label{i}')
@@ -104,11 +105,13 @@ def main():
                 if contacts is None:continue
                 # Timestamp is from acquisition, not from delayed HTTP/UI processing.
                 fresh=0<=time.monotonic()-event['time']<.25
-                row=taps.feed(contacts,event['time'],rows=len(menu_names(state.get('display_feedback'))),pattern=state.get('display_feedback',{}).get('pattern',False),
+                nav=state.get('navigation',{});pattern=state.get('display_feedback',{}).get('pattern',False)
+                row=taps.feed(contacts,event['time'],rows=len(menu_names(state.get('display_feedback'),nav)),pattern=pattern,navigation=nav,
                     allowed=active and touch_requested.is_set() and fresh and user32.GetForegroundWindow()==hwnd)
                 if row is not None:
-                    action_name=menu_names(state.get('display_feedback'))[row]
-                    state=call('touch_click',index=row);clicks+=1;error=''
+                    action_name='返回菜单' if pattern else menu_names(state.get('display_feedback'),nav)[row]
+                    context=dict(page=nav['page'],epoch=nav['epoch'],confirm=nav.get('confirm',False),pattern=pattern) if navigation_enabled(nav) else {}
+                    state=call('touch_click',index=row,**context);clicks+=1;error=''
                     record=dict(time=time.time(),menu=row,name=action_name,point=taps.point,feedback=state.get('display_feedback'),status=state.get('feedback'))
                     with (logdir/'bridge_actions.jsonl').open('a',encoding='utf8') as log:log.write(json.dumps(record,ensure_ascii=False)+'\n')
                 updates.put((state,taps.point,error))
@@ -137,12 +140,18 @@ def main():
             if point:
                 canvas.delete('pointer');x,y=point;canvas.create_oval(x*.8-7,y*.8-7,x*.8+7,y*.8+7,fill='#55dfbd',outline='',tags='pointer')
             label='正在转发' if t.get('active') or k.get('active') else '已暂停 / 已停止'
-            names=menu_names(f)
-            recent=(str(k.get('last_input') or '')+' '+k.get('last_action','')).strip() or (names[t['last_menu']] if t.get('last_menu') is not None else '等待操作')
+            nav=state.get('navigation',{});hierarchical=navigation_enabled(nav);names=menu_names(f,nav)
+            previous=t.get('last_menu')
+            recent=(str(k.get('last_input') or '')+' '+k.get('last_action','')).strip() or t.get('last_name') or (names[previous] if isinstance(previous,int) and 0<=previous<len(names) else '等待操作')
             headline.configure(text=f"{label} · {recent}")
+            canvas.itemconfigure('page_title',text=NAVIGATION_TITLES[nav['page']] if hierarchical else '')
             for i in range(13):
                 visible='normal' if i<len(names) else 'hidden'
-                if i==12 and f.get('firmware',0)>=32:
+                if hierarchical:
+                    left,top,right,bottom=menu_rect(i,nav)
+                    canvas.coords(f'row{i}',left*.8,top*.8,right*.8,bottom*.8)
+                    canvas.coords(f'menu_label{i}',(left+16)*.8,(top+18)*.8)
+                elif i==12 and f.get('firmware',0)>=32:
                     canvas.coords(f'row{i}',512*.8,523*.8,984*.8,545*.8)
                     canvas.coords(f'menu_label{i}',524*.8,534*.8)
                 elif f.get('firmware',0)>=30:
@@ -156,7 +165,7 @@ def main():
                 canvas.itemconfigure(f'row{i}',state=visible)
                 canvas.itemconfigure(f'menu_label{i}',state=visible)
                 if i>=len(names):continue
-                canvas.itemconfigure(f'row{i}',fill='#285367' if i==f.get('focus') else '#172737')
+                canvas.itemconfigure(f'row{i}',fill='#285367' if i==(nav.get('cursor') if hierarchical else f.get('focus')) else '#172737')
                 canvas.itemconfigure(f'menu_label{i}',text=f'{i+1}  {names[i]}')
             for key,bind in k.get('config',{}).get('bindings',{}).items():
                 canvas.itemconfigure('key_'+key,fill='#285367' if key==k.get('last_input') else '#172737')

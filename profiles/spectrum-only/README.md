@@ -1,8 +1,10 @@
 # 仅谱峰版观察页
 
+当前分级菜单版的 User Code 为 `0x000090FB`。从首页进入「设置 → 声谱观察」。布局选项 2 的完整构建配方和码流见[工程包](../../output/Tang-分级菜单UI-v32.zip)。
+
 本配置在 FPGA 屏上保留完整的 64 个频点、实际峰数与 LAST I2S 计时。测试音占第 1、3、5…63 个频点，短按 B 切换 32/31 音，测试时转动 B 可移动缺口。需要板上同时显示波形与单声道延时相图时，使用完整版。
 
-当前键盘扫描修复版的 User Code 为 `0x00005463`。码流 SHA256 为 `2675c1d068245213378d3173010f7ba08c77db51c6a846cf4c43ee3d28b68969`。旧 `0x00005A96` 属于此次扫描修复前的历史版本。
+早期键盘扫描修复版的 User Code 为 `0x00005463`。其码流 SHA256 为 `2675c1d068245213378d3173010f7ba08c77db51c6a846cf4c43ee3d28b68969`。旧 `0x00005A96` 属于此次扫描修复前的历史版本。
 
 最终布局占用 47,038 / 59,904 Logic、24,986 / 60,780 FF、117 / 118 BSRAM 和 57 / 118 DSP。与同一顶层、同一扫描器的完整版相比，净省 2,221 Logic、1,028 FF 和 1 块物理 BSRAM。
 
@@ -10,7 +12,7 @@
 
 ## 构建和核对
 
-在可调用 Gowin EDU V1.9.11.03 `gw_sh.exe` 的 PowerShell 中，从仓库根目录执行以下命令。目标目录须新建或为空。`prepare_monitor_project.py` 会生成带布局选项 1 的独立工程。
+在可调用 Gowin EDU V1.9.11.03 `gw_sh.exe` 的 PowerShell 中，从仓库根目录执行以下命令。目标目录须新建或为空。`prepare_monitor_project.py` 会为当前版本生成带布局选项 2 的独立工程。
 
 ```powershell
 python tools/prepare_monitor_project.py spectrum-only build/v32-spectrum-only

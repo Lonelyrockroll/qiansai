@@ -15,6 +15,7 @@ FX_CONTROL, FX_STATUS, FX_IMPULSE = 24, 25, 26
 OUTPUT_GAIN_STATUS = 27
 PMOD_TEST, PMOD_STATUS = 28, 29
 SCORE_CONTROL, SCORE_READ = 32, 33
+NAVIGATION = 36
 # H1..H32 on the white-key instrument. Index is independent of the allocated voice.
 WHITE_KEYS = tuple(36 + 12*(i//7) + (0,2,4,5,7,9,11)[i%7] for i in range(32))
 
@@ -78,6 +79,14 @@ class Decoder:
                 continue
             del self.buffer[:28]
             p = frame[6:26]
+            if p[19]==NAVIGATION and p[18]>=32:
+                rows=5 if p[1]==4 else 6
+                result.append(dict(seq=frame[3],opcode=p[19],status=p[0],firmware=p[18],
+                    supported=p[0]==0 and p[6]==1 and p[1]<=5 and p[4]==rows and p[2]<rows,
+                    page=p[1],cursor=p[2],confirm=bool(p[3]&1),monitor_open=bool(p[3]&2),
+                    score_visible=bool(p[3]&4),pending=bool(p[3]&8),row_count=p[4],
+                    legacy_focus=p[5],revision=p[6],epoch=p[7]))
+                continue
             if p[19]==34 and p[18]>=32:
                 result.append(dict(seq=frame[3],opcode=p[19],status=p[0],firmware=p[18],monitor=bool(p[1]&1),
                     demo=(p[1]>>1)&3,analysis_overrun=bool(p[1]&8),onset_valid=bool(p[1]&16),

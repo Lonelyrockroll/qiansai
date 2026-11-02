@@ -1,0 +1,2 @@
+PASS hierarchy navigation 671 checks, 124 UART replies: pages, presets, confirmation, legacy, overlays and packet boundaries
+C:\Users\ASUS\AppData\Local\Temp\navigation-controller-jaoxg9sa\tb.v:272: $finish called at 3620486000 (1ps)

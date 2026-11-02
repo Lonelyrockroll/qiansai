@@ -1,0 +1,48 @@
+{
+  "font_banks": 3,
+  "bank_words": 1024,
+  "bank_width_bits": 16,
+  "font_words_used": 3030,
+  "all_glyph_rows_unchanged": true,
+  "checked_at_utc": "2026-11-02T17:04:21.374740+00:00",
+  "baseline_renderer_sha256": "5117deb9bf0b00a72d08b29e2faf5cb24c3c1b16f92dca605479fe2798fe0483",
+  "renderer_sha256": "5117deb9bf0b00a72d08b29e2faf5cb24c3c1b16f92dca605479fe2798fe0483",
+  "pixel_latency_cycles": 3,
+  "pages": {
+    "home": {
+      "pixels_compared": 614400,
+      "pixels_different": 0,
+      "rgb_sha256": "ca8381a9a8ebb5d0246ae57d9ccd57f5d74f481c5851a65f1508e9899c36c017"
+    },
+    "tones": {
+      "pixels_compared": 614400,
+      "pixels_different": 0,
+      "rgb_sha256": "0c7c327499e8f401b68da3310840aec8c97db332884dadd24e99fccdd02ace83"
+    },
+    "effects": {
+      "pixels_compared": 614400,
+      "pixels_different": 0,
+      "rgb_sha256": "6a3be1985d374bdd169d431612aa97c037ffa5f285caa02db2fe8d15213415c7"
+    },
+    "loop_confirm": {
+      "pixels_compared": 614400,
+      "pixels_different": 0,
+      "rgb_sha256": "9fd69346515eea3c51bf50f0f79d0938aee915086ad26e0e33948a851b5c176c"
+    },
+    "guide": {
+      "pixels_compared": 614400,
+      "pixels_different": 0,
+      "rgb_sha256": "932bfd19a0b5a0084d57dbeb1ae1d92c6b34358a9acba3fb0ce876b7462e61ed"
+    },
+    "settings": {
+      "pixels_compared": 614400,
+      "pixels_different": 0,
+      "rgb_sha256": "8de984d5e4babb00cc7b53a2e8e5823302d257859ae975de70c5b4bf30793d46"
+    },
+    "drums": {
+      "pixels_compared": 614400,
+      "pixels_different": 0,
+      "rgb_sha256": "07883767df6d33acf713276ee034f069566c1acd5291fcdae8fcbd029baaed45"
+    }
+  }
+}

@@ -39,114 +39,140 @@ def fixed_bcd(x,y,name,integer_digits=3,scale=0,color="24'hdce7eb",condition=Non
     digit(x+(integer_digits+1)*(16<<scale),y,f'{name}[7:4]',scale,color,condition)
     digit(x+(integer_digits+2)*(16<<scale),y,f'{name}[3:0]',scale,color,condition)
 
-def menu_item(index, label, condition=None):
-    col=index//6;row=index%6
-    x=512+col*240;y=338+row*32
-    digit(x+8,y,str((index+1)//10),color="24'h6e8f98",condition=condition)
-    digit(x+24,y,str((index+1)%10),color="24'h6e8f98",condition=condition)
-    text(x+48,y,label,color="24'hf1f5f3",condition=condition)
+def select_expr(selector, values):
+    """Select string addresses; pages share one glyph/geometry path per row."""
+    result = str(values[-1])
+    for i in reversed(range(len(values)-1)):
+        result = f'({selector}=={i}?({values[i]}):{result})'
+    return result
+
+def label_expr(value):
+    return str(string(value))
+
+def state_expr(selector, values):
+    first = choices(values)
+    return f'({first}+({selector}))'
 
 def scene():
-    text(24,18,'TANG',1,color="24'hf0f6f2")
-    text(176,28,'白键合奏 / 曲目指引',color="24'h8ca7b3")
-    text(176,50,'琴键检测异常，请检查校准',color="24'heca27f",condition='fault || notice!=0')
-    text(176,50,'循环操作受限，请检查录制状态',color="24'heca27f",condition='!fault && notice==0 && loop_notice!=0')
-    play_labels=choices(['已静音','演奏就绪','功放预热'])
-    text(856,23,(f'{play_labels}+(muted?0:(ready?1:2))',4),color="24'h79d7bd")
-    source=choices(['手机曲目','内置练习'])
-    text(856,50,(f'{source}+guide_demo',4),color="24'h8ca7b3")
-    text(24,72,'跟着亮键演奏',color="24'hf0f6f2")
-    states=choices(['等待曲目','曲目就绪','跟拍进行','接收曲目'])
-    text(272,72,(f'{states}+(guide_loading?3:(guide_playing?2:(guide_valid?1:0)))',4),color="guide_loading?24'he9bc79:24'h79d7bd")
-    fixed_bcd(632,72,'time_bcd',3,color="24'hf0f6f2")
-    text(736,72,'/',color="24'h637f8c")
-    fixed_bcd(760,72,'duration_bcd',3,color="24'h8ca7b3")
-    text(864,72,'秒',color="24'h8ca7b3")
-    speed=choices(['0.50倍','0.75倍','1.00倍','1.25倍'])
-    text(912,72,(f'{speed}+guide_speed',5),color="24'h79d7bd")
-    text(24,99,'下一组',color="24'h93adb6")
-    text(824,99,'32白键 C2—F6',color="24'h93adb6")
+    # Navigation, preset names and transport state are shared across pages.
+    # One dynamic string field per row keeps pixel logic small and deterministic.
+    pages=choices(['演奏首页','选择音色','音频效果','循环录制','曲目指引','系统设置'])
+    tone=state_expr('timbre',['纯净正弦','风琴','柔和复合','弦乐','敲击钢琴'])
+    effect=state_expr('fx',['原声','混响','延时','混响延时','合唱','混响合唱','延时合唱','组合效果'])
+    amp=state_expr('muted?0:(ready?1:2)',['已静音','演奏就绪','功放预热'])
+    scan=state_expr('fault?3:(mode==0?2:(calibrated?0:1))',['已校准','校准中','扫描未开','ADC故障'])
+    loop=state_expr('loop_pending?3:(loop_recording?2:(loop_playing?1:0))',['等待录制','循环播放','正在录制','录制准备'])
+    guide=state_expr('guide_loading?3:(guide_playing?2:(guide_valid?1:0))',['等待曲目','曲目就绪','跟拍进行','接收曲目'])
+    speed=state_expr('guide_speed',['速度 0.50倍','速度 0.75倍','速度 1.00倍','速度 1.25倍'])
+    caps=state_expr('loop_duration',['上限 2 秒','上限 4 秒','上限 8 秒'])
+    level=state_expr('drum_mode',['琴键音量','鼓组音量'])
+    play=state_expr('playing',['开始演奏','停止演奏'])
+    record=state_expr('loop_pending?2:(loop_recording?1:0)',['录制一轮','结束录制','取消准备'])
+    loop_play=state_expr('loop_playing',['播放循环','停止循环'])
+    guide_play=state_expr('guide_playing',['播放指引','暂停指引'])
+    toggle_scan=state_expr('mode!=0',['开启扫描','关闭扫描'])
+    volume_target=state_expr('drum_mode',['音量对象  琴键','音量对象  鼓组'])
+    clear=state_expr('ui_confirm',['清空循环','再次点按确认清空'])
+    home=label_expr('返回首页')
+    menus=[
+      [play,*map(label_expr,['音色','效果','循环录制','曲目指引','设置'])],
+      [home,*map(label_expr,['敲击钢琴','纯净正弦','风琴','柔和复合','弦乐'])],
+      [home,*map(label_expr,['原声','混响','延时','合唱','组合'])],
+      [home,record,loop_play,label_expr('撤销末轮'),caps,clear],
+      [home,guide_play,label_expr('返回开头'),speed,label_expr('查看曲谱'),label_expr('')],
+      [home,toggle_scan,label_expr('松键校准'),volume_target,label_expr('声谱观察'),label_expr('屏幕检测')],
+    ]
+    text(24,19,'TANG',1,color="24'hf0f4eb")
+    text(190,25,(f'{pages}+ui_page',4),color="24'hc6d3d6")
+    text(768,25,'输出',color="24'h708b96")
+    text(888,25,(amp,4),color="muted?24'h9aaeb6:24'h79d7bd")
+    text(24,76,'跟着亮键演奏',color="24'hdce7e5")
+    text(260,76,(guide,4),color="guide_loading?24'he9bc79:24'h79d7bd")
+    fixed_bcd(480,76,'time_bcd',3,color="24'hdce7e5")
+    text(586,76,'/',color="24'h637f8c")
+    fixed_bcd(614,76,'duration_bcd',3,color="24'h8ca7b3")
+    text(720,76,'秒',color="24'h8ca7b3")
+    text(840,76,(speed,10),color="24'h93adb6")
+    text(24,99,'下一组',color="24'h708b96")
+    text(824,99,'32白键 C2-F6',color="24'h708b96")
 
-    # One glyph address per letter/octave; no division by a non-power-of-two key width.
     notes=[36+12*(i//7)+(0,2,4,5,7,9,11)[i%7] for i in range(32)]
     labels=[f'{"CDEFGAB"[i%7]}{n//12-1}' for i,n in enumerate(notes)]
     key_base=choices([''.join(labels[:16]),''.join(labels[16:])])
     text(0,240,(str(key_base),2),color="24'h24414b",width=64)
+    text(40,283,'新弹 / 延音',color="24'h8fa8b2")
+    text(256,283,'下一组预告',color="24'h8fa8b2")
+    text(472,283,'实按正确',color="24'h8fa8b2")
+    text(680,283,'实按偏离',color="24'h8fa8b2")
+    text(864,283,'音轨配色',color="24'h8fa8b2")
 
-    text(40,283,'新弹 / 延音',color="24'h96afb7")
-    text(248,283,'下一组预告',color="24'h96afb7")
-    text(460,283,'实按正确',color="24'h96afb7")
-    text(640,283,'实按偏离',color="24'h96afb7")
-    text(844,283,'按音轨配色',color="24'h96afb7")
+    titles=[label_expr(v) for v in ['当前音色','当前音色','当前效果','循环状态','指引状态','琴键状态']]
+    values=[tone,tone,effect,loop,guide,scan]
+    text(40,340,(select_expr('ui_page',titles),4),color="24'h8ca7b3")
+    text(40,372,(select_expr('ui_page',values),6),1,color="ui_confirm?24'heab17e:24'hf0f4eb")
+    text(480,340,(level,4),color="24'h8ca7b3")
+    digit(480,372,'volume/10',1,color="24'hf0f4eb")
+    digit(512,372,'volume%10',1,color="24'hf0f4eb")
+    text(554,384,'%',color="24'h79d7bd")
+    text(480,415,'声部',color="24'h708b96")
+    digit(568,415,'voices/10',color="24'hc6d3d6")
+    digit(584,415,'voices%10',color="24'hc6d3d6")
 
-    modes=choices(['电脑琴键','单键检测','32键扫描'])
-    text(40,328,(f'{modes}+mode',6),color="24'h8ca7b3")
-    text(40,354,'当前音色',color="24'h8ca7b3")
-    tones=choices(['纯净正弦','风琴音色','柔和复合','弦乐锯齿','敲击钢琴'])
-    text(40,378,(f'{tones}+timbre',4),1,color="24'hf0f6f2")
-    level_labels=choices(['琴键音量','鼓组音量'])
-    text(256,354,(f'{level_labels}+drum_mode',4),color="24'h8ca7b3")
-    digit(256,380,'volume/10',1,color="24'hf0f6f2")
-    digit(288,380,'volume%10',1,color="24'hf0f6f2")
-    text(326,395,'%',color="24'h79d7bd")
-    text(376,354,'声部',color="24'h8ca7b3")
-    digit(376,387,'voices/10',color="24'hf0f6f2")
-    digit(392,387,'voices%10',color="24'hf0f6f2")
+    # The overview remains available while selecting a preset. More detailed
+    # context belongs to its own page, not to an ever-growing flat menu.
+    text(40,434,'效果',color="24'h708b96",condition='ui_page<2 || ui_page==5')
+    text(120,434,(effect,8),color="24'hc6d3d6",condition='ui_page<2 || ui_page==5')
+    text(40,463,'琴键',color="24'h708b96",condition='ui_page<3')
+    text(120,463,(scan,4),color="fault?24'heca27f:24'h79d7bd",condition='ui_page<3')
+    text(304,463,(loop,4),color="loop_recording?24'heca27f:24'h8ca7b3",condition='ui_page<3')
+    text(40,434,'实时合成 / 硬件效果',color="24'h8ca7b3",condition='ui_page==2')
+    text(40,495,'点按 B 切换 · A 静音返回',color="24'h708b96",condition='ui_page==1 || ui_page==2')
+    text(40,495,'B 选择功能 · 按转调音量',color="24'h708b96",condition='ui_page==0')
 
-    text(40,435,'LOOP',color="24'h8ca7b3",condition='!drum_mode')
-    fixed_bcd(128,435,'loop_bcd',1,color="24'hdce7eb",condition='!drum_mode')
-    text(192,435,'秒',color="24'h8ca7b3",condition='!drum_mode')
-    digit(240,435,'loop_layers',color="24'h79d7bd",condition='!drum_mode')
-    text(256,435,'/4轮',color="24'h8ca7b3",condition='!drum_mode')
-    caps=choices(['上限2秒','上限4秒','上限8秒'])
-    text(352,435,(f'{caps}+loop_duration',5),color="24'h8ca7b3",condition='!drum_mode')
-    loop_state=choices(['等待录制','循环播放','正在录制','录制准备'])
-    text(272,99,(f'{loop_state}+(loop_pending?3:(loop_recording?2:(loop_playing?1:0)))',4),color="loop_recording?24'heca27f:24'h8ca7b3")
-    fixed_bcd(352,99,'loop_bcd',1,color="24'hdce7eb")
-    text(420,99,'秒',color="24'h8ca7b3")
-    digit(464,99,'loop_layers',color="24'h79d7bd")
-    text(480,99,'/4轮',color="24'h8ca7b3")
-    text(576,99,(f'{caps}+loop_duration',5),color="24'h8ca7b3")
-    text(40,463,(f'{loop_state}+(loop_pending?3:(loop_recording?2:(loop_playing?1:0)))',4),color="loop_recording?24'heca27f:24'h8ca7b3",condition='!drum_mode')
-    text(208,463,'指引事件',color="24'h8ca7b3",condition='!drum_mode')
-    for i in range(3):digit(272+i*16,463,f'index_bcd[{(2-i)*4} +: 4]',color="24'h79d7bd",condition='!drum_mode')
-    text(320,463,'/',color="24'h637f8c",condition='!drum_mode')
-    for i in range(3):digit(336+i*16,463,f'count_bcd[{(2-i)*4} +: 4]',color="24'h8ca7b3",condition='!drum_mode')
-    text(40,501,'输出',color="24'h8ca7b3",condition='!drum_mode')
-    alerts=choices(['已校准','校准中','扫描未开','ADC故障'])
-    text(336,501,(f'{alerts}+(fault?3:(mode==0?2:(calibrated?0:1)))',4),color="fault?24'heca27f:24'h79d7bd",condition='!drum_mode')
-    # The drum page uses its compact 12-pad status strip; the guide keyboard stays visible.
-    for i,name in enumerate(['底鼓','军鼓','拍手','闭镲','开镲','低通','中通','高通','吊镲','叮镲','边击','牛铃']):
-        x=40+(i%4)*104;y=435+(i//4)*29
-        text(x+8,y,f'{i+1:02} {name}',color=f"pressed[{i}]?24'h133c3a:24'h95acb5",condition='drum_mode')
+    text(40,430,'时长',color="24'h708b96",condition='ui_page==3')
+    fixed_bcd(120,430,'loop_bcd',1,color="24'hc6d3d6",condition='ui_page==3')
+    text(184,430,'秒',color="24'h708b96",condition='ui_page==3')
+    digit(248,430,'loop_layers',color="24'h79d7bd",condition='ui_page==3')
+    text(264,430,'/4轮',color="24'h708b96",condition='ui_page==3')
+    text(360,430,(caps,6),color="24'h8ca7b3",condition='ui_page==3')
+    text(40,458,'再按录制可提前结束本轮',color="24'h8ca7b3",condition='ui_page==3 && !ui_confirm')
+    text(40,458,'清空全部循环？',color="24'heab17e",condition='ui_page==3 && ui_confirm')
+    text(40,491,'再次点按 B 确认 · 旋转取消',color="24'heab17e",condition='ui_page==3 && ui_confirm')
+    for i in range(12):
+        x=40+i*48
+        digit(x+12,491,str((i+1)//10),color=f"drum_mode && pressed[{i}]?24'h123d36:24'h718d99",condition='ui_page==3 && !ui_confirm')
+        digit(x+28,491,str((i+1)%10),color=f"drum_mode && pressed[{i}]?24'h123d36:24'h718d99",condition='ui_page==3 && !ui_confirm')
 
-    text(512,309,'B 选择 · 点按执行',color="24'h8ca7b3")
-    p=choices(['开始演奏','停止演奏']);menu_item(0,(f'{p}+playing',4))
-    p=choices(['录制一轮','结束录制','取消准备']);menu_item(1,(f'{p}+(loop_pending?2:(loop_recording?1:0))',4))
-    p=choices(['切换音色','撤销末轮']);menu_item(2,(f'{p}+drum_mode',4))
-    p=choices(['开启扫描','关闭扫描']);menu_item(3,(f'{p}+(mode!=0)',4),condition='!drum_mode')
-    q=choices(['播放循环','停止循环']);menu_item(3,(f'{q}+loop_playing',4),condition='drum_mode')
-    menu_item(4,'松键校准',condition='!drum_mode');menu_item(4,(f'{caps}+loop_duration',5),condition='drum_mode')
-    menu_item(5,(f'{q}+loop_playing',4),condition='!drum_mode');menu_item(5,'清空循环',condition='drum_mode')
-    menu_item(6,'全部静音')
-    p=choices(['鼓组页面','琴键页面']);menu_item(7,(f'{p}+drum_mode',4))
-    fx=choices(['效果 原声','效果 混响','效果 延迟','效果 混响延迟','效果 合唱','效果 混响合唱','效果 延迟合唱','效果 全开']);menu_item(8,(f'{fx}+fx',8))
-    p=choices(['播放指引','暂停指引']);menu_item(9,(f'{p}+guide_playing',4))
-    menu_item(10,'指引下一组');menu_item(11,'指引重来')
-    text(520,525,'13 声谱观察',color="24'hf1f5f3")
-    text(24,550,'A 转滑音 · 按转颤音 · 点静音',color="24'h8ca7b3")
-    text(512,550,'B 转选项 · 按转音量 · 点执行',color="24'h8ca7b3")
-    bend=choices([f'滑音 {i*50:+d} 音分' if i else '滑音 0 音分' for i in range(-4,5)])
-    depth=choices([f'颤音 {i*10} 音分' for i in range(6)])
-    text(24,576,(f'{bend}+bend_position',11),color="timbre==4?24'h657e87:24'h79d7bd")
-    text(248,576,(f'{depth}+vibrato_depth',10),color="timbre==4?24'h657e87:24'h79d7bd")
-    p=choices(['现场表情','钢琴原音']);text(456,576,(f'{p}+(timbre==4)',4),color="24'h8ca7b3")
-    text(720,576,'手机传曲 · 板卡跟拍',color="24'h8ca7b3")
+    text(40,434,'曲目事件',color="24'h708b96",condition='ui_page==4')
+    for i in range(3):digit(184+i*16,434,f'index_bcd[{(2-i)*4} +: 4]',color="24'h79d7bd",condition='ui_page==4')
+    text(240,434,'/',color="24'h637f8c",condition='ui_page==4')
+    for i in range(3):digit(272+i*16,434,f'count_bcd[{(2-i)*4} +: 4]',color="24'h8ca7b3",condition='ui_page==4')
+    text(40,463,'手机传曲后可独立跟拍',color="24'h8ca7b3",condition='ui_page==4')
+    text(40,495,'曲谱需先在手机发送',color="notice==3?24'heab17e:24'h708b96",condition='ui_page==4')
+    text(40,463,'校准时请松开全部琴键',color="24'h8ca7b3",condition='ui_page==5')
+    text(40,495,'鼓组按键始终可以演奏',color="24'h708b96",condition='ui_page==5')
+
+    text(680,309,'B 选择 / 点按确认',color="24'h8ca7b3")
+    for i in range(6):
+        condition='ui_page!=4' if i==5 else None
+        expr=select_expr('ui_page',[page[i] for page in menus])
+        text(704,333+36*i,(expr,9),1,color="ui_confirm && ui_page==3 && ui_cursor==5?24'hffe0b7:24'he0e9e7",condition=condition)
+    text(40,533,'输出',color="24'h708b96",condition='ui_page!=1')
+    text(360,533,'校准异常',color="24'heca27f",condition='fault || notice==2')
+    text(360,533,'请先开启扫描',color="24'heab17e",condition='!fault && notice==1')
+    text(360,533,'循环操作受限',color="24'heca27f",condition='!fault && notice==0 && loop_notice!=0')
+    bend=state_expr('bend_position',[f'滑音 {i*50:+d}' if i else '滑音 0' for i in range(-4,5)])
+    depth=state_expr('vibrato_depth',[f'颤音 {i*10}' for i in range(6)])
+    text(40,533,(bend,7),color="timbre==4?24'h546e78:24'h8ca7b3",condition='ui_page==1')
+    text(200,533,(depth,5),color="timbre==4?24'h546e78:24'h8ca7b3",condition='ui_page==1')
+    text(24,574,'A 点按静音返回 · 旋转滑音 · 按转颤音',color="24'h708b96")
+    text(632,574,'B 旋转选择 · 按转音量',color="24'h8ca7b3")
     return key_base
 
 HEADER='''`timescale 1ns/1ps
 // Generated by tools/generate_guide_panel.py. Three-cycle pixel pipeline.
 module panel_renderer(input wire clk,rst,input wire [10:0] x,y,input wire hs,vs,de,
+ input wire [2:0] ui_page,input wire [3:0] ui_cursor,input wire ui_confirm,
  input wire [3:0] bend_position,focus,input wire [2:0] vibrato_depth,fx,timbre,input wire [6:0] volume,input wire [5:0] voices,
  input wire [1:0] mode,input wire calibrated,fault,muted,ready,playing,pattern,
  input wire [9:0] loop_actual_cs,loop_position_cs,input wire [2:0] loop_layers,loop_notice,input wire [1:0] loop_duration,
@@ -221,29 +247,38 @@ module panel_renderer(input wire clk,rst,input wire [10:0] x,y,input wire hs,vs,
   if(y<62)bg=24'h101f2e;
   if(y>=114 && y<274)bg=24'h354957;
   if(y>=118 && y<124 && x[4:0]!=31)bg=guide_valid && guide_next[key_index]?24'he9c38a:24'h263c48;
-  if(x>=680 && x<780 && y>=105 && y<111)begin bg=24'h263c48;if(x<680+loop_progress)bg=loop_recording?24'heca27f:24'h79d7bd;end
   if(y>=128 && y<268 && x[4:0]!=31)begin
    bg=guide_key?(guide_onset[key_index]?target_color:held_color):24'hebf0e7;
    if(y<133 && !guide_key)bg=24'hc5d1ce;
    if(actual_keys[key_index] && (x[4:0]<3 || x[4:0]>27 || y<133 || y>=262))bg=wrong_key?24'he88874:24'h2bbd91;
   end
-  if(y>=314 && y<536 && x>=24 && x<480)bg=24'h142936;
-  if(y>=328 && y<526 && x>=512 && x<992)begin
-   bg=24'h132633;
-   if((x<744 && focus<6 && y>=332+{focus,5'b0} && y<360+{focus,5'b0}) ||
-      (x>=752 && x<984 && focus>=6 && focus<12 && y>=332+{(focus-4'd6),5'b0} && y<360+{(focus-4'd6),5'b0}))bg=24'h28495a;
-   if((x>=512 && x<516 && focus<6 && y>=332+{focus,5'b0} && y<360+{focus,5'b0}) ||
-      (x>=752 && x<756 && focus>=6 && focus<12 && y>=332+{(focus-4'd6),5'b0} && y<360+{(focus-4'd6),5'b0}))bg=24'h79d7bd;
+  // Two clear working areas: current context and one six-row navigation list.
+  if(x>=24 && x<640 && y>=324 && y<552)bg=24'h132630;
+  if(x>=456 && x<458 && y>=340 && y<438)bg=24'h29414a;
+  if(x>=40 && x<624 && y>=449 && y<450)bg=24'h243b45;
+  if(ui_page==3 && x>=40 && x<440 && y>=521 && y<525)begin bg=24'h263c48;if(x<40+{loop_progress,2'b00})bg=loop_recording?24'heca27f:24'h79d7bd;end
+  if(x>=672 && x<1000 && y>=330 && y<546)begin
+   bg=24'h10212b;
+   if(x>=680 && x<992 && y>=334+ui_cursor*36 && y<366+ui_cursor*36 && (ui_page!=4 || ui_cursor<5))
+    bg=ui_confirm?24'h513d2f:24'h244d50;
+   if(x>=680 && x<684 && y>=334+ui_cursor*36 && y<366+ui_cursor*36 && (ui_page!=4 || ui_cursor<5))
+    bg=ui_confirm?24'heab17e:24'h79d7bd;
   end
-  if(focus==12 && x>=512 && x<984 && y>=523 && y<545)bg=x<516?24'h79d7bd:24'h28495a;
-  if(!drum_mode && x>=120 && x<312 && y>=502 && y<512)begin bg=24'h2b424d;if(x<120+(peak_width>>1))bg=peak>220?24'hec947c:24'h79d7bd;end
-  if(x>=720 && x<816 && y>=32 && y<38)begin bg=24'h2b424d;if(x<720+(peak_width>>2))bg=peak>220?24'hec947c:24'h79d7bd;end
-  if(y>=286 && y<296)begin
+  // A small right-hand marker identifies the applied preset independently of focus.
+  if(x>=974 && x<980)begin
+   if(ui_page==1 && y>=348+((timbre==4)?1:(timbre+2))*36 && y<354+((timbre==4)?1:(timbre+2))*36)bg=24'h79d7bd;
+   if(ui_page==2 && (fx==0 || fx==1 || fx==2 || fx==4 || fx==7) && y>=348+((fx==0)?1:(fx==1?2:(fx==2?3:(fx==4?4:5))))*36 && y<354+((fx==0)?1:(fx==1?2:(fx==2?3:(fx==4?4:5))))*36)bg=24'h79d7bd;
+  end
+  if(ui_page==4 && y>=510 && y<546 && x>=672 && x<1000)bg=24'h0c1925;
+  if(ui_page!=1 && x>=120 && x<312 && y>=536 && y<542)begin bg=24'h2b424d;if(x<120+(peak_width>>1))bg=peak>220?24'hec947c:24'h79d7bd;end
+  if(x>=824 && x<872 && y>=28 && y<34)begin bg=24'h2b424d;if(x<824+(peak_width>>3))bg=peak>220?24'hec947c:24'h79d7bd;end
+  if(y==62 || y==563)bg=24'h253942;
+  if(y>=286 && y<295)begin
    if(x>=24 && x<32)bg=24'h67d8b8;
-   if(x>=232 && x<240)bg=24'he9c38a;
-   if(x>=444 && x<452)bg=24'h2bbd91;
-   if(x>=624 && x<632)bg=24'he88874;
-   if(x>=824 && x<832)bg=24'hb7abe6;
+   if(x>=240 && x<248)bg=24'he9c38a;
+   if(x>=456 && x<464)bg=24'h2bbd91;
+   if(x>=664 && x<672)bg=24'he88874;
+   if(x>=848 && x<856)bg=24'hb7abe6;
   end
 '''
 FOOTER='''  if(pattern) begin
@@ -277,6 +312,7 @@ endmodule
 '''
 
 def generate():
+    STRINGS[:]=[''];FIELDS.clear()
     key_base=scene()
     assert len(STRINGS)<=128,(len(STRINGS),STRINGS)
     chars=sorted(set('0123456789'+''.join(STRINGS)))
@@ -299,7 +335,7 @@ def generate():
             if 1<=y<=16:rows[idx*16+y%16]=bits
             else:assert bits==0,(ch,y)
     # Preserve legacy row values exactly, but omit the universally blank row16.
-    # IDs are contiguous here (digits retain ASCII IDs), and 198*15=2970 words.
+    # IDs stay contiguous (digits retain ASCII IDs); at most 204 glyph slots.
     glyph_slots=max(ids.values())+1
     assert glyph_slots*15<=3072,(glyph_slots,len(chars))
     assert all(rows[glyph*16]==0 for glyph in range(256)), 'Nonblank row16 cannot be omitted'
@@ -318,13 +354,13 @@ def generate():
     for i in range(len(STRINGS)*32,len(words)):words[i]=blank
     code=HEADER
     for i in range(12):
-        x=40+(i%4)*104;y=432+(i//4)*29
-        code+=f"  if(drum_mode && x>={x} && x<{x+96} && y>={y} && y<{y+26})bg=pressed[{i}]?24'h79d7bd:24'h243b47;\n"
+        x=40+i*48;y=485
+        code+=f"  if(ui_page==3 && !ui_confirm && x>={x} && x<{x+44} && y>={y} && y<{y+30})bg=drum_mode && pressed[{i}]?24'h79d7bd:24'h243b47;\n"
     for x,y,width,scale,expr,color,dig,condition in FIELDS:
         if y==240:
             code+=f"  if(y>=240 && y<260)begin enable=1;direct_on=0;addr={key_base}*32+x[9:4];row=y-240;col=x[3:0];fg={color};end\n"
             continue
-        cond='' if not condition else condition+' && '
+        cond='' if not condition else '('+condition+') && '
         code+=f"  if({cond}x>={x} && x<{x+width*(16<<scale)} && y>={y} && y<{y+(20<<scale)})begin enable=1;direct_on=0;addr=({expr})*32+((x-{x})>>{4+scale});row=(y-{y})>>{scale};col=(x-{x})>>{scale};fg={color};\n"
         if dig is not None:code+=f"   direct_on=1;direct=8'd48+({dig});\n"
         code+='  end\n'
@@ -341,14 +377,14 @@ def generate():
 def preview(dest):
     dest.mkdir(parents=True,exist_ok=True)
     iv=shutil.which('iverilog') or 'E:/iverilog/bin/iverilog.exe';vv=shutil.which('vvp') or 'E:/iverilog/bin/vvp.exe'
-    for drum in (0,1):
-        name='guide' if not drum else 'drums'
+    for name,page,cursor,confirm,drum in [('home',0,1,0,0),('tones',1,1,0,0),('effects',2,2,0,0),('loop_confirm',3,5,1,1),('guide',4,1,0,0),('settings',5,2,0,0),('drums',3,1,0,1)]:
         path=(dest/(name+'.ppm')).as_posix()
         tb=f'''`timescale 1ns/1ps
 module preview;
 reg clk=0,rst=1;always #5 clk=~clk;reg [10:0] x=0,y=0;wire [23:0] rgb;
 panel_renderer dut(.clk(clk),.rst(rst),.x(x),.y(y),.hs(1'b0),.vs(1'b0),.de(1'b1),
- .bend_position(4'd4),.vibrato_depth(3'd2),.focus(4'd9),.fx(3'd1),.timbre(3'd4),.volume(7'd7),.voices(6'd3),.mode(2'd2),
+ .ui_page(3'd{page}),.ui_cursor(4'd{cursor}),.ui_confirm(1'b{confirm}),
+ .bend_position(4'd4),.vibrato_depth(3'd2),.focus(4'd9),.fx(3'd1),.timbre(3'd4),.volume(7'd25),.voices(6'd3),.mode(2'd2),
  .calibrated(1'b1),.fault(1'b0),.muted(1'b0),.ready(1'b1),.playing(1'b1),.pattern(1'b0),
  .loop_actual_cs(10'd600),.loop_position_cs(10'd123),.loop_layers(3'd2),.loop_notice(3'd0),.loop_duration(2'd2),
  .loop_playing(1'b1),.loop_recording(1'b0),.loop_pending(1'b0),.loop_progress(7'd20),.drum_mode(1'd{drum}),

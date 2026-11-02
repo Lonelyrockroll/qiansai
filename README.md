@@ -1,8 +1,14 @@
 # qiansai
 
+[新版分级菜单操作](SCREEN-NAVIGATION.md) · [完整 Gowin 工程、码流与实板记录](output/Tang-分级菜单UI-v32.zip)
+
+新版 `0x000090FB` 在顶部完整显示 32 个白键，首页提供音色、效果、循环录制、曲目指引和设置五个入口。旋转 B 选择，短按 B 执行，按住 B 旋转调音量，短按 A 静音回首页。
+
+![分级菜单首页](tests/guide_ui/results/hierarchical/home.png)
+
 [琴键音量 40% 版本](VOLUME-RANGE.md)将实体琴键上限放宽到 40%，当前推荐试听设置为 32%，基于 v32 FX2，码流为 `0x00000239`。[下载码流与验证包](output/Tang-琴键音量40-v32FX2.zip)
 
-最新已验证码流使用仅谱峰显示配置。解压上面的下载包后，可用 Gowin 打开其中的 `FPGA工程/synth_display.gprj`，对应源码、引脚和时序校验结果一并保存在包内。
+此前的琴键音量 40% 版使用仅谱峰显示配置。解压该版下载包后，可用 Gowin 打开其中的 `FPGA工程/synth_display.gprj`，对应源码、引脚和时序校验结果一并保存在包内。
 
 [v32 FX2 效果增强](EFFECTS-ENHANCED.md)统一板载菜单与上位机预设，提供长尾混响、约 320 ms 回声和更深的合唱调制。[码流与统一试听包](output/Tang-效果增强-v32FX2.zip)
 

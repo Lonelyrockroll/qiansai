@@ -1,4 +1,4 @@
-"""Run renderer BCD/menu regression and/or reproduce both full-frame RTL previews."""
+"""Run renderer BCD/menu regression and/or reproduce seven hierarchical full-frame RTL previews."""
 import argparse
 import json
 import os
@@ -7,7 +7,7 @@ import shutil
 import subprocess
 
 from PIL import Image
-from verify import verify_font, verify_frames
+from verify import verify_font, verify_frames, CASES
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -29,7 +29,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     select = parser.add_mutually_exclusive_group()
     select.add_argument('--check-only', action='store_true', help='Run fast BCD, menu, colors, feedback, and font checks only')
-    select.add_argument('--render-only', action='store_true', help='Render both full frames and compare golden pixels only')
+    select.add_argument('--render-only', action='store_true', help='Render seven full frames and compare golden pixels only')
     parser.add_argument('--output-dir', type=Path, default=HERE / '.work', help='Generated results, default: tests/guide_ui/.work (gitignored)')
     parser.add_argument('--iverilog', help='Icarus compiler, otherwise IVERILOG environment variable or PATH')
     parser.add_argument('--vvp', help='Icarus runtime, otherwise VVP environment variable or PATH')
@@ -38,7 +38,7 @@ def main():
     iv = executable(args.iverilog, 'iverilog')
     vv = executable(args.vvp, 'vvp')
     output = args.output_dir.resolve()
-    if output == (HERE / 'results').resolve():
+    if (HERE / 'results').resolve() == output or (HERE / 'results').resolve() in output.parents:
         raise SystemExit('Choose a separate output directory; results/ contains the accepted golden images.')
     output.mkdir(parents=True, exist_ok=True)
 
@@ -53,9 +53,9 @@ def main():
         subprocess.run([vv, str(compile_tb('check'))], check=True, cwd=FPGA, timeout=60)
     if not args.check_only:
         compiled = compile_tb('render')
-        for drum, name in enumerate(('guide', 'drums')):
+        for name, page, cursor, confirm, drum in CASES:
             ppm = output / f'{name}.ppm'
-            subprocess.run([vv, str(compiled), f'+DRUMS={drum}', f'+OUTPUT={ppm.as_posix()}'],
+            subprocess.run([vv, str(compiled), f'+DRUMS={drum}', f'+PAGE={page}', f'+CURSOR={cursor}', f'+CONFIRM={confirm}', f'+OUTPUT={ppm.as_posix()}'],
                            check=True, cwd=FPGA, timeout=180)
             with Image.open(ppm) as frame:
                 frame.save(output / f'{name}.png')

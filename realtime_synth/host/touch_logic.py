@@ -4,9 +4,36 @@ Coordinates come from HID logical ranges. No desktop cursor coordinates are used
 import math
 
 MENU=['开始 / 停止演奏','切换音色','音量增加','音量减小','切换扫描','松键校准','全部静音','屏幕检测']
+NAVIGATION_TITLES=('演奏首页','音色','效果','Loop','曲目指引','设置')
+NAVIGATION_MENUS=(
+    ('开始 / 停止演奏','音色','效果','Loop','曲目指引','设置'),
+    ('返回首页','敲击钢琴','纯净正弦','风琴','柔和音色','弦乐'),
+    ('返回首页','原声','混响','延时','合唱','组合效果'),
+    ('返回首页','录制 / 结束','播放 / 暂停','撤销末轮','录制上限','清空循环'),
+    ('返回首页','播放 / 暂停指引','返回开头','指引速度','全屏曲谱'),
+    ('返回首页','琴键扫描','松键校准','琴键 / 鼓组音量','声谱观察','屏幕检测'),
+)
 
-def menu_names(display):
+def navigation_enabled(navigation):
+    return bool(navigation and navigation.get('supported') and navigation.get('revision')==1
+                and type(navigation.get('page')) is int and 0<=navigation['page']<6)
+
+def navigation_identity(navigation):
+    if not navigation_enabled(navigation):return None
+    return tuple(navigation.get(k) for k in ('page','cursor','epoch','confirm','monitor_open','score_visible','pending'))
+
+def menu_rect(index,navigation=None):
+    """Frozen 1024x600 HDL menu hit rectangles; right/bottom are exclusive."""
+    if navigation_enabled(navigation):
+        return (672,330+36*index,1000,366+36*index)
+    raise ValueError('需要层级菜单状态')
+
+def menu_names(display,navigation=None):
     display=display or {}
+    if navigation_enabled(navigation):
+        names=list(NAVIGATION_MENUS[navigation['page']])
+        if navigation['page']==3 and navigation.get('confirm'):names[5]='再次确认清空'
+        return names
     if display.get('firmware',0)>=32:return menu_names(dict(display,firmware=31))+['声谱观察']
     if display.get('firmware',0)>=30:
         return menu_names(dict(display,firmware=29))+['播放 / 暂停指引','指引下一组','指引重来']
@@ -31,9 +58,15 @@ def to_pixel(contact):
         out.append(min(size-1,max(0,round((value-low)*(size-1)/(high-low)))))
     return tuple(out)
 
-def hit_test(x,y,pattern=False,rows=8):
+def hit_test(x,y,pattern=False,rows=8,navigation=None):
     if not (0<=x<1024 and 0<=y<600):return None
     if pattern:return 7 # one tap returns from the full-screen test pattern
+    if navigation_enabled(navigation):
+        if any(navigation.get(k) for k in ('monitor_open','score_visible','pending')):return None
+        for i in range(len(NAVIGATION_MENUS[navigation['page']])):
+            left,top,right,bottom=menu_rect(i,navigation)
+            if left<=x<right and top<=y<bottom:return i
+        return None
     if rows==13 and 512<=x<984 and 523<=y<545:return 12
     if rows in (12,13):
         column=0 if 512<=x<744 else 1 if 752<=x<984 else -1
@@ -68,7 +101,7 @@ class TapDetector:
     def __init__(self):self.last_click=-100;self.reset()
     def reset(self):
         self.candidate=None;self.blocked=False;self.was_down=False;self.last_time=0;self.point=None
-    def feed(self,contacts,now,pattern=False,allowed=True,rows=8):
+    def feed(self,contacts,now,pattern=False,allowed=True,rows=8,navigation=None):
         if not allowed:
             self.reset();self.blocked=True;return None
         if self.was_down and now-self.last_time>1:
@@ -81,12 +114,12 @@ class TapDetector:
             c=down[0]
             try:x,y=to_pixel(c)
             except ValueError:self.candidate=None;self.blocked=True;return None
-            self.point=(x,y);row=hit_test(x,y,pattern,rows)
+            self.point=(x,y);row=hit_test(x,y,pattern,rows,navigation)
             if not self.was_down and not self.blocked:
-                self.candidate=dict(id=c.get('id',0),row=row,x=x,y=y,time=now,pattern=pattern)
+                self.candidate=dict(id=c.get('id',0),row=row,x=x,y=y,time=now,pattern=pattern,navigation=navigation_identity(navigation))
             elif self.candidate:
                 a=self.candidate
-                if c.get('id',0)!=a['id'] or row!=a['row'] or pattern!=a['pattern'] or (x-a['x'])**2+(y-a['y'])**2>24**2:
+                if c.get('id',0)!=a['id'] or row!=a['row'] or pattern!=a['pattern'] or navigation_identity(navigation)!=a['navigation'] or (x-a['x'])**2+(y-a['y'])**2>24**2:
                     self.candidate=None;self.blocked=True
             self.was_down=True;return None
         candidate=self.candidate;was_down=self.was_down;blocked=self.blocked
@@ -98,7 +131,7 @@ class TapDetector:
         except ValueError:return None
         self.point=(x,y)
         row=candidate['row']
-        if row is None or hit_test(x,y,pattern,rows)!=row or pattern!=candidate['pattern']:return None
+        if row is None or hit_test(x,y,pattern,rows,navigation)!=row or pattern!=candidate['pattern'] or navigation_identity(navigation)!=candidate['navigation']:return None
         if (x-candidate['x'])**2+(y-candidate['y'])**2>24**2:return None
         if not .015<=now-candidate['time']<=2.0 or now-self.last_click<.15:return None
         self.last_click=now;return row
