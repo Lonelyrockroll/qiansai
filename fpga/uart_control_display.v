@@ -121,8 +121,17 @@ module uart_control_display #(
         case(fx_mask)
          0:fx_mask<=1;1:fx_mask<=2;2:fx_mask<=4;4:fx_mask<=7;default:fx_mask<=0;
         endcase
-        fx_reverb_mix<=48;fx_delay_mix<=64;fx_chorus_mix<=80;fx_feedback<=96;
-        fx_delay_time<=2;fx_room<=1;fx_rate<=1;fx_depth<=1;fx_command_valid<=1;
+        fx_reverb_mix<=0;fx_delay_mix<=0;fx_chorus_mix<=0;fx_feedback<=112;
+        fx_delay_time<=3;fx_room<=2;fx_rate<=2;fx_depth<=2;
+        case(fx_mask)
+         0:fx_reverb_mix<=128;
+         1:fx_delay_mix<=128;
+         2:fx_chorus_mix<=128;
+         4:begin fx_reverb_mix<=64;fx_delay_mix<=64;fx_chorus_mix<=112;end
+         default:begin fx_reverb_mix<=48;fx_delay_mix<=64;fx_chorus_mix<=80;
+           fx_feedback<=96;fx_delay_time<=2;fx_room<=1;fx_rate<=1;fx_depth<=1;end
+        endcase
+        fx_command_valid<=1;
       end
     endtask
     // A PC request owns the binary port through its full reply. One independent
@@ -357,7 +366,7 @@ module uart_control_display #(
                                     else begin result_code<=0;state<=CAP_ADDR;end
                                 end
                                 24:begin
-                                    if(rx_buf[6]>7 || rx_buf[7]>96 || rx_buf[8]>96 || rx_buf[9]>128 ||
+                                    if(rx_buf[6]>7 || rx_buf[7]>128 || rx_buf[8]>128 || rx_buf[9]>128 ||
                                        ((rx_buf[6][0]?{1'b0,rx_buf[7]}:9'd0)+(rx_buf[6][1]?{1'b0,rx_buf[8]}:9'd0)>128) ||
                                        rx_buf[10]>3 || rx_buf[11]>128 || rx_buf[12]>2 || rx_buf[13]>3 || rx_buf[14]>3 || rx_buf[15]>1)result_code<=3;
                                     else begin
@@ -492,7 +501,7 @@ module uart_control_display #(
                         tx_buf[7]={5'd0,fx_status_mask};tx_buf[8]=fx_status_reverb;tx_buf[9]=fx_status_delay;tx_buf[10]=fx_status_chorus;
                         tx_buf[11]={6'd0,fx_status_time};tx_buf[12]=fx_status_feedback;tx_buf[13]={6'd0,fx_status_room};
                         tx_buf[14]={6'd0,fx_status_rate};tx_buf[15]={6'd0,fx_status_depth};
-                        tx_buf[16]={2'd0,fx_monitor_mute,fx_tail,fx_overrun,fx_clipped,fx_busy,fx_pending};
+                        tx_buf[16]={2'b01,fx_monitor_mute,fx_tail,fx_overrun,fx_clipped,fx_busy,fx_pending};
                         for(i=0;i<4;i=i+1)tx_buf[17+i]=fx_frames[i*8+:8];
                         for(i=0;i<3;i=i+1)tx_buf[21+i]=fx_clip_frames[i*8+:8];
                     end

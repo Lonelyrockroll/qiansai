@@ -31,6 +31,10 @@ module audio_effects(
  reg [9:0] ca,cwa,cp=0;reg [12:0] da,dwa,dp=0;reg [11:0] ra,rwa;
  reg cwe=0,dwe=0,rwe=0;
  reg signed [15:0] cwd,dwd,crd,drd;reg signed [17:0] rwd,rrd;
+ // Average pairs on write and interpolate the return. The existing 8192-word
+ // line now reaches 320 ms without allocating another block of sample RAM.
+ reg delay_half=0;
+ reg signed [15:0] delay_input_previous=0,delay_tap_previous=0,delay_return=0;
  reg [10:0] c_age=0;reg [13:0] d_age=0;
  reg [9:0] rp[0:5],r_age[0:5];reg signed [17:0] lowpass[0:3];
  always @(posedge clk)begin
@@ -63,17 +67,20 @@ module audio_effects(
   end
  endfunction
  wire [12:0] delay_samples=delay_time==0?13'd1953:delay_time==1?13'd3906:delay_time==2?13'd5859:13'd7813;
- wire [7:0] room_gain=room==0?8'd208:room==1?8'd224:8'd236;
+ wire [7:0] room_gain=room==0?8'd224:room==1?8'd240:8'd248;
  reg [31:0] phase=0;
  wire [31:0] phase_step=rate==0?32'd21990:rate==1?32'd39582:rate==2?32'd70369:32'd105553;
  wire signed [15:0] lfo;
  chorus_lfo modulation(.clk(clk),.addr(phase[31:17]),.value(lfo));
- wire signed [15:0] depth_value=depth==0?16'sd32:depth==1?16'sd64:depth==2?16'sd96:16'sd128;
- wire signed [31:0] lfo_delta=depth==0?($signed(lfo)>>>2):depth==1?($signed(lfo)>>>1):depth==2?(($signed(lfo)*3)>>>2):$signed(lfo);
+ wire signed [31:0] lfo_delta=depth==0?($signed(lfo)>>>1):depth==1?$signed(lfo):
+                                    depth==2?(($signed(lfo)*3)>>>1):($signed(lfo)<<<1);
  wire signed [31:0] delay_q8=32'sd131072+lfo_delta;
  wire [9:0] c_distance=delay_q8[17:8];
  reg [9:0] current_distance;reg [7:0] fraction;
  reg cvalid0,cvalid1;reg signed [15:0] x,c0,c1,c_tap,ch_sample,d_tap;
+ wire signed [31:0] delay_input_pair=$signed(ch_sample)+$signed(delay_input_previous);
+ wire signed [31:0] delay_tap_pair=$signed(d_tap)+$signed(delay_tap_previous);
+ wire signed [15:0] delay_input_average=shr0(delay_input_pair,1);
  reg signed [31:0] mul0,mul1,room_sum,lp_next,room_write,ap_input,ap_output,reverb_out;
  reg signed [17:0] r_tap;reg [2:0] line;
  reg signed [31:0] final0,final1,final2,final_sum,final_product;
@@ -83,6 +90,7 @@ module audio_effects(
  task erase_history;
  begin
   cp<=0;dp<=0;c_age<=0;d_age<=0;phase<=0;tail_count<=0;
+  delay_half<=0;delay_input_previous<=0;delay_tap_previous<=0;delay_return<=0;
   room_sum<=0;lp_next<=0;room_write<=0;ap_input<=0;ap_output<=0;reverb_out<=0;
   for(i=0;i<6;i=i+1)begin rp[i]<=0;r_age[i]<=0;end
   for(i=0;i<4;i=i+1)lowpass[i]<=0;
@@ -127,9 +135,11 @@ module audio_effects(
       r_mix<=approach(r_mix,0);d_mix<=approach(d_mix,0);c_mix<=approach(c_mix,0);
       if(r_mix==0 && d_mix==0 && c_mix==0 && !cfg_valid)begin erase_history();apply_pending();end
      end else begin
-      r_mix<=approach(r_mix,mask[0]?reverb_mix:8'd0);
-      d_mix<=approach(d_mix,mask[1]?delay_mix:8'd0);
-      c_mix<=approach(c_mix,mask[2]?chorus_mix:8'd0);
+      // A newly filled delay starts with the input at the switch instant.
+      // Fade it in only once valid history exists, including a held note.
+      r_mix<=approach(r_mix,(mask[0] && r_age[3]>=1013)?reverb_mix:8'd0);
+      d_mix<=approach(d_mix,(mask[1] && d_age>=delay_samples)?delay_mix:8'd0);
+      c_mix<=approach(c_mix,(mask[2] && c_age>c_distance)?chorus_mix:8'd0);
      end
      current_distance<=c_distance;fraction<=delay_q8[7:0];
      cvalid0<=c_age>=c_distance;cvalid1<=c_age>c_distance;
@@ -148,9 +158,18 @@ module audio_effects(
     COUT:begin ch_sample<=sat16(shr0(mul0+mul1,8));da<=dp-delay_samples;state<=DWAIT;end
     DWAIT:state<=DREAD;
     DREAD:begin d_tap<=d_age>=delay_samples?drd:16'sd0;state<=DMUL;end
-    DMUL:begin mul0<=ch_sample*$signed(10'd256-{2'b0,feedback});mul1<=d_tap*$signed({1'b0,feedback});state<=DWRITE;end
+    DMUL:begin
+     mul0<=delay_input_average*$signed(10'd256-{2'b0,feedback});
+     mul1<=d_tap*$signed({1'b0,feedback});
+     delay_return<=delay_half?d_tap:shr0(delay_tap_pair,1);
+     state<=DWRITE;
+    end
     DWRITE:begin
-     dwe<=1;dwa<=dp;dwd<=sat16(shr0(mul0+mul1,8));dp<=dp+1'b1;if(d_age<8192)d_age<=d_age+1'b1;
+     delay_half<=!delay_half;delay_input_previous<=ch_sample;
+     if(delay_half)begin
+      dwe<=1;dwa<=dp;dwd<=sat16(shr0(mul0+mul1,8));dp<=dp+1'b1;
+      delay_tap_previous<=d_tap;if(d_age<8192)d_age<=d_age+1'b1;
+     end
      line<=0;room_sum<=0;ra<=base_for(0)+rp[0];state<=RWAIT;
     end
     RWAIT:state<=RREAD;
@@ -178,7 +197,7 @@ module audio_effects(
     end
     FMUL:begin
      final0<=ch_sample*$signed({1'b0,dry_gain});
-     final1<=d_tap*$signed({1'b0,d_mix});final2<=(reverb_out<<<1)*$signed({1'b0,r_mix});state<=FSUM;
+     final1<=delay_return*$signed({1'b0,d_mix});final2<=(reverb_out<<<1)*$signed({1'b0,r_mix});state<=FSUM;
     end
     FSUM:begin final_sum<=shr0(final0+final1+final2,8);state<=FGAIN;end
     FGAIN:begin final_product<=final_sum*$signed((mask==0 && r_mix==0 && d_mix==0 && c_mix==0)?10'd256:{1'b0,mute_gain});state<=OUTPUT;end

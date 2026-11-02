@@ -1,0 +1,83 @@
+{
+  "passed": true,
+  "samples": 227051,
+  "clip_count": 0,
+  "sources": {
+    "audio_effects.v": "c3f748d120e89f0a0885490d5d23ff169d568655dc6b393876726cd6e679cbe8",
+    "chorus_lfo.v": "abab9c25c5950f30088fb44fef7f9cf69ecb190bb0aa08e9a9a4f3832334b2c2"
+  },
+  "cases": [
+    {
+      "settings": {
+        "mask": 0
+      },
+      "peak": 16378,
+      "late_peak": 16378
+    },
+    {
+      "settings": {
+        "mask": 2,
+        "d": 128,
+        "time": 3,
+        "feedback": 112
+      },
+      "peak": 12000,
+      "late_peak": 0
+    },
+    {
+      "settings": {
+        "mask": 1,
+        "r": 128,
+        "room": 2
+      },
+      "peak": 12000,
+      "late_peak": 0
+    },
+    {
+      "settings": {
+        "mask": 4,
+        "c": 128,
+        "rate": 2,
+        "depth": 2
+      },
+      "peak": 10000,
+      "late_peak": 9994
+    },
+    {
+      "settings": {
+        "mask": 7,
+        "r": 64,
+        "d": 64,
+        "c": 112,
+        "time": 3,
+        "room": 2,
+        "feedback": 112,
+        "rate": 2,
+        "depth": 2
+      },
+      "peak": 12000,
+      "late_peak": 0
+    }
+  ],
+  "steady_switching": {
+    "passed": true,
+    "stimulus": "333 Hz, 12000-code sine, five live effect changes",
+    "maximum_adjacent_sample_delta": 649,
+    "peak": 11999
+  },
+  "lifecycle": {
+    "passed": true,
+    "clear_and_configuration_same_cycle": true,
+    "stale_tail_clear": true,
+    "tail_silence_frames": 200000,
+    "disable_ramp": true,
+    "feedback": 128,
+    "depth": 3,
+    "room": 2
+  },
+  "phrase": {
+    "samples": 390625,
+    "engine_worst_cycles": 200,
+    "common_pcm_sha256": "e9e3cc20f0424cb840081bc64628198b301a2742fa7175bc9f0249bcf3fab418"
+  }
+}

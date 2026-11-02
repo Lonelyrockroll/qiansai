@@ -130,6 +130,7 @@ class Decoder:
                 result.append(dict(seq=frame[3],status=p[0],mask=p[1],reverb_mix=p[2],delay_mix=p[3],chorus_mix=p[4],
                     delay_time=p[5],feedback=p[6],room=p[7],rate=p[8],depth=p[9],pending=bool(flags&1),busy=bool(flags&2),
                     clipped=bool(flags&4),overrun=bool(flags&8),tail=bool(flags&16),monitor_mute=bool(flags&32),
+                    effect_profile=2 if flags&64 else 1,
                     frames=int.from_bytes(p[11:15],'little'),clipped_frames=int.from_bytes(p[15:18],'little'),
                     sample_rate=FS,firmware=p[18],opcode=p[19]))
                 continue

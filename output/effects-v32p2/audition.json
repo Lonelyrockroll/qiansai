@@ -1,0 +1,50 @@
+{
+  "source": "One phrase synthesized by the production HDL voice engine, then processed by integer effect models verified against RTL.",
+  "source_sha256": "e9e3cc20f0424cb840081bc64628198b301a2742fa7175bc9f0249bcf3fab418",
+  "frames": 390625,
+  "logical_sample_rate": 48828.125,
+  "wav_sample_rate": 48828,
+  "common_audition_gain": 2.8598734453414796,
+  "files": {
+    "new_off": {
+      "peak": 9166,
+      "tail_rms": 0.0,
+      "sha256": "625e66b85f4b2642303494727e4169720ca280af3c14b976e5bda400b9e31cf2"
+    },
+    "new_reverb": {
+      "peak": 4723,
+      "tail_rms": 60.19510184732113,
+      "sha256": "1632390f0648fad0dedfdb2a7725ff0ea9b6bd7d82ae67e284b070ad34c2973a"
+    },
+    "new_delay": {
+      "peak": 4576,
+      "tail_rms": 187.81095890431942,
+      "sha256": "342036c066446f893ea0b77d22694c5b70ad0e068557cd6385a6830db5890fd8"
+    },
+    "new_chorus": {
+      "peak": 7559,
+      "tail_rms": 0.0,
+      "sha256": "db379e0b75295f95dc365b2723b4920134f1f00d852f85e01f3933ecd0d60d81"
+    },
+    "previous_off": {
+      "peak": 9166,
+      "tail_rms": 0.0,
+      "sha256": "625e66b85f4b2642303494727e4169720ca280af3c14b976e5bda400b9e31cf2"
+    },
+    "previous_reverb": {
+      "peak": 6467,
+      "tail_rms": 11.384311385547143,
+      "sha256": "098a3174a5e6d3c039df0f8fed55a92a02b9ed7bc4a37fbd069ef82332135133"
+    },
+    "previous_delay": {
+      "peak": 6353,
+      "tail_rms": 39.11043733712917,
+      "sha256": "2014bff4519a9e790ae679c028a756ca33828aa4c67841c95a8861e76de463ee"
+    },
+    "previous_chorus": {
+      "peak": 8089,
+      "tail_rms": 0.0,
+      "sha256": "c62f4a55d7004b6d4f38217525e447869a3b52f5a7460a07659d1071a483dd97"
+    }
+  }
+}

@@ -1,0 +1,2 @@
+PASS transition, simultaneous clear/config, signed tail termination, audio-disable ramp
+tests/effects_enhanced/transitions.v:32: $finish called at 209529580000 (1ps)

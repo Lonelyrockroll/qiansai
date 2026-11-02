@@ -147,10 +147,14 @@ $('pmodTest').onclick=()=>action('pmod_test');$('pmodSingle').onclick=()=>action
 let fxSeen='',fxEditing=false;
 function fxLabels(){for(const id of ['fxRev','fxDelay','fxChorus','fxFeedback'])$(id+'Text').textContent=(Number($(id).value)/256*100).toFixed(1)+'%';}
 function renderFx(s){const f=s.effects||{},ok=s.connected&&s.feedback?.firmware>=20;
+ const enhanced=f.effect_profile>=2;
+ $('fxRev').max=$('fxDelay').max=enhanced?128:96;
+ Array.from($('fxTime').options).forEach((o,i)=>o.textContent=(i+1)*(enhanced?80:40)+' ms');
+ Array.from($('fxDepth').options).forEach((o,i)=>o.textContent=['浅','中','深','更深'][i]+(enhanced?' · ±'+([1.31,2.62,3.93,5.24][i])+' ms':''));
  document.querySelectorAll('.fxPreset').forEach(b=>b.disabled=!ok);$('fxApply').disabled=!ok;
  $('fxStatus').textContent=!ok?'等待连接 v20 或更新固件':f.overrun?'效果运算超时':f.clipped?'效果输出达到限幅，请降低音量或混合量':f.pending?'正在平滑切换':
  `效果：${[f.mask&1?'混响':'',f.mask&2?'延迟':'',f.mask&4?'合唱':''].filter(Boolean).join(' + ')||'旁路'} · ${f.monitor_mute?'模拟输出关闭，仅数字测试':'模拟输出正常'} · ${f.tail?'尾音处理中':'就绪'}`;
- const key=JSON.stringify([f.mask,f.reverb_mix,f.delay_mix,f.chorus_mix,f.delay_time,f.feedback,f.room,f.rate,f.depth,f.monitor_mute]);
+ const key=JSON.stringify([f.effect_profile,f.mask,f.reverb_mix,f.delay_mix,f.chorus_mix,f.delay_time,f.feedback,f.room,f.rate,f.depth,f.monitor_mute]);
  if(ok&&f.mask!==undefined&&key!==fxSeen&&!fxEditing){fxSeen=key;$('fxRevOn').checked=!!(f.mask&1);$('fxDelayOn').checked=!!(f.mask&2);$('fxChorusOn').checked=!!(f.mask&4);
  for(const [id,name] of Object.entries({fxRev:'reverb_mix',fxDelay:'delay_mix',fxChorus:'chorus_mix',fxTime:'delay_time',fxFeedback:'feedback',fxRoom:'room',fxRate:'rate',fxDepth:'depth'}))$(id).value=f[name];$('fxMonitorMute').checked=!!f.monitor_mute;}
  fxLabels();

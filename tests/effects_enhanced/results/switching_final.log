@@ -1,0 +1,2 @@
+PASS continuous 333Hz tone and five preset changes; max adjacent delta 649, positive peak 11999
+tests/effects_enhanced/switching.v:37: $finish called at 132500120000 (1ps)
