@@ -3,6 +3,7 @@
 const $ = id => document.getElementById(id);
 const SEGMENTS = {
   'hall-headphone': ['霍尔越阈', '耳机口起音'],
+  'hall-speaker-leg': ['霍尔越阈', '喇叭功放单端起音'],
   'mark-headphone': ['FPGA MARK 起始边沿', '耳机口起音'],
   'hall-mark': ['霍尔越阈', 'FPGA MARK 起始边沿'],
 };
@@ -450,7 +451,10 @@ async function pickFile() {
   if(!file){$('import-status').textContent='';return;}
   try{
     if(file.size>24*1024*1024)throw Error('CSV 超过 24 MiB，请缩短采集窗口后再导出。');
-    const text=await file.text();if(generation!==state.fileGeneration)return;
+    let text;
+    try{text=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}).decode(await file.arrayBuffer());}
+    catch{throw Error('CSV 需使用 UTF-8 编码，请另存为 UTF-8 后重新导入。');}
+    if(generation!==state.fileGeneration)return;
     const found=detectColumns(text);
     state.csv=text;$('record-name').value=file.name.slice(0,100);
     if(found){
