@@ -7,6 +7,7 @@ MENU=['开始 / 停止演奏','切换音色','音量增加','音量减小','切�
 
 def menu_names(display):
     display=display or {}
+    if display.get('firmware',0)>=32:return menu_names(dict(display,firmware=31))+['声谱观察']
     if display.get('firmware',0)>=30:
         return menu_names(dict(display,firmware=29))+['播放 / 暂停指引','指引下一组','指引重来']
     if display.get('firmware',0)>=22:
@@ -33,7 +34,8 @@ def to_pixel(contact):
 def hit_test(x,y,pattern=False,rows=8):
     if not (0<=x<1024 and 0<=y<600):return None
     if pattern:return 7 # one tap returns from the full-screen test pattern
-    if rows==12:
+    if rows==13 and 512<=x<984 and 523<=y<545:return 12
+    if rows in (12,13):
         column=0 if 512<=x<744 else 1 if 752<=x<984 else -1
         if column<0 or not 332<=y<520:return None
         row=(y-332)//32

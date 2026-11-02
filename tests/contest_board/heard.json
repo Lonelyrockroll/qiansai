@@ -1,0 +1,17 @@
+{
+  "current_user_code": "0x0000365B",
+  "profile": "full",
+  "spectrum_count_from_board": [
+    32,
+    31,
+    31
+  ],
+  "method": "Onboard frequency monitor with a separate FFT of all three final PCM captures. Analog monitor muted for this test.",
+  "local_ui_operator_confirmation": {
+    "result": "on-board local controls confirmed",
+    "user_confirmation": "读数能保留，32/31 峰与缺口移动都正常",
+    "profile": "full",
+    "user_code": "0x0000C69B"
+  },
+  "manual_ui_confirmation_scope": "C69B before the held-key scanner repair. Current 365B independent digital results are in spectrum.json."
+}

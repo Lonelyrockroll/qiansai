@@ -1,5 +1,7 @@
 # Tang Mega 60K NEO · 32 键实时合成器
 
+v32 新增的板屏观察、32/31 路对照、起音计时和手机设置，见[现场验收](现场验收.md)。源码与原理图对应的外部测点、答疑第 115 条的解释及实测边界，见[验收测量](赛题二问答与验收测量.md)。
+
 当前 v31 支持手机选择 PDF，经蓝牙传送当前页，在 Tang HDMI 屏全屏显示，并从手机前后翻页。[曲谱演示步骤](FULLSCREEN-SCORE.md)。v30 的 [32 白键 MIDI 屏幕指引](SCREEN-GUIDE.md) 仍可使用。音频保留 v29 的四子帧 DAC 输出、32 分量演奏钢琴，以及其余旋律音色的滑音与颤音。[模拟输出测量](OUTPUT-HARMONICS.md) · [旋钮说明](EXPRESSION.md)。工程还包含 32 键扫描、旋律与 12 键打击垫、Loop、HDMI、USB 控制键盘、蓝牙录音和音频电平表。
 
 * **打开 FPGA 工程**　使用 Gowin EDU V1.9.11.03 打开 `fpga/synth_display.gprj`，器件已设为 GW5AT-LV60PG484AC1/I0。命令行构建时从 `fpga` 目录运行 `gw_sh.exe build.tcl`，并确保 PATH 上有 Python 3。全部源码、约束和 ROM 均随包提供。

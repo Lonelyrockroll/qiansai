@@ -4,6 +4,7 @@ module bt_console(input wire clk,rst,bt_rx,output wire bt_tx,input wire audio_ti
  output wire [15:0] period,output reg [15:0] commands,dropped,
  output wire request,output reg [7:0] command,input wire accept,input wire settled,
  input wire [6:0] volume,input wire [2:0] timbre,fx,input wire [7:0] lamps,
+ input wire layout_safe,input wire [4:0] scan_key,output wire [4:0] pitch_key,
  input wire guide_ui_valid,input wire [3:0] guide_ui_action,
  input wire score_video_visible,capture_busy,capture_ready,
  input wire score_ui_valid,input wire [1:0] score_ui_action,output wire score_ui_ready,
@@ -33,9 +34,11 @@ module bt_console(input wire clk,rst,bt_rx,output wire bt_tx,input wire audio_ti
  localparam IDLE=0,REQUEST=1,APPLY=2,SETTLE=3,REPLY=4;
  reg [2:0] state;reg [4:0] index;reg [6:0] v;reg [2:0] t,f;reg [7:0] lights;reg invalid;
  record_stream recorder(.clk(clk),.rst(rst),.audio_tick(audio_tick),.pcm(pcm),.period(period),
-  .extension(extension && data!="G" && data!="P" && state==IDLE && !guide_owned && !discarding),.operation(data),.ready(tx_ready && !send && !guide_owned),
+  .extension(extension && data!="G" && data!="P" && data!="J" && state==IDLE && !guide_owned && !discarding),.operation(data),.ready(tx_ready && !send && !guide_owned),
   .send(stream_send),.out_byte(stream_byte),.owned(stream_owned));
  guide_transport guide(.clk(clk),.rst(rst),.audio_tick(audio_tick),
+  .key_probe(extension && data=="J" && state==IDLE && !guide_owned && !stream_owned && !discarding),
+  .layout_safe(layout_safe),.scan_key(scan_key),.pitch_key(pitch_key),
   .score_probe(extension && data=="P" && state==IDLE && !guide_owned && !stream_owned && !discarding),
   .score_video_visible(score_video_visible),.capture_busy(capture_busy),.capture_ready(capture_ready),
   .score_ui_valid(score_ui_valid),.score_ui_action(score_ui_action),.score_ui_ready(score_ui_ready),

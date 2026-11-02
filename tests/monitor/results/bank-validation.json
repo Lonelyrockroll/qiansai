@@ -1,0 +1,9 @@
+{
+  "result": "passed",
+  "scope": "Bank ownership in 50/49 MHz domains, including stalled vertical blank, disabled capture and a pixel-only reset during write.",
+  "source_sha256": {
+    "audio_monitor.v": "8c1e16f5539ce41053bda427abc07058461a1fe5542243902aaff6052749119d",
+    "tb_banks.v": "ea607fe54320a2cb2b0f056b2e1a2bd035d52b1b5fb778ea3a28d99b997c31a4"
+  },
+  "summary": "PASS bank exchange: 432 writes, stall without vblank, disable, pixel reset during writer, valid frame recovery"
+}

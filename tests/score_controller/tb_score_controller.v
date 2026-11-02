@@ -12,12 +12,24 @@ module tb_score_controller;
  wire capture_command_valid,capture_command_arm,score_ui_valid;wire [1:0] score_ui_action;
  reg ui_valid=0;reg [3:0] ui_action=0;reg [15:0] ui_value=0;wire ui_ready,amp_hold;
  wire guide_ui_valid;wire [3:0] guide_ui_action;
+ reg amp_ready=1,engine_cleared=0,fx_tail=0,fx_pending=0,loop_playing=0,loop_recording=0,loop_pending=0,native_panic=0;
+ wire amp_muted=!amp_ready;
+ reg [5:0] router_held=0,active_voices=0;
+ reg [2:0] loop_layers=0;
+ reg [35:0] loop_counts=0;
+ wire panic,loop_command_valid,monitor_fade;
+ integer clean_count=0,panic_count=0,loop_commands=0,power_drops=0;
+ reg watch_session=0;
  `include "controller_instance.vh"
  always @(posedge clk)capture_read_data<={1'b0,capture_read_address}^16'ha55a;
  integer accepted=0,armed=0;reg [1:0] last_action=0;
  always @(posedge clk)if(!rst)begin
    if(score_ui_valid && score_ui_ready)begin accepted=accepted+1;last_action=score_ui_action;end
    if(capture_command_valid && capture_command_arm)armed=armed+1;
+   if(monitor_fade)clean_count=clean_count+1;
+   if(panic)panic_count=panic_count+1;
+   if(loop_command_valid)loop_commands=loop_commands+1;
+   if(watch_session && (!amp_hold || !dut.armed || !dut.ui_local))power_drops=power_drops+1;
  end
  reg [7:0] wire_bytes[0:8191];integer wire_count=0,bitpos;reg [7:0] decoded;
  // Independent 8N1 decoder sees only the physical uart_out pin.
@@ -47,7 +59,7 @@ module tb_score_controller;
    wait(wire_count>=base+28);for(i=0;i<28;i=i+1)reply[i]=wire_bytes[base+i];
    check(reply[0]==8'h5a && reply[1]==8'ha5 && reply[2]==1 && reply[3]==seqno && reply[4]==8'h80 && reply[5]==20 && reply[27]==13,"UART reply envelope");
    xor_byte=0;for(i=2;i<26;i=i+1)xor_byte=xor_byte^reply[i];check(reply[26]===xor_byte,"UART reply XOR");
-   check(reply[6]===expected,"reply status");check(reply[24]==31 && reply[25]==op,"firmware/opcode unchanged");
+   check(reply[6]===expected,"reply status");check(reply[24]==32 && reply[25]==op,"firmware/opcode unchanged");
    wait(dut.state==0);repeat(2)@(posedge clk);
  end endtask
  task transaction(input [7:0] op,input [7:0] expected);begin start_request(op);finish_reply(op,expected);end endtask
@@ -57,6 +69,77 @@ module tb_score_controller;
  end endtask
  task pulse_ui(input [3:0] action);begin
    wait(ui_ready);@(negedge clk);ui_action=action;ui_valid=1;@(negedge clk);ui_valid=0;
+ end endtask
+ task enter_live;begin
+   clear_payload();payload[0]=5;payload[1]=12;transaction(10,0);
+   check(dut.monitor_open && dut.monitor_demo==0,"menu 13 opens LIVE");
+ end endtask
+ task monitor_status(input [1:0] mode,input [4:0] gap);begin
+   clear_payload();transaction(34,0);
+   check(reply[7][0] && reply[7][2:1]==mode && reply[8][4:0]==gap,"real UART monitor status/missing voice");
+ end endtask
+ task begin_warm_session;begin
+   amp_ready=0;
+   clear_payload();payload[0]=6;payload[1]=0;transaction(10,0);
+   pulse_ui(2);repeat(5)@(posedge clk);#1;
+   check(amp_hold && dut.armed && dut.ui_local,"local performance session opened");
+   amp_ready=1;enter_live();watch_session=1;
+ end endtask
+ task clear_old_engine;begin
+   @(negedge clk);engine_cleared=1;amp_ready=0;
+   @(negedge clk);engine_cleared=0;router_held=0;active_voices=0;fx_tail=0;fx_pending=0;
+   repeat(3)@(posedge clk);#1;amp_ready=1;
+ end endtask
+ task hot_takeover(input [5:0] held,input [5:0] voices,input tail,input effect_update);integer nc,np,nl,pd;begin
+   begin_warm_session();router_held=held;active_voices=voices;fx_tail=tail;fx_pending=effect_update;
+   nc=clean_count;np=panic_count;nl=loop_commands;pd=power_drops;
+   pulse_ui(2);repeat(8)@(posedge clk);#1;
+   check(dut.monitor_open && dut.monitor_demo==0 && dut.monitor_wait_clear && amp_hold,"hot B waits for the old engine to clear");
+   check(clean_count==nc+1 && panic_count==np,"hot takeover emits exactly one isolated fade and no user panic");
+   pulse_ui(2);repeat(8)@(posedge clk);#1;
+   check(clean_count==nc+1 && dut.monitor_wait_clear && !dut.monitor_demo,"repeated B while fading cannot restart the fade");
+   clear_old_engine();
+   check(!dut.monitor_wait_clear && dut.monitor_demo==1 && amp_hold,"engine acknowledgement starts 32 and preserves the session");
+   monitor_status(1,15);
+   pulse_ui(2);repeat(5)@(posedge clk);monitor_status(2,15);
+   pulse_ui(1);repeat(5)@(posedge clk);monitor_status(2,16);
+   pulse_ui(9);repeat(5)@(posedge clk);monitor_status(2,15);
+   check(clean_count==nc+1 && panic_count==np && loop_commands==nl && power_drops==pd,
+         "32/31/gap steps preserve session and do not repeat cleanup");
+   watch_session=0;pulse_ui(3);repeat(5)@(posedge clk);#1;
+   check(!amp_hold && !dut.monitor_open && dut.monitor_demo==0 && panic_count==np+1,"A exits demo and mutes once");
+ end endtask
+ task reject_loop(input playing,input recording,input pending);integer nc,np,nl,pd;begin
+   begin_warm_session();router_held=2;active_voices=1;fx_tail=1;
+   loop_playing=playing;loop_recording=recording;loop_pending=pending;loop_layers=1;loop_counts=36'd3;
+   nc=clean_count;np=panic_count;nl=loop_commands;pd=power_drops;
+   pulse_ui(2);repeat(8)@(posedge clk);#1;
+   check(dut.monitor_open && !dut.monitor_demo && !dut.monitor_wait_clear && amp_hold,"active Loop keeps LIVE selected");
+   check(clean_count==nc && panic_count==np && loop_commands==nl && power_drops==pd,
+         "active Loop receives no cleanup, panic, stop or layer command");
+   clear_payload();transaction(14,0);
+   check(reply[7][3:0]=={pending,recording,playing,1'b1} && reply[8]==1 && word_at(14)==3,
+         "UART Loop flags, layer and event count retained");
+   router_held=0;active_voices=0;fx_tail=0;loop_playing=0;loop_recording=0;loop_pending=0;
+   watch_session=0;pulse_ui(3);repeat(5)@(posedge clk);#1;
+   loop_layers=0;loop_counts=0;
+ end endtask
+ task cancel_takeover(input integer reason);integer nc;begin
+   begin_warm_session();router_held=1;active_voices=1;fx_tail=1;
+   nc=clean_count;pulse_ui(2);repeat(6)@(posedge clk);#1;
+   check(dut.monitor_wait_clear && clean_count==nc+1,"cancellation case starts in pending fade");
+   watch_session=0;
+   case(reason)
+    0:pulse_ui(3);
+    1:begin clear_payload();transaction(3,0);end
+    2:begin @(negedge clk);score_show_requested=1;repeat(5)@(negedge clk);score_show_requested=0;end
+    3:begin @(negedge clk);native_panic=1;@(negedge clk);native_panic=0;end
+   endcase
+   repeat(5)@(posedge clk);#1;
+   check(!dut.monitor_wait_clear && !dut.monitor_demo,"cancel clears pending before engine acknowledgement");
+   clear_old_engine();
+   check(!dut.monitor_wait_clear && !dut.monitor_demo && clean_count==nc+1,"late engine acknowledgement cannot resurrect demo");
+   if(dut.monitor_open || amp_hold)begin pulse_ui(3);repeat(5)@(posedge clk);#1;end
  end endtask
  initial begin
    force dut.rx_valid=inject_valid;force dut.rx_data=inject_data;force dut.rx_error=1'b0;
@@ -112,8 +195,30 @@ module tb_score_controller;
    check(dut.ui_pending && !amp_hold,"exit queued while sheet visible");
    score_visible=0;repeat(4)@(posedge clk);#1;
    check(!amp_hold,"queued sheet exit cannot become menu execute if Bluetooth hides sheet");
+   score_valid=0;score_visible=0;score_show_requested=0;score_loading=0;score_reserved=0;repeat(6)@(posedge clk);
+   amp_ready=0;before_count=clean_count;
+   clear_payload();payload[0]=5;payload[1]=12;transaction(10,0);
+   check(dut.monitor_open && dut.monitor_demo==0,"13 opens live observation");
+   pulse_ui(2);repeat(5)@(posedge clk);check(amp_hold && dut.monitor_demo==1,"local B starts all 32");
+   check(!dut.monitor_wait_clear && clean_count==before_count,"cold idle start does not wait for a nonexistent clear");amp_ready=1;
+   pulse_ui(2);repeat(5)@(posedge clk);check(dut.monitor_demo==2 && dut.missing_voice==15,"local B removes one voice");
+   pulse_ui(1);repeat(5)@(posedge clk);check(dut.monitor_demo==2 && dut.missing_voice==16,"turn B shifts the gap");
+   pulse_ui(3);repeat(5)@(posedge clk);check(!amp_hold && !dut.monitor_open && dut.monitor_demo==0,"A mutes and returns");
+   begin_warm_session();before_count=clean_count;pulse_ui(2);repeat(5)@(posedge clk);#1;
+   check(dut.monitor_demo==1 && !dut.monitor_wait_clear && clean_count==before_count,"warm idle start goes directly to all 32");
+   watch_session=0;pulse_ui(3);repeat(5)@(posedge clk);#1;
+   hot_takeover(1,0,0,0);
+   hot_takeover(0,5,0,0);
+   hot_takeover(0,0,1,0);
+   hot_takeover(0,0,0,1);
+   loop_layers=1;loop_counts=36'd7;hot_takeover(2,5,1,1);
+   clear_payload();transaction(14,0);check(reply[8]==1 && word_at(14)==7,"stopped recorded layer retained");loop_layers=0;loop_counts=0;
+   reject_loop(1,0,0);
+   reject_loop(0,1,0);
+   reject_loop(0,0,1);
+   cancel_takeover(0);cancel_takeover(1);cancel_takeover(2);cancel_takeover(3);
    if(failures!=0)$fatal(1,"FAIL controller %0d of %0d checks",failures,checks);
-   $display("PASS score controller %0d checks, %0d UART replies: op32/33 bounds/tag races, PCM23/arm, local exit and backpressure",checks,seqno);$finish;
+   $display("PASS score controller %0d checks, %0d UART replies: PDF/PCM, cold and warm monitor takeover, Loop exclusion and late fade acknowledgements",checks,seqno);$finish;
  end
  initial begin #20000000;$fatal(1,"controller timeout");end
 endmodule

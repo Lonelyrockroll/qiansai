@@ -1,2 +1,2 @@
 PASS physical 8N1 UART at divisor   434:          27 TGAK,           4 TREC data,           1 recording end;    20377268 clocks
-F:\codex-project\pcb\tang-guide\tests\guide_fpga\tb_console.v:160: $finish called at 407545360000 (1ps)
+F:\codex-project\pcb\tang-contest\tests\guide_fpga\tb_console.v:162: $finish called at 407545360000 (1ps)

@@ -23,6 +23,22 @@ module synth_display_top(
     wire loop_live_ready,event_valid,event_ready,pc_pad_valid,pc_pad_ready;wire [3:0] pc_pad;
     wire [122:0] event_data;wire [2:0] event_source;
     reg queued_valid=0;reg [122:0] queued_data=0;reg [2:0] queued_source=0;
+    wire monitor_open,monitor_fade;wire [1:0] monitor_demo;wire [4:0] missing_voice;
+    wire demo_active=monitor_demo!=0;
+    reg demo_previous=0;
+    always @(posedge sys_clk)if(rst)demo_previous<=0;else demo_previous<=demo_active;
+    wire demo_entry=demo_active && !demo_previous;
+    wire tone_valid;wire [122:0] tone_event;
+    wire [5:0] measured_peaks;wire [319:0] spectrum_levels;wire monitor_overrun;
+    wire [15:0] onset_us;wire onset_valid,onset_marker;
+    wire [4:0] measured_key;wire [15:0] measurement_count;
+    reg [23:0] physical_ons,physical_offs;
+    always @(posedge sys_clk)begin
+      if(rst)begin physical_ons<=0;physical_offs<=0;end
+      else if(key_cv && key_cr)begin
+       if(key_gate)physical_ons<=physical_ons+1'b1;else physical_offs<=physical_offs+1'b1;
+      end
+    end
     wire router_ready;wire event_queue_ready=!queued_valid && !panic && !amp_muting;
     wire routed_drum_valid;wire [3:0] routed_drum_pad;
     wire routed_cfg_valid,routed_gate,routed_restart;wire [4:0] routed_voice;wire [31:0] routed_step,music_active_mask;
@@ -33,7 +49,7 @@ module synth_display_top(
     wire [18:0] loop_actual_length;wire [9:0] loop_actual_cs,loop_position_cs;
     wire [15:0] drum_level;
     always @(posedge sys_clk)begin
-        if(rst || panic || clear_engine)queued_valid<=0;
+        if(rst || panic || clear_engine || demo_active)queued_valid<=0;
         else begin
             if(queued_valid && router_ready)queued_valid<=0;
             // Data can be sampled whenever the slot is empty; only valid marks an accepted event.
@@ -50,7 +66,7 @@ module synth_display_top(
     wire adc_soc,adc_eoc;wire [12:0] adc_data;
     reg fault_old=0;
     always @(posedge sys_clk) if(rst) fault_old<=0;else fault_old<=key_fault;
-    assign panic=uart_panic;
+    assign panic=uart_panic || monitor_fade;
     wire engine_ready,amp_ready,amp_muting,clear_engine,output_clipped;
     wire led_command_valid,led_preparing,led_busy;wire [1:0] led_command,led_mode,led_color;
     wire [4:0] led_index;wire [31:0] led_latched_mask,led_frames;
@@ -81,8 +97,11 @@ module synth_display_top(
       .playing(loop_playing),.recording(loop_recording),.pending_record(loop_pending),.layers(loop_layers),.duration_index(loop_duration),
       .position(loop_position),.progress(loop_progress),.notice(loop_notice),.event_full(loop_full),.layer_counts(loop_counts),.replayed_events(loop_replayed),
       .actual_length(loop_actual_length),.actual_cs(loop_actual_cs),.position_cs(loop_position_cs));
-    performance_router router(.clk(sys_clk),.rst(rst),.clear(clear_engine),.cancel(panic),
-      .event_valid(queued_valid && !panic && !amp_muting),.event_ready(router_ready),.event_data(queued_data),.event_source(queued_source),
+    contest_tones tones(.clk(sys_clk),.rst(rst || panic || clear_engine || demo_entry),.mode(monitor_demo),.missing(missing_voice),
+        .audio_ready(amp_ready && !amp_muting),.volume(drum_mode?drum_level:key_level),
+        .event_valid(tone_valid),.event_ready(demo_active && router_ready && !amp_muting && !panic),.event_data(tone_event));
+    performance_router router(.clk(sys_clk),.rst(rst),.clear(clear_engine || demo_entry),.cancel(panic),
+      .event_valid((demo_active?tone_valid:queued_valid) && !panic && !amp_muting),.event_ready(router_ready),.event_data(demo_active?tone_event:queued_data),.event_source(demo_active?3'd0:queued_source),
       .drum_valid(routed_drum_valid),.drum_ready(drum_engine_ready),.drum_pad(routed_drum_pad),
       .cfg_valid(routed_cfg_valid),.cfg_ready(engine_ready),.cfg_voice(routed_voice),.cfg_gate(routed_gate),.cfg_restart(routed_restart),
       .cfg_step(routed_step),.cfg_wave(routed_wave),.cfg_level(routed_level),.cfg_attack(routed_attack),.cfg_decay(routed_decay),.cfg_sustain(routed_sustain),.cfg_release(routed_release),
@@ -96,7 +115,8 @@ module synth_display_top(
     wire [31:0] cfg_step;
     wire [2:0] cfg_wave;
     wire [15:0] cfg_level,cfg_attack,cfg_decay,cfg_sustain,cfg_release;
-    wire signed [15:0] pcm,engine_pcm,dry_pcm;
+    wire signed [15:0] pcm,engine_pcm,dry_pcm,fx_pcm;
+    assign pcm=demo_active?dry_pcm:fx_pcm;
     wire fx_cv,fx_monitor_mute,fx_test_valid,fx_busy,fx_pending,fx_tail,fx_overrun,fx_clipped,fx_valid;
     wire [2:0] fx_mask,fx_status_mask;
     wire [7:0] fx_r,fx_d,fx_c,fx_fb,fx_sr,fx_sd,fx_sc,fx_sfb;
@@ -114,7 +134,7 @@ module synth_display_top(
       .audio_enable(amp_ready && !amp_muting),.dry_pcm(fx_test_pending?fx_test_sample:dry_pcm),
       .cfg_valid(fx_cv),.cfg_mask(fx_mask),.cfg_reverb_mix(fx_r),.cfg_delay_mix(fx_d),.cfg_chorus_mix(fx_c),
       .cfg_feedback(fx_fb),.cfg_delay_time(fx_time),.cfg_room(fx_room),.cfg_rate(fx_rate),.cfg_depth(fx_depth),
-      .pcm(pcm),.valid(fx_valid),.busy(fx_busy),.pending(fx_pending),.tail_active(fx_tail),.overrun(fx_overrun),
+      .pcm(fx_pcm),.valid(fx_valid),.busy(fx_busy),.pending(fx_pending),.tail_active(fx_tail),.overrun(fx_overrun),
       .clipped(fx_clipped),.clipped_frames(fx_clip_frames),.frames(fx_frames),.mask(fx_status_mask),
       .reverb_mix(fx_sr),.delay_mix(fx_sd),.chorus_mix(fx_sc),.feedback(fx_sfb),.delay_time(fx_stime),
       .room(fx_sroom),.rate(fx_srate),.depth(fx_sdepth));
@@ -181,38 +201,65 @@ module synth_display_top(
     wire choose_native=!choose_reset && !choose_off && pads_allowed && drum_hit_valid;
     wire choose_pc=!choose_reset && !choose_off && !choose_native && pads_allowed && pc_pad_valid;
     wire choose_music=!choose_reset && !choose_native && !choose_pc && music_allowed;
+    // Note-on and note-off use the physical key's ID throughout a gesture.
+    // User mapping changes pitch and the guide highlight, not note ownership.
     wire [122:0] music_event={2'b01,source_gate,(use_keys?key_voice:cfg_voice),(use_keys?key_wave:cfg_wave),
       (use_keys?key_step:cfg_step),source_level,(use_keys?key_attack:cfg_attack),(use_keys?key_decay:cfg_decay),
       (use_keys?key_sustain:cfg_sustain),(use_keys?key_tail:cfg_release)};
-    assign performance_live_valid=choose_reset || choose_native || choose_pc || choose_music;
+    assign performance_live_valid=!demo_active && (choose_reset || choose_native || choose_pc || choose_music);
     assign performance_live_data=choose_reset?{2'b10,121'd0}:(choose_native || choose_pc)?
       {2'b00,1'b1,1'b0,(choose_native?drum_hit_pad:pc_pad),115'd0}:music_event;
-    assign cfg_ready=!use_keys && choose_music && loop_live_ready;
-    assign key_cr=use_keys && choose_music && loop_live_ready;
-    assign pc_pad_ready=choose_pc && loop_live_ready;
-    assign drum_hit_ready=(!uart_amp_hold && !amp_ready) || amp_muting || panic ? 1'b1:(choose_native && loop_live_ready);
+    assign cfg_ready=!demo_active && !use_keys && choose_music && loop_live_ready;
+    assign key_cr=!demo_active && use_keys && choose_music && loop_live_ready;
+    assign pc_pad_ready=!demo_active && choose_pc && loop_live_ready;
+    assign drum_hit_ready=demo_active || (!uart_amp_hold && !amp_ready) || amp_muting || panic ? 1'b1:(choose_native && loop_live_ready);
     always @(posedge sys_clk)begin
       if(rst || clear_engine || panic)live_flush_pending<=0;
-      else if(control_live_flush || (key_fault && !fault_old))live_flush_pending<=1;
+        else if(control_live_flush || orphan_flush || (key_fault && !fault_old))live_flush_pending<=1;
       else if(choose_reset && loop_live_ready)live_flush_pending<=0;
     end
     keyboard_adc adc(.clk(sys_clk),.rst(rst),.soc(adc_soc),.eoc(adc_eoc),.data(adc_data));
+    wire [4:0] physical_scan,mapped_key;wire [31:0] sensed_keys;
+    wire orphan_flush;wire [15:0] orphan_flush_count;
+    key_release_guard release_guard(.clk(sys_clk),.rst(rst),.scan_count(key_scans),
+        .eligible(key_mode==2 && key_calibrated && !key_fault && amp_hold && amp_ready && !amp_muting &&
+          !panic && !clear_engine && !demo_active && !key_recalibrate && !key_cv),
+        .can_issue(!queued_valid && router_ready),
+        .released(sensed_keys==0 && key_pressed==0),.live_held(live_held_count!=0),
+        .flush(orphan_flush),.flush_count(orphan_flush_count));
+    wire [6:0] mapped_note;wire [31:0] mapped_step;
+    white_key_map mapped_pitch(.key(mapped_key),.note(mapped_note));
+    note_rom mapped_steps(.note(mapped_note),.step(mapped_step));
+    // Physical address remains constant through settling, ADC conversions and EMIT.
+    reg [31:0] key_step_q;
+    always @(posedge sys_clk)key_step_q<=mapped_step;
+    assign key_step=key_step_q;
+    reg [31:0] mapped_pressed=0;
+    always @(posedge sys_clk)
+      if(rst || panic || !uart_amp_hold || !amp_ready || key_fault || key_recalibrate || key_mode==0 || demo_active)mapped_pressed<=0;
+      else if(key_cv && key_cr)mapped_pressed[mapped_key]<=key_gate;
     keyboard_input keys(.clk(sys_clk),.rst(rst),.recalibrate(key_recalibrate),
-        .play(amp_hold && amp_ready && !amp_muting && !panic && !clear_engine),
+        .play(!demo_active && amp_hold && amp_ready && !amp_muting && !panic && !clear_engine),
         .mode(key_mode),.test_key(key_test),.press_threshold(key_press),.release_threshold(key_release),
         .max_level(key_level),.velocity_scale(key_scale),.mux_addr(key_addr),.mux_cs_n(key_cs_n),.mux_wr_n(key_wr_n),
         .adc_soc(adc_soc),.adc_eoc(adc_eoc),.adc_data(adc_data),.calibrated(key_calibrated),.fault(key_fault),
         .pressed_mask(key_pressed),.scan_count(key_scans),.last_raw(key_raw),.last_base(key_base),
         .last_delta(key_delta),.last_velocity(key_velocity),.last_key(key_last),
         .cfg_valid(key_cv),.cfg_ready(key_cr),.cfg_voice(key_voice),.cfg_gate(key_gate),
-        .cfg_level(key_cv_level),.cfg_step(key_step));
-    assign debug_sample=tick;
+        .cfg_level(key_cv_level),.sensed_mask(sensed_keys),.scan_index(physical_scan),.cfg_step());
+    onset_meter onset(.clk(sys_clk),.rst(rst),.accept_key(key_cv && key_cr && key_gate),.accept_id(key_voice),
+      .isolated(held_count==0 && active_voices==0 && !fx_tail && pcm==0),.ready(amp_ready && !amp_muting && !panic),
+      .bclk(i2s_bclk),.lrclk(i2s_lrclk),.sd(i2s_data),.marker(onset_marker),.valid(onset_valid),.elapsed_us(onset_us),
+      .measured_key(measured_key),.measurement_count(measurement_count));
+    assign debug_sample=(monitor_open && !demo_active)?onset_marker:tick;
     wire bt_request,bt_accept,bt_locked,pmod_test,pmod_testing,pmod_single;wire [2:0] pmod_select;
     wire [7:0] bt_command,pmod_lamps;wire [15:0] bt_period,bt_count,bt_dropped;
     wire guide_ui_valid,guide_valid,guide_playing,guide_loading,guide_demo;wire [3:0] guide_ui_action;
     wire [15:0] guide_time_cs,guide_duration_cs;wire [9:0] guide_count,guide_index;wire [1:0] guide_speed;
     wire [31:0] guide_current,guide_onset,guide_next;wire [63:0] guide_colors;
-    bt_console bluetooth(.guide_ui_valid(guide_ui_valid),.guide_ui_action(guide_ui_action),
+    bt_console bluetooth(.layout_safe(!amp_hold && !amp_ready && !demo_active && held_count==0 && active_voices==0 &&
+        key_pressed==0 && (key_mode==0 || (key_calibrated && !key_fault && sensed_keys==0)) && !loop_playing && !loop_recording && !loop_pending),
+        .scan_key(physical_scan),.pitch_key(mapped_key),.guide_ui_valid(guide_ui_valid),.guide_ui_action(guide_ui_action),
         .score_video_visible(score_video_owned),.capture_busy(cap_busy || (cap_cv && cap_arm)),.capture_ready(cap_ready),
         .score_ui_valid(score_ui_valid),.score_ui_action(score_ui_action),.score_ui_ready(score_ui_ready),
         .score_write_enable(score_wr),.score_write_address(score_wr_address),.score_write_data(score_wr_data),
@@ -228,9 +275,13 @@ module synth_display_top(
         .magnitude(magnitude),.muted(PA_EN),
         .lamps(pmod_lamps),.testing(pmod_testing),.led_n(led_n));
     wire [31:0] pc_key_pressed;
-    wire [31:0] panel_keys=key_mode==0?pc_key_pressed:key_pressed;
+    wire [31:0] panel_keys=key_mode==0?pc_key_pressed:mapped_pressed;
     wire [11:0] pt_bias;wire [1:0] pt_mode;
-    uart_control_display controller(.guide_ui_valid(guide_ui_valid),.guide_ui_action(guide_ui_action),
+    uart_control_display controller(.monitor_open(monitor_open),.monitor_demo(monitor_demo),.missing_voice(missing_voice),
+        .monitor_fade(monitor_fade),.engine_cleared(clear_engine),.orphan_flush_count(orphan_flush_count),
+        .measured_key(measured_key),.measurement_count(measurement_count),.physical_ons(physical_ons),.physical_offs(physical_offs),
+        .measured_peaks(measured_peaks),.spectrum_levels(spectrum_levels),.monitor_overrun(monitor_overrun),
+        .onset_valid(onset_valid),.onset_us(onset_us),.guide_ui_valid(guide_ui_valid),.guide_ui_action(guide_ui_action),
         .score_ui_valid(score_ui_valid),.score_ui_action(score_ui_action),.score_ui_ready(score_ui_ready),
         .score_valid(score_valid),.score_show_requested(score_show),.score_visible(score_visible_sync[1]),
         .score_loading(score_loading),.score_reserved(score_reserved),.score_page_index(score_page_index),.score_page_count(score_page_count),
@@ -270,7 +321,7 @@ module synth_display_top(
         .ui_focus(ui_focus),.ui_pattern(ui_pattern),.ui_local(ui_local),.ui_volume(ui_volume),.ui_notice(ui_notice),
         .sample_tick(tick),.active_voices(active_voices),.pcm(pcm),.overrun(overrun|drum_overrun|fx_overrun|limiter_overrun),.clipped(clipped|output_clipped|fx_clipped),
         .amp_muted(PA_EN),.amp_ready(amp_ready),.gain_mode(gain_mode),.amp_hold(uart_amp_hold),
-        .key_calibrated(key_calibrated),.key_fault(key_fault),.key_pressed(panel_keys),
+        .key_calibrated(key_calibrated),.key_fault(key_fault),.key_pressed(key_mode==0?pc_key_pressed:key_pressed),
         .key_last(key_last),.key_raw(key_raw),.key_base(key_base),.key_delta(key_delta),.key_velocity(key_velocity),.key_scans(key_scans),
         .key_mode(key_mode),.key_test(key_test),.key_wave(key_wave),.key_recalibrate(key_recalibrate),
         .key_level(key_level),.key_press(key_press),.key_release(key_release),.key_attack(key_attack),
@@ -278,7 +329,7 @@ module synth_display_top(
         .panic(uart_panic),.cfg_valid(cfg_valid),.cfg_ready(cfg_ready),.cfg_voice(cfg_voice),
         .cfg_gate(cfg_gate),.cfg_step(cfg_step),.cfg_wave(cfg_wave),.cfg_level(cfg_level),
         .cfg_attack(cfg_attack),.cfg_decay(cfg_decay),.cfg_sustain(cfg_sustain),.cfg_release(cfg_release));
-    synth_engine_shared engine(.pitch_offset(pitch_offset),.clk(sys_clk),.rst(rst|clear_engine),.sample_tick(tick),
+    synth_engine_shared engine(.pitch_offset(demo_active?14'sd0:pitch_offset),.clk(sys_clk),.rst(rst|clear_engine),.sample_tick(tick),
         .cfg_valid(routed_cfg_valid && !panic && !amp_muting),.cfg_ready(engine_ready),.cfg_voice(routed_voice),
         .cfg_gate(routed_gate),.cfg_restart(routed_restart),.cfg_step(routed_step),.cfg_wave(routed_wave),.cfg_level(routed_level),
         .cfg_attack(routed_attack),.cfg_decay(routed_decay),.cfg_sustain(routed_sustain),.cfg_release(routed_release),
@@ -320,7 +371,17 @@ module synth_display_top(
     score_renderer score_video(.clk(pixel_clk),.rst(pixel_rst),.show_requested(score_show),
         .x(x),.y(y),.de(de),.frame_start(frame_start),.read_address(score_pixel_address),.read_data(score_pixel_data),
         .visible(score_visible_pixel),.select_page(score_select),.rgb(score_rgb));
-    assign final_rgb=score_select?score_rgb:rgb;
+    reg [1:0] monitor_sync=0;reg monitor_visible=0;
+    always @(posedge pixel_clk)begin
+      monitor_sync<={monitor_sync[0],monitor_open};
+      if(pixel_rst)monitor_visible<=0;else if(frame_start)monitor_visible<=monitor_sync[1];
+    end
+    wire [23:0] monitor_rgb;
+    audio_monitor monitor(.sys_clk(sys_clk),.sys_rst(rst),.sample_tick(tick),.pcm(pcm),.enable(monitor_open),
+      .test_state((monitor_demo==0 && (loop_playing || loop_pending || loop_recording))?2'd3:monitor_demo),.missing_voice(missing_voice),.onset_us(onset_us),.onset_valid(onset_valid),
+      .pixel_clk(pixel_clk),.pixel_rst(pixel_rst),.frame_start(frame_start),.x(x),.y(y),
+      .peak_count(measured_peaks),.spectrum_levels(spectrum_levels),.analysis_overrun(monitor_overrun),.rgb(monitor_rgb));
+    assign final_rgb=score_select?score_rgb:(monitor_visible?monitor_rgb:rgb);
     panel_renderer renderer(.actual_keys(panel_state[370:339]),.guide_colors(panel_state[338:275]),
         .guide_next(panel_state[274:243]),.guide_onset(panel_state[242:211]),.guide_target(panel_state[210:179]),
         .guide_speed(panel_state[178:177]),.guide_index(panel_state[176:167]),.guide_count(panel_state[166:157]),

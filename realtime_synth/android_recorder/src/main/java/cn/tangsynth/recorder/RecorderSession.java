@@ -21,6 +21,7 @@ final class RecorderSession {
         void status(RecorderSession source, Phase phase, String detail, long samples, int peak);
         void saved(RecorderSession source, File file, boolean interrupted);
         void guide(RecorderSession source, GuideProtocol.Ack state, String detail, boolean busy);
+        default void keys(RecorderSession source,KeyProtocol.Ack state,String detail,boolean busy){}
         default void score(RecorderSession source, ScoreProtocol.Ack state, String detail, boolean busy){}
     }
     static final String ADDRESS="2F:92:2C:11:7B:B6";
@@ -42,14 +43,15 @@ final class RecorderSession {
     private final StreamReader stream=new StreamReader();
     private final AudioFrame frame=stream.audio;
     private final Object acknowledgementLock=new Object();
-    private GuideProtocol.Ack acknowledgement;
-    private ScoreProtocol.Ack scoreAcknowledgement;
+    private Object pendingReply;
+    private Class<?> pendingReplyType;
     private volatile boolean guideAvailable,guideBusy;
     private volatile boolean scoreAvailable,scoreBusy;
     private volatile ScoreProtocol.Ack scoreState;
     private volatile GuideProtocol.Ack guideState;
     private int nextGuideSequence,guideProbes;
-    private int scoreProbes;
+    private int scoreProbes,keyProbes;
+    private volatile boolean keyAvailable,keyBusy;
     private volatile int pendingSequence=-1,pendingOperation=-1;
 
     RecorderSession(BluetoothDevice device,File dir,Listener listener) {
@@ -57,7 +59,8 @@ final class RecorderSession {
     }
     Phase phase(){return phase;}
     boolean guideAvailable(){return guideAvailable;}
-    boolean guideBusy(){return guideBusy || scoreBusy;}
+    boolean guideBusy(){return guideBusy || scoreBusy || keyBusy;}
+    boolean keyAvailable(){return keyAvailable;}
     boolean scoreAvailable(){return scoreAvailable;}
     ScoreProtocol.Ack scoreState(){return scoreState;}
     GuideProtocol.Ack guideState(){return guideState;}
@@ -86,7 +89,7 @@ final class RecorderSession {
             else if(!scoreAvailable && scoreProbes<3){
                 scoreProbes++;write("~P");
                 if(scoreProbes==3)listener.score(this,scoreState,"未收到曲谱能力回包；若按钮未启用，请下载 v31 曲谱固件后重连",false);
-            }
+            }else if(!keyAvailable && keyProbes<3){keyProbes++;write("~J");}
         }
     }
     private void write(String text){
@@ -131,6 +134,7 @@ final class RecorderSession {
             BufferedInputStream in=new BufferedInputStream(made.getInputStream(),4096);
             while(phase!=Phase.CLOSED){
                 if(stream.read(in))handleFrame();
+                else if(stream.keyAcknowledgement!=null)handleKeyReply(stream.keyAcknowledgement);
                 else if(stream.scoreAcknowledgement!=null)handleScoreReply(stream.scoreAcknowledgement);
                 else handleGuideReply(stream.acknowledgement);
             }
@@ -194,39 +198,43 @@ final class RecorderSession {
             guideAvailable=true;guideState=ack;
             listener.guide(this,ack,"屏幕指引已就绪",guideBusy);
         }
+        received(ack.sequence,ack.operation,ack);
+    }
+    private void received(int sequence,int operation,Object ack){
         synchronized(acknowledgementLock){
-            if(ack.sequence==pendingSequence && ack.operation==pendingOperation){
-                acknowledgement=ack;acknowledgementLock.notifyAll();
+            if(sequence==pendingSequence && operation==pendingOperation && pendingReplyType!=null && pendingReplyType.isInstance(ack)){
+                pendingReply=ack;acknowledgementLock.notifyAll();
             }
         }
     }
-    private GuideProtocol.Ack exchangeGuide(int operation,byte[] payload)throws IOException{
+    private <T> T exchange(int operation,byte[] payload,Class<T> replyType,String title)throws IOException{
         nextGuideSequence=nextGuideSequence%255+1;
-        byte[] bytes=GuideProtocol.request(nextGuideSequence,operation,payload);
+        byte[] bytes=GuideProtocol.frame(nextGuideSequence,operation,payload);
         synchronized(acknowledgementLock){
-            pendingSequence=nextGuideSequence;pendingOperation=operation;acknowledgement=null;
+            pendingSequence=nextGuideSequence;pendingOperation=operation;pendingReplyType=replyType;pendingReply=null;
         }
         try{
             for(int attempt=0;attempt<3;attempt++){
-                if(phase==Phase.CLOSED)throw new IOException("蓝牙已断开，曲目没有提交");
+                if(phase==Phase.CLOSED)throw new IOException("蓝牙已断开");
                 socket.getOutputStream().write(bytes);socket.getOutputStream().flush();
                 long until=SystemClock.elapsedRealtime()+1800;
                 synchronized(acknowledgementLock){
-                    while(acknowledgement==null && phase!=Phase.CLOSED && SystemClock.elapsedRealtime()<until){
+                    while(pendingReply==null && phase!=Phase.CLOSED && SystemClock.elapsedRealtime()<until){
                         try{acknowledgementLock.wait(Math.max(1,until-SystemClock.elapsedRealtime()));}
-                        catch(InterruptedException e){Thread.currentThread().interrupt();throw new IOException("指引传输已取消");}
+                        catch(InterruptedException e){Thread.currentThread().interrupt();throw new IOException(title+"传输已取消");}
                     }
-                    if(acknowledgement!=null){
-                        GuideProtocol.Ack ack=acknowledgement;
-                        if(ack.status!=0)throw new IOException(ack.error());
-                        guideState=ack;return ack;
-                    }
+                    if(replyType.isInstance(pendingReply))return replyType.cast(pendingReply);
                 }
             }
-            throw new IOException("指引回包超时。请检查板卡连接后重新发送");
+            throw new IOException(title+"回包超时，请检查连接后重试");
         }finally{
-            synchronized(acknowledgementLock){pendingSequence=-1;pendingOperation=-1;acknowledgement=null;}
+            synchronized(acknowledgementLock){pendingSequence=-1;pendingOperation=-1;pendingReplyType=null;pendingReply=null;}
         }
+    }
+    private GuideProtocol.Ack exchangeGuide(int operation,byte[] payload)throws IOException{
+        GuideProtocol.Ack ack=exchange(operation,payload,GuideProtocol.Ack.class,"指引");
+        if(ack.status!=0)throw new IOException(ack.error());
+        guideState=ack;return ack;
     }
     private interface GuideTask {GuideProtocol.Ack run()throws IOException;}
     private synchronized void guideTask(String initial,GuideTask task){
@@ -276,39 +284,38 @@ final class RecorderSession {
             scoreAvailable=true;scoreState=ack;
             listener.score(this,ack,"曲谱显示已就绪",guideBusy());
         }
-        synchronized(acknowledgementLock){
-            if(ack.sequence==pendingSequence && ack.operation==pendingOperation){
-                scoreAcknowledgement=ack;acknowledgementLock.notifyAll();
-            }
-        }
+        received(ack.sequence,ack.operation,ack);
     }
     private ScoreProtocol.Ack exchangeScore(int operation,byte[] payload)throws IOException{
-        nextGuideSequence=nextGuideSequence%255+1;
-        byte[] bytes=ScoreProtocol.request(nextGuideSequence,operation,payload);
-        synchronized(acknowledgementLock){
-            pendingSequence=nextGuideSequence;pendingOperation=operation;scoreAcknowledgement=null;
+        ScoreProtocol.Ack ack=exchange(operation,payload,ScoreProtocol.Ack.class,"曲谱");
+        if(ack.status!=0)throw new IOException(ack.error());
+        scoreState=ack;return ack;
+    }
+    private void handleKeyReply(KeyProtocol.Ack ack){
+        if(phase==Phase.CLOSED)return;
+        if(ack.sequence==0 && ack.operation==KeyProtocol.QUERY && ack.status==0){
+            keyAvailable=true;listener.keys(this,ack,"键位设置已就绪",guideBusy());
         }
-        try{
-            for(int attempt=0;attempt<3;attempt++){
-                if(phase==Phase.CLOSED)throw new IOException("蓝牙已断开，请重新发送这一页");
-                socket.getOutputStream().write(bytes);socket.getOutputStream().flush();
-                long until=SystemClock.elapsedRealtime()+1800;
-                synchronized(acknowledgementLock){
-                    while(scoreAcknowledgement==null && phase!=Phase.CLOSED && SystemClock.elapsedRealtime()<until){
-                        try{acknowledgementLock.wait(Math.max(1,until-SystemClock.elapsedRealtime()));}
-                        catch(InterruptedException e){Thread.currentThread().interrupt();throw new IOException("曲谱传输已取消");}
-                    }
-                    if(scoreAcknowledgement!=null){
-                        ScoreProtocol.Ack ack=scoreAcknowledgement;
-                        if(ack.status!=0)throw new IOException(ack.error());
-                        scoreState=ack;return ack;
-                    }
-                }
-            }
-            throw new IOException("曲谱回包超时，请检查连接后重新发送这一页");
-        }finally{
-            synchronized(acknowledgementLock){pendingSequence=-1;pendingOperation=-1;scoreAcknowledgement=null;}
+        received(ack.sequence,ack.operation,ack);
+    }
+    synchronized void keys(int operation,int first,int second){
+        if(phase!=Phase.READY || guideBusy() || !keyAvailable){
+            listener.keys(this,null,"连接支持键位设置的固件并等待当前操作完成",guideBusy());return;
         }
+        byte[] payload;
+        if(operation==KeyProtocol.RESET)payload=new byte[0];
+        else if(first<0 || first>=32 || second<0 || second>=32)return;
+        else if(operation==KeyProtocol.QUERY)payload=new byte[]{(byte)first};
+        else if(operation==KeyProtocol.SWAP && first!=second)payload=new byte[]{(byte)first,(byte)second};
+        else{listener.keys(this,null,"请选择两个不同的琴键",false);return;}
+        keyBusy=true;listener.keys(this,null,"正在读取板卡…",true);
+        try{writer.execute(()->{
+            KeyProtocol.Ack ack=null;String detail;
+            try{ack=exchange(operation,payload,KeyProtocol.Ack.class,"键位");detail=ack.status==0?ack.describe():ack.error();}
+            catch(IOException ex){detail=ex.getMessage();}
+            keyBusy=false;
+            if(phase!=Phase.CLOSED){listener.keys(this,ack,detail,false);report("录音接口已就绪");}
+        });}catch(RejectedExecutionException closed){keyBusy=false;}
     }
     private interface ScoreTask {ScoreProtocol.Ack run()throws IOException;}
     private synchronized void scoreTask(String initial,ScoreTask task){

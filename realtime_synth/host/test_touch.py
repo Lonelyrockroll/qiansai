@@ -26,6 +26,11 @@ class GestureTests(unittest.TestCase):
             self.assertIsNone(hit_test(x+20,y+28,rows=12))
         self.assertIsNone(hit_test(800,240,rows=12))
         self.assertIsNone(hit_test(512,524,rows=12))
+    def test_v32_observer_menu_bounds(self):
+        self.assertEqual(hit_test(520,529,rows=13),12)
+        self.assertIsNone(hit_test(520,529,rows=12))
+        self.assertEqual(hit_test(754,502,rows=13),11)
+
     def test_release_once(self):
         t=TapDetector()
         for i in range(30):self.assertIsNone(t.feed([contact()],i*.02))

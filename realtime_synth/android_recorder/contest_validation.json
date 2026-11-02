@@ -1,0 +1,37 @@
+{
+  "apk": "dist/TangRecorder-1.3.apk",
+  "version_name": "1.3",
+  "version_code": 4,
+  "sha256": "a4c4f2bf1ad9fe45d32cedd631a0987338cc1d7a69328c94ee364dbae17d0c44",
+  "bytes": 160355,
+  "certificate_sha256": "0c620b15ad828e47929f6038e118237eea838ef841bfe5918cc16116a2b71581",
+  "same_certificate_as_1_2": true,
+  "live_downloads": {
+    "PDF": {
+      "url": "https://www.mutopiaproject.org/ftp/HoretzkyF/horetzky25/horetzky25-a4.pdf",
+      "bytes": 48482,
+      "sha256": "394f1fd8e05732b82e5fd764d850d2a7a73996acfe22f032d6cdc27e1167c3c0"
+    },
+    "MIDI": {
+      "url": "https://www.mutopiaproject.org/ftp/HoretzkyF/horetzky25/horetzky25.mid",
+      "bytes": 852,
+      "sha256": "26c0338c18bff555424fe3323179792ae79e24518a468f2aa9168904e9c25444",
+      "guide_events": 108
+    }
+  },
+  "android_emulator": {
+    "system": "Android 35 x86_64 / WHPX",
+    "midi": "horetzky25.mid\n54 个可演奏音符 · 108 / 512 个事件 · 20.68 秒\n将略过 27 个半音、0 个越界音、0 个打击乐音符",
+    "pdf": "horetzky25-a4.pdf\n第 1 / 1 页 · 黑白预览 · 5.3 KB 待发送",
+    "rejected_html": "下载未完成 · 没有收到有效的 PDF 文件，请使用文件直链",
+    "restored_after_restart": "horetzky25-a4.pdf\n第 1 / 1 页 · 黑白预览 · 5.3 KB 待发送"
+  },
+  "regressions": [
+    "OnlineScoreTest offline error boundaries + actual Java HTTPS GET live for both files",
+    "KeySessionTest actual session, wrong magic + lost swap ACK, identical retry/one swap, v31 fallback",
+    "GuideTest / GuideSessionTest / ScoreTest / ScoreSessionTest",
+    "24 TGAK and 845 TPAK fixture cross decode, 27 mixed TGAK/TREC, original PCM/WAV golden",
+    "15 actual 8N1 TKAK replies, Android decode and 32 scan outputs after each request"
+  ],
+  "hardware_note": "Android emulator tested real online file entry points. No physical phone/board operations were performed by this test, see independent board records."
+}

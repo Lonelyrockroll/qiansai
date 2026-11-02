@@ -38,7 +38,7 @@ def main():
     tk.Label(app,text='使用已启用的小键盘或触摸屏控制。\n保持此窗口在前台；按 Esc 停止转发并静音。',fg='#e9edf2',bg='#0c1623',font=('Microsoft YaHei',20)).pack(pady=10)
     headline=tk.Label(app,text='正在连接触摸屏…',fg='#e9edf2',bg='#0c1623',font=('Microsoft YaHei',22));headline.pack(pady=20)
     canvas=tk.Canvas(app,width=820,height=480,bg='#172737',highlightthickness=0);canvas.pack()
-    for i,name in enumerate(MENU+['效果切换','播放 / 暂停指引','指引下一组','指引重来']):
+    for i,name in enumerate(MENU+['效果切换','播放 / 暂停指引','指引下一组','指引重来','声谱观察']):
         y=112+i*48;canvas.create_rectangle(632*.8,y*.8,992*.8,(y+44)*.8,outline='#436176',tags=f'row{i}')
         canvas.create_text(646*.8,(y+22)*.8,text=f'{i+1}  {name}',anchor='w',fill='#e9edf2',font=('Microsoft YaHei',13),tags=f'menu_label{i}')
     for i,key in enumerate(INPUTS):
@@ -140,9 +140,12 @@ def main():
             names=menu_names(f)
             recent=(str(k.get('last_input') or '')+' '+k.get('last_action','')).strip() or (names[t['last_menu']] if t.get('last_menu') is not None else '等待操作')
             headline.configure(text=f"{label} · {recent}")
-            for i in range(12):
+            for i in range(13):
                 visible='normal' if i<len(names) else 'hidden'
-                if f.get('firmware',0)>=30:
+                if i==12 and f.get('firmware',0)>=32:
+                    canvas.coords(f'row{i}',512*.8,523*.8,984*.8,545*.8)
+                    canvas.coords(f'menu_label{i}',524*.8,534*.8)
+                elif f.get('firmware',0)>=30:
                     mx,my=512+(i//6)*240,332+(i%6)*32
                     canvas.coords(f'row{i}',mx*.8,my*.8,(mx+232)*.8,(my+28)*.8)
                     canvas.coords(f'menu_label{i}',(mx+14)*.8,(my+14)*.8)

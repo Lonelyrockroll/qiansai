@@ -6,7 +6,7 @@ module guide_transport #(
  parameter RX_TIMEOUT_CYCLES=CLK_HZ/2,
  parameter UPLOAD_TIMEOUT_CYCLES=CLK_HZ*10
 )(
- input wire clk,rst,audio_tick,probe,score_probe,
+ input wire clk,rst,audio_tick,probe,score_probe,key_probe,layout_safe,input wire [4:0] scan_key,output wire [4:0] pitch_key,
  input wire rx_valid,input wire [7:0] rx_data,
  input wire tx_ready,output reg tx_valid,output reg [7:0] tx_data,
  input wire recorder_active,
@@ -35,7 +35,7 @@ module guide_transport #(
  reg [31:0] rx_timeout;
  reg [15:0] rx_crc,tx_crc;
  reg [7:0] reply_seq,reply_op,reply_status;
- reg cache_valid,cacheable,score_reply;
+ reg cache_valid,cacheable,score_reply,key_reply,key_command_valid;
  reg [191:0] last_request,request_identity;
  wire [191:0] identity;
  genvar j;
@@ -50,9 +50,10 @@ module guide_transport #(
  end
  wire guide_command_ready,guide_response_valid,score_command_ready,score_response_valid;
  wire [7:0] guide_response_status,score_response_status;
- wire command_ready=score_reply?score_command_ready:guide_command_ready;
- wire response_valid=score_reply?score_response_valid:guide_response_valid;
- wire [7:0] response_status=score_reply?score_response_status:guide_response_status;
+ wire key_response;wire [7:0] key_status;wire [4:0] key_a,key_b,pitch_a,pitch_b;
+ wire command_ready=key_reply || (score_reply?score_command_ready:guide_command_ready);
+ wire response_valid=key_reply?key_response:(score_reply?score_response_valid:guide_response_valid);
+ wire [7:0] response_status=key_reply?key_status:(score_reply?score_response_status:guide_response_status);
  reg command_valid,score_command_valid;
  reg [7:0] command_op,command_length;
  reg [159:0] command_payload;
@@ -60,6 +61,10 @@ module guide_transport #(
  // Older guide-only benches leave the newly added capability pin open.
  // A hardware request is active only at logic one.
  wire score_probe_active=(score_probe===1'b1);
+ wire key_probe_active=(key_probe===1'b1);
+ key_layout keys(.clk(clk),.rst(rst),.safe_to_edit(layout_safe),.scan_key(scan_key),.pitch_key(pitch_key),
+  .command_valid(key_command_valid),.op(command_op),.length(command_length),.a(command_payload[7:0]),.b(command_payload[15:8]),
+  .response_valid(key_response),.status(key_status),.report_a(key_a),.report_pitch_a(pitch_a),.report_b(key_b),.report_pitch_b(pitch_b));
  assign receiving=state==MAGIC || state==DATA || (state==IDLE && rx_valid && rx_data==8'ha5);
  assign owned=state!=IDLE || tx_valid || (rx_valid && rx_data==8'ha5);
  guide_player #(.CLK_HZ(CLK_HZ),.UPLOAD_TIMEOUT_CYCLES(UPLOAD_TIMEOUT_CYCLES)) player(
@@ -91,13 +96,13 @@ module guide_transport #(
  always @(posedge clk)begin
   if(rst)begin
    state<=IDLE;rx_index<=0;tx_index<=0;crc_index<=0;rx_timeout<=0;rx_crc<=16'hffff;tx_crc<=16'hffff;
-   reply_seq<=0;reply_op<=0;reply_status<=0;cache_valid<=0;cacheable<=0;score_reply<=0;last_request<=0;request_identity<=0;
+   reply_seq<=0;reply_op<=0;reply_status<=0;cache_valid<=0;cacheable<=0;score_reply<=0;key_reply<=0;key_command_valid<=0;last_request<=0;request_identity<=0;
    command_valid<=0;score_command_valid<=0;command_op<=0;command_length<=0;command_payload<=0;
    tx_valid<=0;tx_data<=0;
    for(i=0;i<28;i=i+1)frame[i]<=0;
    for(i=0;i<24;i=i+1)begin reply[i]<=0;last_reply[i]<=0;end
   end else begin
-   tx_valid<=0;command_valid<=0;score_command_valid<=0;
+   tx_valid<=0;command_valid<=0;score_command_valid<=0;key_command_valid<=0;
    if(state==MAGIC || state==DATA)begin
     if(rx_valid)rx_timeout<=0;
     else if(rx_timeout==RX_TIMEOUT_CYCLES-1)begin state<=IDLE;rx_timeout<=0;end
@@ -106,9 +111,9 @@ module guide_transport #(
    case(state)
     IDLE:begin
      if(rx_valid && rx_data==8'ha5)begin frame[0]<=rx_data;rx_timeout<=0;state<=MAGIC;end
-     else if(probe || score_probe_active)begin
+     else if(probe || score_probe_active || key_probe_active)begin
       // A fresh capability exchange starts a connection's retry namespace.
-      reply_seq<=0;reply_op<=score_probe_active?16:0;score_reply<=score_probe_active;
+      reply_seq<=0;reply_op<=key_probe_active?24:(score_probe_active?16:0);score_reply<=score_probe_active;key_reply<=key_probe_active;
       reply_status<=0;cacheable<=0;cache_valid<=0;state<=BUILD;
      end
     end
@@ -122,7 +127,7 @@ module guide_transport #(
      if(rx_index==27)state<=CHECK;else rx_index<=rx_index+1'b1;
     end
     CHECK:begin
-     reply_seq<=frame[3];reply_op<=frame[4];score_reply<=frame[4]>=16 && frame[4]<=20;
+     reply_seq<=frame[3];reply_op<=frame[4];score_reply<=frame[4]>=16 && frame[4]<=20;key_reply<=frame[4]>=24 && frame[4]<=26;
      request_identity<=identity;cacheable<=0;
      if({frame[27],frame[26]}!=rx_crc)begin reply_status<=1;state<=BUILD;end
      else if(frame[2]!=1 || frame[5]>20 || padding_bad)begin reply_status<=3;state<=BUILD;end
@@ -137,16 +142,19 @@ module guide_transport #(
      end
     end
     DISPATCH:if(command_ready)begin
-     if(score_reply)score_command_valid<=1;else command_valid<=1;
+     if(key_reply)key_command_valid<=1;else if(score_reply)score_command_valid<=1;else command_valid<=1;
      state<=WAIT_REPLY;
     end
     WAIT_REPLY:if(response_valid)begin
      reply_status<=response_status;cacheable<=response_status!=4;state<=BUILD;
     end
     BUILD:begin
-     reply[0]<="T";reply[1]<=score_reply?"P":"G";reply[2]<="A";reply[3]<="K";reply[4]<=1;
+     reply[0]<="T";reply[1]<=key_reply?"K":(score_reply?"P":"G");reply[2]<="A";reply[3]<="K";reply[4]<=1;
      reply[5]<=reply_seq;reply[6]<=reply_op;reply[7]<=reply_status;
-     if(score_reply)begin
+     if(key_reply)begin
+      reply[8]<={3'd0,key_a};reply[9]<={3'd0,pitch_a};reply[10]<={3'd0,key_b};reply[11]<={3'd0,pitch_b};
+      for(i=12;i<=21;i=i+1)reply[i]<=0;
+     end else if(score_reply)begin
       reply[8]<=score_received_compressed[7:0];reply[9]<=score_received_compressed[15:8];
       reply[10]<=score_received_compressed[23:16];reply[11]<=score_received_compressed[31:24];
       reply[12]<=score_page_index[7:0];reply[13]<=score_page_index[15:8];

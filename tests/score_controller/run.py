@@ -4,8 +4,8 @@ from pathlib import Path
 HERE=Path(__file__).resolve().parent
 ROOT=HERE.parents[1]
 RESULTS=HERE/'results'
-CONTROLLED=set('clk rst capture_busy capture_ready capture_id capture_count capture_capacity capture_read_data score_ui_ready score_valid score_show_requested score_visible score_loading score_reserved score_page_index score_page_count score_received_compressed score_decoded_bytes ui_valid ui_action ui_value'.split())
-OUTPUTS=set('uart_out capture_read_address capture_command_valid capture_command_arm score_ui_valid score_ui_action ui_ready amp_hold guide_ui_valid guide_ui_action'.split())
+CONTROLLED=set('clk rst capture_busy capture_ready capture_id capture_count capture_capacity capture_read_data score_ui_ready score_valid score_show_requested score_visible score_loading score_reserved score_page_index score_page_count score_received_compressed score_decoded_bytes ui_valid ui_action ui_value amp_ready amp_muted engine_cleared router_held active_voices fx_tail fx_pending loop_playing loop_recording loop_pending loop_layers loop_counts native_panic'.split())
+OUTPUTS=set('uart_out capture_read_address capture_command_valid capture_command_arm score_ui_valid score_ui_action ui_ready amp_hold guide_ui_valid guide_ui_action panic loop_command_valid monitor_fade'.split())
 CONSTANTS={'uart_in':1,'cfg_ready':1,'pc_pad_ready':1,'amp_muted':1,'amp_ready':1,'guide_valid':1,'guide_playing':1,'guide_demo':1,'guide_speed':2,'guide_count':84,'guide_index':12,'guide_time_cs':125,'guide_duration_cs':2400,'guide_current':0x4000}
 def instance(text):
  ports=text.split(')(',1)[1].split(');',1)[0]

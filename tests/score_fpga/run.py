@@ -4,7 +4,7 @@ from pathlib import Path
 HERE=Path(__file__).resolve().parent
 ROOT=HERE.parents[1]
 RESULTS=HERE/'results'
-SOURCES=['guide_transport.v','guide_player.v','score_store.v','pcm_capture.v','score_capture_ram.v']
+SOURCES=['guide_transport.v','key_layout.v','guide_player.v','score_store.v','pcm_capture.v','score_capture_ram.v']
 def run(args,work):
  p=subprocess.run(list(map(str,args)),cwd=work,text=True,capture_output=True,timeout=180)
  if p.returncode or 'FATAL:' in p.stdout:raise RuntimeError(p.stdout+'\n'+p.stderr)

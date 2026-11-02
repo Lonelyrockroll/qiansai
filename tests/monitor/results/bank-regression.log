@@ -1,0 +1,2 @@
+PASS bank exchange: 432 writes, stall without vblank, disable, pixel reset during writer, valid frame recovery
+F:\codex-project\pcb\tang-contest\.work\tang-monitor-u80v5tmm\tb_banks.v:53: $finish called at 16402134088 (1ps)

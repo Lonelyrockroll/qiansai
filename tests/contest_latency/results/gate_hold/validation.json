@@ -1,0 +1,173 @@
+{
+  "scope": "Isolated GW5AT-60B scanner, functional simulation of routed primitives using the Gowin library, no SDF. Not a hardware measurement or a simulation of the encrypted full-board netlist.",
+  "user_visible_key": "H15 / zero-based physical 14",
+  "baseline_code": 4000,
+  "hold_code": 4720,
+  "clock_hz": 50000000,
+  "adc_conversion_clocks": 20,
+  "hold_scans": 32,
+  "hold_ms": 15.38048,
+  "internal_state_forced": false,
+  "testbench_sha256": "a3df537cd7b513d222a5e2dd5237c8077a8a1d43c34723ad09250600b34b7dd0",
+  "original_synth_mismatch_reproduced": true,
+  "cases": {
+    "original": {
+      "scanner_sha256": "2691f9b01b849d5c723ff0064c94b72b722e992de3fece7478366b4911213452",
+      "probe_sha256": "d6690a60656a1e1e0251562b5d30e2d2735914622575c6627e800ccb8d9b6cce",
+      "postroute_vo_sha256": "418b5a4ce8b3b5b557ecabf1c9b2e53c75c1e536a28f11c116ce2e2dbfc53074",
+      "rtl": {
+        "ons": 1,
+        "offs": 1,
+        "held_scans": 32,
+        "missing_held_bit_scans": 0
+      },
+      "gate": {
+        "ons": 16,
+        "offs": 0,
+        "held_scans": 32,
+        "missing_held_bit_scans": 16
+      },
+      "h15_lut_cone": [
+        {
+          "key": 14,
+          "state": 8,
+          "delta": 720,
+          "old_q": 1,
+          "gate": 1,
+          "valid": 0,
+          "ff_instance": "\\keys/pressed_mask_14_s0",
+          "ff_ports": {
+            "D": "\\keys/n2698_4",
+            "CLK": "clk_d",
+            "CE": "VCC",
+            "RESET": "\\keys/n117_6",
+            "Q": "mask_d[14]"
+          },
+          "D": 0,
+          "CE": 1,
+          "RESET": 0,
+          "next_q": 0
+        },
+        {
+          "key": 14,
+          "state": 10,
+          "delta": 720,
+          "old_q": 0,
+          "gate": 1,
+          "valid": 1,
+          "ff_instance": "\\keys/pressed_mask_14_s0",
+          "ff_ports": {
+            "D": "\\keys/n2698_4",
+            "CLK": "clk_d",
+            "CE": "VCC",
+            "RESET": "\\keys/n117_6",
+            "Q": "mask_d[14]"
+          },
+          "D": 1,
+          "CE": 1,
+          "RESET": 0,
+          "next_q": 1
+        },
+        {
+          "key": 13,
+          "state": 8,
+          "delta": 720,
+          "old_q": 1,
+          "gate": 1,
+          "valid": 0,
+          "ff_instance": "\\keys/pressed_mask_14_s0",
+          "ff_ports": {
+            "D": "\\keys/n2698_4",
+            "CLK": "clk_d",
+            "CE": "VCC",
+            "RESET": "\\keys/n117_6",
+            "Q": "mask_d[14]"
+          },
+          "D": 1,
+          "CE": 1,
+          "RESET": 0,
+          "next_q": 1
+        }
+      ]
+    },
+    "final": {
+      "scanner_sha256": "d917ff0ef8f282f96b4e87f898cfa6fbff119d45e43090a865b58b87de17911c",
+      "probe_sha256": "d6690a60656a1e1e0251562b5d30e2d2735914622575c6627e800ccb8d9b6cce",
+      "postroute_vo_sha256": "61993e9c98df329e25d85ea99f0e2b0ee4a3189332ecb37da44e74132f6b3483",
+      "rtl": {
+        "ons": 1,
+        "offs": 1,
+        "held_scans": 32,
+        "missing_held_bit_scans": 0
+      },
+      "gate": {
+        "ons": 1,
+        "offs": 1,
+        "held_scans": 32,
+        "missing_held_bit_scans": 0
+      },
+      "h15_lut_cone": [
+        {
+          "key": 14,
+          "state": 8,
+          "delta": 720,
+          "old_q": 1,
+          "gate": 1,
+          "valid": 0,
+          "ff_instance": "\\keys/pressed_mask_14_s0",
+          "ff_ports": {
+            "D": "gate_d",
+            "CLK": "clk_d",
+            "CE": "\\keys/pressed_mask_14_7",
+            "RESET": "\\keys/n154_5",
+            "Q": "mask_d[14]"
+          },
+          "D": 1,
+          "CE": 0,
+          "RESET": 0,
+          "next_q": 1
+        },
+        {
+          "key": 14,
+          "state": 10,
+          "delta": 720,
+          "old_q": 0,
+          "gate": 1,
+          "valid": 1,
+          "ff_instance": "\\keys/pressed_mask_14_s0",
+          "ff_ports": {
+            "D": "gate_d",
+            "CLK": "clk_d",
+            "CE": "\\keys/pressed_mask_14_7",
+            "RESET": "\\keys/n154_5",
+            "Q": "mask_d[14]"
+          },
+          "D": 1,
+          "CE": 1,
+          "RESET": 0,
+          "next_q": 1
+        },
+        {
+          "key": 13,
+          "state": 8,
+          "delta": 720,
+          "old_q": 1,
+          "gate": 1,
+          "valid": 0,
+          "ff_instance": "\\keys/pressed_mask_14_s0",
+          "ff_ports": {
+            "D": "gate_d",
+            "CLK": "clk_d",
+            "CE": "\\keys/pressed_mask_14_7",
+            "RESET": "\\keys/n154_5",
+            "Q": "mask_d[14]"
+          },
+          "D": 1,
+          "CE": 0,
+          "RESET": 0,
+          "next_q": 1
+        }
+      ]
+    }
+  }
+}

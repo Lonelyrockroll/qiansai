@@ -15,10 +15,10 @@ module keyboard_input #(
     output reg [4:0] last_key,
     output reg cfg_valid,input wire cfg_ready,
     output reg [4:0] cfg_voice,output reg cfg_gate,
-    output reg [15:0] cfg_level,output wire [31:0] cfg_step
+    output reg [15:0] cfg_level,output reg [31:0] sensed_mask,output wire [4:0] scan_index,output wire [31:0] cfg_step
 );
     localparam START=0,SELECT=1,SETTLE=2,REQUEST=3,CONVERT=4,AVERAGE=5,
-        READ_KEY=6,DELTA=7,DECIDE=8,LEVEL=9,EMIT=10,END_SLOT=11;
+        READ_KEY=6,DELTA=7,DECIDE=8,LEVEL=9,EMIT=10,END_SLOT=11,SCALE=12;
     reg [3:0] state;
     reg [19:0] timer;
     reg [15:0] slot_time;
@@ -29,12 +29,17 @@ module keyboard_input #(
     reg [12:0] first_sample,sample,base_read,old_read,delta_work,speed_work;
     reg [16:0] sum_read;
     reg [31:0] level_product;
+    // Q14 touch range is independent of the user's volume setting. Use a
+    // separate cycle for volume scaling; quiet playing keeps its dynamics.
+    wire [14:0] touch_q14 = level_product>=16384 ? 15'd16384 :
+                             level_product<4096 ? 15'd4096 : level_product[14:0];
     reg [16:0] sums[0:31];
     reg [12:0] baseline[0:31],history0[0:31],history1[0:31],history2[0:31];
     reg [12:0] peak_speed[0:31];
     reg [15:0] held_level[0:31];
     wire [13:0] sample_sum={1'b0,first_sample}+{1'b0,adc_data};
     wire [16:0] calibration_sum=sum_read+{4'b0,sample};
+    assign scan_index=key;
     wire [6:0] note;
     white_key_map pitch(.key(cfg_voice),.note(note));
     note_rom notes(.note(note),.step(cfg_step));
@@ -43,11 +48,29 @@ module keyboard_input #(
     function [4:0] channel(input [4:0] k);
         begin channel=k<16?k:(k<28?6'd43-{1'b0,k}:k);end
     endfunction
+    wire [31:0] selected_mask=32'h00000001<<key;
+    // The outgoing event holds its physical key stable through EMIT. Update
+    // the complete word once, only when that note is actually accepted.
+    always @(posedge clk) begin
+        if(rst || recalibrate || mode==0 || !play || fault) pressed_mask<=0;
+        else if(state==EMIT && cfg_valid && cfg_ready)
+            pressed_mask<=cfg_gate?(pressed_mask|selected_mask):(pressed_mask&~selected_mask);
+    end
+    // Physical sensing remains active during mute; use the same explicit
+    // one-hot word operations so every other key retains its previous bit.
+    always @(posedge clk) begin
+        if(rst || recalibrate || mode==0) sensed_mask<=0;
+        else if(!fault && calibrated && state==DECIDE) begin
+            if(mode!=2 && key!=test_key) sensed_mask<=sensed_mask&~selected_mask;
+            else if(delta_work>=press_threshold) sensed_mask<=sensed_mask|selected_mask;
+            else if(delta_work<=release_threshold) sensed_mask<=sensed_mask&~selected_mask;
+        end
+    end
     integer i;
     always @(posedge clk) begin
         if(rst || recalibrate || mode==0) begin
             state<=START;timer<=0;slot_time<=0;key<=0;cal_round<=0;conversion<=0;
-            adc_soc<=0;seen_low<=0;calibrated<=0;fault<=0;pressed_mask<=0;
+            adc_soc<=0;seen_low<=0;calibrated<=0;fault<=0;
             cfg_valid<=0;cfg_voice<=0;cfg_gate<=0;cfg_level<=0;mux_addr<=0;
             scan_count<=0;last_key<=0;last_raw<=0;last_base<=0;last_delta<=0;last_velocity<=0;
             first_sample<=0;sample<=0;base_read<=0;old_read<=0;sum_read<=0;
@@ -59,7 +82,7 @@ module keyboard_input #(
         end else begin
             adc_soc<=0;
             if(slot_time<16'hffff) slot_time<=slot_time+1'b1;
-            if(!play || fault) begin pressed_mask<=0;cfg_valid<=0;end
+            if(!play || fault) cfg_valid<=0;
             if(!fault) case(state)
                 START: if(timer==STARTUP_CYCLES-1) begin timer<=0;state<=SELECT;end
                        else timer<=timer+1'b1;
@@ -75,7 +98,7 @@ module keyboard_input #(
                         if(conversion==0) begin conversion<=1;state<=REQUEST;end
                         else if(conversion==1) begin first_sample<=adc_data;conversion<=2;state<=REQUEST;end
                         else begin sample<=sample_sum[13:1];state<=READ_KEY;end
-                    end else if(timer==ADC_TIMEOUT-1) begin fault<=1;cfg_valid<=0;pressed_mask<=0;end
+                    end else if(timer==ADC_TIMEOUT-1) begin fault<=1;cfg_valid<=0;end
                     else timer<=timer+1'b1;
                 end
                 READ_KEY: begin
@@ -108,7 +131,7 @@ module keyboard_input #(
                             end
                         end else if(delta_work<=release_threshold) begin
                             cfg_voice<=key;cfg_gate<=0;cfg_level<=held_level[key];cfg_valid<=1;state<=EMIT;
-                            pressed_mask[key]<=0;peak_speed[key]<=0;
+                            peak_speed[key]<=0;
                         end else state<=END_SLOT;
                     end
                 end
@@ -117,16 +140,17 @@ module keyboard_input #(
                     level_product<=speed_work*velocity_scale;state<=AVERAGE;
                 end
                 AVERAGE: begin
-                    if(level_product>={16'b0,max_level}) cfg_level<=max_level;
-                    else if(level_product<({16'b0,max_level}>>2)) cfg_level<=max_level>>2;
-                    else cfg_level<=level_product[15:0];
+                    level_product<=max_level*touch_q14;state<=SCALE;
+                end
+                SCALE: begin
+                    cfg_level<=level_product[29:14]+level_product[13];
                     if(key==test_key) last_velocity<={3'b0,speed_work};
                     cfg_valid<=play;state<=EMIT;
                 end
                 EMIT: begin
                     if(!play) begin cfg_valid<=0;state<=END_SLOT;end
                     else if(cfg_valid && cfg_ready) begin
-                        cfg_valid<=0;pressed_mask[key]<=cfg_gate;
+                        cfg_valid<=0;
                         if(cfg_gate) held_level[key]<=cfg_level;
                         state<=END_SLOT;
                     end

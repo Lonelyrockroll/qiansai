@@ -18,7 +18,7 @@ public final class ScoreSessionTest {
         public void guide(RecorderSession s,GuideProtocol.Ack a,String d,boolean busy){}
         public void score(RecorderSession s,ScoreProtocol.Ack a,String d,boolean busy){score=d;}
     }
-    static final class Peer implements AutoCloseable {
+    static class Peer implements AutoCloseable {
         final PipedInputStream fromApp=new PipedInputStream(32768),toApp=new PipedInputStream(32768);
         final PipedOutputStream appWrites,peerWrites;final Thread worker;
         final AtomicReference<Throwable> error=new AtomicReference<>();
@@ -76,11 +76,13 @@ public final class ScoreSessionTest {
                     if(b=='I')audio(3,0);
                     if(b=='G' && guide)send(GuideTest.reply(0,0,0));
                     if(b=='P' && score)send(scoreAck(0,16));
+                    if(b=='J')keyProbe();
                     if(b=='R'){starts++;audio(1,0);}
                     if(b=='S')audio(2,1);
                 }else prefix=b=='~';
             }}catch(IOException ended){}catch(Throwable t){error.set(t);}
         }
+        void keyProbe()throws IOException{}
         public void close()throws Exception{
             try{appWrites.close();peerWrites.close();fromApp.close();toApp.close();}finally{worker.join(1000);}
             if(error.get()!=null)throw new AssertionError(error.get());

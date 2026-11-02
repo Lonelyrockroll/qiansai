@@ -1,0 +1,4 @@
+METER 18 165420 165440 165 -420
+COLD 2614450 480170 2884390 2885090 3024970 3047010 3049810 3950930
+PASS cold session
+F:\codex-project\pcb\tang-contest\tests\contest_latency\tb_latency.v:200: $finish called at 21857550000 (1ps)

@@ -78,6 +78,16 @@ class Decoder:
                 continue
             del self.buffer[:28]
             p = frame[6:26]
+            if p[19]==34 and p[18]>=32:
+                result.append(dict(seq=frame[3],opcode=p[19],status=p[0],firmware=p[18],monitor=bool(p[1]&1),
+                    demo=(p[1]>>1)&3,analysis_overrun=bool(p[1]&8),onset_valid=bool(p[1]&16),
+                    missing=p[2],peak_count=p[3],onset_us=int.from_bytes(p[4:6],'little'),active=p[6],
+                    release_repairs=int.from_bytes(p[7:9],'little'),measured_key=p[9],measurements=int.from_bytes(p[10:12],'little'),
+                    physical_ons=int.from_bytes(p[12:15],'little'),physical_offs=int.from_bytes(p[15:18],'little')))
+                continue
+            if p[19]==35 and p[18]>=32:
+                result.append(dict(seq=frame[3],opcode=p[19],status=p[0],firmware=p[18],group=p[1],levels=list(p[2:18])))
+                continue
             if p[19]==SCORE_CONTROL and p[18]>=31:
                 result.append(dict(seq=frame[3],status=p[0],score_valid=bool(p[1]&1),score_show=bool(p[1]&2),
                     score_loading=bool(p[1]&4),score_reserved=bool(p[1]&8),score_visible=bool(p[1]&16),

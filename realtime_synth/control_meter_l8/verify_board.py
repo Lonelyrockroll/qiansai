@@ -16,8 +16,8 @@ from transports import open_device
 LIMITS=(66,185,520,1037,2068,4126,8231,16423)
 OPS=(4,9,11,12,16,22,25,27,29)
 class Board:
-    def __init__(self):
-        self.device=open_device('com:COM6')
+    def __init__(self,identifier='com:COM6'):
+        self.device=open_device(identifier)
         self.seq=0
         self.decoder=Decoder()
     def call(self,op,payload=b''):

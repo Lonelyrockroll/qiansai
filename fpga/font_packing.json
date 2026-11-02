@@ -1,11 +1,11 @@
 {
-  "glyphs_used": 198,
-  "strings_used": 120,
+  "glyphs_used": 201,
+  "strings_used": 121,
   "font_words": 3072,
   "font_banks": 3,
   "font_bank_words": 1024,
   "font_rows_per_glyph": 15,
-  "font_used_words": 2970,
+  "font_used_words": 3015,
   "string_bytes": 4096,
   "key_pitch_labels": [
     "C2",

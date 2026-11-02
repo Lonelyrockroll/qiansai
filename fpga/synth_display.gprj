@@ -60,5 +60,10 @@
     <File path="score_store.v" type="file.verilog" enable="1" />
     <File path="score_capture_ram.v" type="file.verilog" enable="1" />
     <File path="score_renderer.v" type="file.verilog" enable="1" />
+    <File path="key_layout.v" type="file.verilog" enable="1" />
+    <File path="contest_tones.v" type="file.verilog" enable="1" />
+    <File path="onset_meter.v" type="file.verilog" enable="1" />
+    <File path="key_release_guard.v" type="file.verilog" enable="1" />
+    <File path="audio_monitor.v" type="file.verilog" enable="1" />
   </FileList>
 </Project>

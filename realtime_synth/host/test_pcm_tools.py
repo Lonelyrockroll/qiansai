@@ -19,6 +19,19 @@ class FakeController:
         return dict(capture_id=ident,offset=offset+(self.bad=='offset'),count=count,data=data.hex())
 
 class Tests(unittest.TestCase):
+    def test_frozen_capture_not_replaced_or_accidentally_canceled(self):
+        c=FakeController();calls=[];call=c.exchange
+        def logged(op,p=b''):
+            calls.append(op)
+            if op==PCM_CONTROL:c.meta.update(ready=False,armed=False,recording=False);return {}
+            return call(op,p)
+        c.exchange=logged
+        with self.assertRaises(ValueError):pcm_tools.arm(c,64,'immediate',0)
+        with self.assertRaises(ValueError):pcm_tools.abort(c)
+        with self.assertRaises(ValueError):pcm_tools.release_ready(c,4)
+        self.assertNotIn(PCM_CONTROL,calls)
+        c.pcm_files={'pcm':'already-exported.pcm'};pcm_tools.release_ready(c,5)
+        self.assertEqual(calls.count(PCM_CONTROL),1);self.assertEqual(c.pcm_files['pcm'],'already-exported.pcm')
     def run_export(self,bad=None):
         c=FakeController(bad);pcm_tools.start_export(c)
         deadline=time.monotonic()+3

@@ -12,9 +12,14 @@ sys.path.insert(0, str(ROOT / 'fpga'))
 from check_sources import inspect
 
 
-def validate(build):
+def validate(build, profile='full'):
     manifest = json.loads((build / 'source_manifest.json').read_text())
     expected = {Path(name).name: sha for name, sha in inspect().items()}
+    if profile=='spectrum-only':
+        monitor=ROOT/'profiles/spectrum-only/fpga/audio_monitor.v'
+        expected['audio_monitor.v']=hashlib.sha256(monitor.read_bytes()).hexdigest()
+    elif profile!='full':
+        raise ValueError('Unknown monitor profile')
     built = {Path(name).name: sha for name, sha in manifest.items()}
     assert len(built) == len(manifest) and built == expected, 'Build/source mismatch'
     for name, sha in built.items():
@@ -48,7 +53,7 @@ def validate(build):
     assert not re.search(r'ERROR\s+\(', (build/'build.log').read_text(errors='replace'))
     fw = int(re.search(r'tx_buf\[24\]\s*=\s*(\d+);\s*tx_buf\[25\]=opcode;', (build/'uart_control_display.v').read_text())[1])
     placement = int(re.search(r'-place_option\s+(\d+)',(build/'build.tcl').read_text())[1])
-    result = dict(validated=True, firmware=fw, place_option=placement, resources=resources, frequency=frequency,
+    result = dict(validated=True, firmware=fw, monitor_profile=profile, place_option=placement, resources=resources, frequency=frequency,
                   slack=slack, pins=pins, source_sha256=built,
                   sha256=hashlib.sha256(bitstream.read_bytes()).hexdigest(),
                   user_code=re.search(r'//UserCode:\s*(\S+)', bitstream.read_text()[:2000])[1],
@@ -61,4 +66,5 @@ def validate(build):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('build', type=Path)
-    validate(parser.parse_args().build.resolve())
+    parser.add_argument('--profile',choices=('full','spectrum-only'),default='full')
+    args=parser.parse_args();validate(args.build.resolve(),args.profile)

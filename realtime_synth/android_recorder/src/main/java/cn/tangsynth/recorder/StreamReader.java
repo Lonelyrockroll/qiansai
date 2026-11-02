@@ -9,8 +9,9 @@ final class StreamReader {
     final AudioFrame audio=new AudioFrame();
     GuideProtocol.Ack acknowledgement;
     ScoreProtocol.Ack scoreAcknowledgement;
+    KeyProtocol.Ack keyAcknowledgement;
     boolean read(InputStream in)throws IOException{
-        acknowledgement=null;scoreAcknowledgement=null;
+        acknowledgement=null;scoreAcknowledgement=null;keyAcknowledgement=null;
         int signature=0;
         while(true){
             int value=in.read();
@@ -26,6 +27,10 @@ final class StreamReader {
             }
             if(signature==0x5450414b){
                 try{scoreAcknowledgement=ScoreProtocol.readReply(in);return false;}
+                catch(IOException bad){if(bad instanceof EOFException)throw bad;signature=0;}
+            }
+            if(signature==0x544b414b){
+                try{keyAcknowledgement=KeyProtocol.readReply(in);return false;}
                 catch(IOException bad){if(bad instanceof EOFException)throw bad;signature=0;}
             }
         }

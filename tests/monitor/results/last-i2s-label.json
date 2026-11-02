@@ -1,0 +1,25 @@
+{
+  "scope": "One LIVE-label edit. Compare the actual RTL raster with the previous compact monitor golden at 1024x600.",
+  "prior_source_sha256": "c5b26e073a8bc1a005d2c861296c4e0fdd4aef4fd3e0caebe024c0b2f9516ff5",
+  "current_source_sha256": "c417697e12835fd70a4fb615a49f3d7ee6bb33a2264e2ed77b8cb296d786928a",
+  "prior_rgb_sha256": "0e5ea2f5acfafa21872c15983f13759e01da2f75b58a38ea8dbc889c76114f33",
+  "current_rgb_sha256": "af4bc0e4d0c0e5e56c9fdf8379ade772fa8c34f6b5c67dbfc7a0cb5ee3987868",
+  "changed_pixel_bounds_exclusive": [
+    560,
+    38,
+    698,
+    52
+  ],
+  "changed_pixels": 420,
+  "pixels_compared": 614400,
+  "changed_pixels_outside_live_label": 0,
+  "loop_display_followup": {
+    "source_sha256": "8c1e16f5539ce41053bda427abc07058461a1fe5542243902aaff6052749119d",
+    "previous_source_sha256": "c417697e12835fd70a4fb615a49f3d7ee6bb33a2264e2ed77b8cb296d786928a",
+    "compared_renderer_pixels": 329728,
+    "modes_0_to_2_different_pixels_in_changed_regions": 0,
+    "mode_3_outside_new_heading_matches": "LIVE",
+    "checked_regions": "Rows 0..65, 506..510 and 573..588. For mode 3 the deliberately different top text was checked independently by tb_status.v.",
+    "mode_3_header_and_markers": "status-validation.json"
+  }
+}

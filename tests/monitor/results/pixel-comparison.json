@@ -1,0 +1,26 @@
+{
+  "tone": {
+    "pixels_compared": 614400,
+    "changed_within_phase_panel": 4424,
+    "differences_outside_phase_panel": 0,
+    "rgb_sha256": "0e5ea2f5acfafa21872c15983f13759e01da2f75b58a38ea8dbc889c76114f33",
+    "reference_renderer_sha256": "57bf813670c42cbdec60748748759fe048d9629b590489b5bd9b86e0e14e7bc5",
+    "reference_png_sha256": "96c89a970ac1ccb043eb58850c67efb2557f0da3814d3d0e113f68c95123e0f8"
+  },
+  "test32": {
+    "pixels_compared": 614400,
+    "changed_within_phase_panel": 9928,
+    "differences_outside_phase_panel": 0,
+    "rgb_sha256": "d19f374950f03857b7185a7947477656026957f30c0b0781f0641ae316a76f15",
+    "reference_renderer_sha256": "57bf813670c42cbdec60748748759fe048d9629b590489b5bd9b86e0e14e7bc5",
+    "reference_png_sha256": "20ded1052bb0c9e17e5b313e2a870725699edaa513aab392145ef218c0d87c36"
+  },
+  "test31": {
+    "pixels_compared": 614400,
+    "changed_within_phase_panel": 10440,
+    "differences_outside_phase_panel": 0,
+    "rgb_sha256": "20b1fd4a0785aa852aa24c98528d6849ae5334cedb17b3a1b9be69cc844c590f",
+    "reference_renderer_sha256": "57bf813670c42cbdec60748748759fe048d9629b590489b5bd9b86e0e14e7bc5",
+    "reference_png_sha256": "70ce6a5186f08f7744f0d92da9d31c7f1b0c60a5e7a2836240c865a0641b241c"
+  }
+}

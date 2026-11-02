@@ -89,6 +89,7 @@ module panel_renderer(input wire clk,rst,input wire [10:0] x,y,input wire hs,vs,
    if((x>=512 && x<516 && focus<6 && y>=332+{focus,5'b0} && y<360+{focus,5'b0}) ||
       (x>=752 && x<756 && focus>=6 && focus<12 && y>=332+{(focus-4'd6),5'b0} && y<360+{(focus-4'd6),5'b0}))bg=24'h79d7bd;
   end
+  if(focus==12 && x>=512 && x<984 && y>=523 && y<545)bg=x<516?24'h79d7bd:24'h28495a;
   if(!drum_mode && x>=120 && x<312 && y>=502 && y<512)begin bg=24'h2b424d;if(x<120+(peak_width>>1))bg=peak>220?24'hec947c:24'h79d7bd;end
   if(x>=720 && x<816 && y>=32 && y<38)begin bg=24'h2b424d;if(x<720+(peak_width>>2))bg=peak>220?24'hec947c:24'h79d7bd;end
   if(y>=286 && y<296)begin
@@ -423,17 +424,19 @@ module panel_renderer(input wire clk,rst,input wire [10:0] x,y,input wire hs,vs,
   end
   if(x>=800 && x<864 && y>=498 && y<518)begin enable=1;direct_on=0;addr=(99)*32+((x-800)>>4);row=(y-498)>>0;col=(x-800)>>0;fg=24'hf1f5f3;
   end
-  if(x>=24 && x<312 && y>=550 && y<570)begin enable=1;direct_on=0;addr=(100)*32+((x-24)>>4);row=(y-550)>>0;col=(x-24)>>0;fg=24'h8ca7b3;
+  if(x>=520 && x<632 && y>=525 && y<545)begin enable=1;direct_on=0;addr=(100)*32+((x-520)>>4);row=(y-525)>>0;col=(x-520)>>0;fg=24'hf1f5f3;
   end
-  if(x>=512 && x<800 && y>=550 && y<570)begin enable=1;direct_on=0;addr=(101)*32+((x-512)>>4);row=(y-550)>>0;col=(x-512)>>0;fg=24'h8ca7b3;
+  if(x>=24 && x<312 && y>=550 && y<570)begin enable=1;direct_on=0;addr=(101)*32+((x-24)>>4);row=(y-550)>>0;col=(x-24)>>0;fg=24'h8ca7b3;
   end
-  if(x>=24 && x<200 && y>=576 && y<596)begin enable=1;direct_on=0;addr=(102+bend_position)*32+((x-24)>>4);row=(y-576)>>0;col=(x-24)>>0;fg=timbre==4?24'h657e87:24'h79d7bd;
+  if(x>=512 && x<800 && y>=550 && y<570)begin enable=1;direct_on=0;addr=(102)*32+((x-512)>>4);row=(y-550)>>0;col=(x-512)>>0;fg=24'h8ca7b3;
   end
-  if(x>=248 && x<408 && y>=576 && y<596)begin enable=1;direct_on=0;addr=(111+vibrato_depth)*32+((x-248)>>4);row=(y-576)>>0;col=(x-248)>>0;fg=timbre==4?24'h657e87:24'h79d7bd;
+  if(x>=24 && x<200 && y>=576 && y<596)begin enable=1;direct_on=0;addr=(103+bend_position)*32+((x-24)>>4);row=(y-576)>>0;col=(x-24)>>0;fg=timbre==4?24'h657e87:24'h79d7bd;
   end
-  if(x>=456 && x<520 && y>=576 && y<596)begin enable=1;direct_on=0;addr=(117+(timbre==4))*32+((x-456)>>4);row=(y-576)>>0;col=(x-456)>>0;fg=24'h8ca7b3;
+  if(x>=248 && x<408 && y>=576 && y<596)begin enable=1;direct_on=0;addr=(112+vibrato_depth)*32+((x-248)>>4);row=(y-576)>>0;col=(x-248)>>0;fg=timbre==4?24'h657e87:24'h79d7bd;
   end
-  if(x>=720 && x<896 && y>=576 && y<596)begin enable=1;direct_on=0;addr=(119)*32+((x-720)>>4);row=(y-576)>>0;col=(x-720)>>0;fg=24'h8ca7b3;
+  if(x>=456 && x<520 && y>=576 && y<596)begin enable=1;direct_on=0;addr=(118+(timbre==4))*32+((x-456)>>4);row=(y-576)>>0;col=(x-456)>>0;fg=24'h8ca7b3;
+  end
+  if(x>=720 && x<896 && y>=576 && y<596)begin enable=1;direct_on=0;addr=(120)*32+((x-720)>>4);row=(y-576)>>0;col=(x-720)>>0;fg=24'h8ca7b3;
   end
   if(pattern) begin
    enable=0;

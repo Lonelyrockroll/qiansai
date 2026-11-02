@@ -102,7 +102,7 @@ class Tests(unittest.TestCase):
         self.assertIsNone(ctl.transport);self.assertTrue(fake.closed)
 
     def test_v27_to_v31_main_status(self):
-        for version in range(27,32):
+        for version in range(27,33):
             ctl=server.Controller();ctl.stop.set();ctl.worker.join();ctl.transport=FirmwareTransport(version)
             try:
                 answer=ctl.exchange(1)
@@ -123,7 +123,7 @@ class Tests(unittest.TestCase):
         finally:ctl.disconnect()
 
     def test_unknown_version_and_bad_rate_still_fail(self):
-        for version in (5,27,32,99):
+        for version in (5,27,33,99):
             ctl=server.Controller();ctl.stop.set();ctl.worker.join();fake=FirmwareTransport(version);ctl.transport=fake
             with self.assertRaises(OSError):ctl.exchange(30)
             self.assertIsNone(ctl.transport);self.assertTrue(fake.closed)

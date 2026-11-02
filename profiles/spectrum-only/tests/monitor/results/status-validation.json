@@ -1,0 +1,15 @@
+{
+  "result": "passed",
+  "source_sha256": {
+    "audio_monitor.v": "8b8ebea9a25e6dca97a970d90a96711d8c9a6388b6c1b2fd5d5474f0d46fb6dd",
+    "display_snapshot.v": "71355f98c0843b7a73bdead73b654e5392107eeef9da04f85df3dbbcbe24cc1d",
+    "tb_monitor.v": "892a561956b40d0500f8e3a2e5982263dded225fb761aa4546151dff5dc73fa7"
+  },
+  "scope": "Actual Lite DFT/renderer RTL simulation; no board claim.",
+  "sample_period_sys_clocks": 160,
+  "status_only": true,
+  "frames": [],
+  "rgb_sha256": {
+    "loop-header": "0fb238b4d4dde3b7f1c736c77c91859878444b8cb0efecde5081c99a457a2c86"
+  }
+}

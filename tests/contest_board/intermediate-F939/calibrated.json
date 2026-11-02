@@ -1,0 +1,16 @@
+{
+  "seq": 3,
+  "status": 0,
+  "mode": 2,
+  "calibrated": true,
+  "fault": false,
+  "key": 12,
+  "raw": 4597,
+  "baseline": 4608,
+  "delta": 11,
+  "velocity": 0,
+  "pressed_mask": 0,
+  "scans": 322,
+  "firmware": 32,
+  "opcode": 9
+}

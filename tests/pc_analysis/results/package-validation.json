@@ -1,0 +1,40 @@
+{
+  "passed": true,
+  "archive": "Tang-PC-Audio-Tools.zip",
+  "bytes": 364977,
+  "sha256": "5487dae04e46107706bbdc1a1843e29d91667cdb271db92042801a2ab70bb1fc",
+  "entries": 32,
+  "board_user_code": "0x0000365B",
+  "source_manifest_sha256": "8a747ebc39baf1d980f4475ca1edb195f2cb8996cbeec7a931c3fe8679fa9973",
+  "cases": {
+    "all32": {
+      "capture_id": 1,
+      "first_frame": 410437,
+      "pcm_sha256": "71ff1fefcf3eb2e664139b6d97b29b4fda83e44f8b72beb2cdd7821c2ec936b1",
+      "crc32": "F3F18842",
+      "peak_count": 32
+    },
+    "off16": {
+      "capture_id": 2,
+      "first_frame": 1003900,
+      "pcm_sha256": "86ccb421857bcedc8adb1e919063cfc74adc612c1e61e938c1d9205ddd2bdac2",
+      "crc32": "52FB8DA1",
+      "peak_count": 31
+    },
+    "off17": {
+      "capture_id": 3,
+      "first_frame": 1596542,
+      "pcm_sha256": "de3c29c48d3de846c4444eedb3aa6d2c0dcbd5ffe45d7ca1e8cac7e0ba191d0c",
+      "crc32": "EA99B055",
+      "peak_count": 31
+    }
+  },
+  "source_hashes": {
+    "realtime_synth/host/audio_web.py": "fafa2f74cdbfa75e7f3b0b1ab8c8865140c7f475f6cb56134912959a9092f4f5",
+    "realtime_synth/host/audio-monitor.html": "b3ab802716caedeff96db972817b5d5b0ace42e0761f37ba2a86811ea6b12ca1",
+    "realtime_synth/host/audio-monitor.js": "b2bb5842faae4028b73eae36456b66ef79bc9191677076374c86809e5260e24b",
+    "tools/pc_audio_analysis.py": "6152bb102ad17a01b56eb678bd782aa07e47cc6951cd0ba9d03e02af8065a08d"
+  },
+  "browser_from": "extracted stand-alone kit",
+  "scope": "ZIP bytes, source PCM, capture metadata, peak CSVs and the browser validation all match. External sound card was not exercised."
+}

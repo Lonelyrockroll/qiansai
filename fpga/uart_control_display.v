@@ -31,6 +31,11 @@ module uart_control_display #(
     input wire signed [15:0] pcm,input wire overrun,clipped,
     output reg [11:0] pt_bias,output reg [1:0] pt_mode,
     input wire amp_muted,amp_ready,output reg [1:0] gain_mode,output reg amp_hold,
+    output reg monitor_open,monitor_fade,input wire engine_cleared,output reg [1:0] monitor_demo,output reg [4:0] missing_voice,
+    input wire [5:0] measured_peaks,input wire [319:0] spectrum_levels,input wire monitor_overrun,
+    input wire onset_valid,input wire [15:0] onset_us,orphan_flush_count,
+    input wire [4:0] measured_key,input wire [15:0] measurement_count,
+    input wire [23:0] physical_ons,physical_offs,
     output reg guide_ui_valid,output reg [3:0] guide_ui_action,
     output reg score_ui_valid,output reg [1:0] score_ui_action,input wire score_ui_ready,
     input wire score_valid,score_show_requested,score_visible,score_loading,score_reserved,
@@ -95,6 +100,7 @@ module uart_control_display #(
     reg [2:0] read_count,read_index;
     reg [95:0] capture_words;
     reg ui_pending,pending_score_exit;reg [3:0] pending_action;
+    reg monitor_wait_clear;
     reg [3:0] pending_focus;reg pending_from_host;
     reg [15:0] pending_value;
     assign ui_ready=!ui_pending && state==COLLECT && rx_index==0 && !rx_valid;
@@ -154,6 +160,7 @@ module uart_control_display #(
             state<=COLLECT;rx_index<=0;tx_index<=0;checksum<=0;crc_ok<=0;
             seq<=0;opcode<=0;result_code<=0;gate_mask<=0;command_count<=0;frame_count<=0;
             watchdog<=0;rx_timeout<=0;armed<=0;timed_out<=0;panic<=0;tx_data<=0;tx_valid<=0;gain_mode<=1;amp_hold<=0;
+            monitor_open<=0;monitor_demo<=0;monitor_fade<=0;monitor_wait_clear<=0;missing_voice<=15;
             guide_ui_valid<=0;guide_ui_action<=0;score_ui_valid<=0;score_ui_action<=0;pt_bias<=DEFAULT_PT_BIAS;pt_mode<=2;express_adjust<=0;express_depth<=0;express_up<=0;
             key_mode<=0;key_test<=12;key_wave<=4;key_recalibrate<=0;
             key_level<=4588;key_press<=256;key_release<=128;key_attack<=672;
@@ -169,7 +176,11 @@ module uart_control_display #(
             capture_command_valid<=0;
             led_command_valid<=0;
             diag_command_valid<=0;
-            guide_ui_valid<=0;if(score_ui_ready)score_ui_valid<=0;express_adjust<=0;panic<=0;tx_valid<=0;key_recalibrate<=0;live_piano_flush<=0;loop_command_valid<=0;
+            guide_ui_valid<=0;if(score_ui_ready)score_ui_valid<=0;express_adjust<=0;panic<=0;monitor_fade<=0;tx_valid<=0;key_recalibrate<=0;live_piano_flush<=0;loop_command_valid<=0;
+            if(monitor_wait_clear)begin
+                if(!monitor_open || !amp_hold || panic || score_show_requested)monitor_wait_clear<=0;
+                else if(engine_cleared)begin monitor_wait_clear<=0;monitor_demo<=1;end
+            end
             if(sample_tick) frame_count<=frame_count+1'b1;
             if(armed && !ui_local && watchdog<WATCHDOG_CYCLES) watchdog<=watchdog+1'b1;
             if(armed && !ui_local && watchdog==WATCHDOG_CYCLES-1) begin
@@ -201,7 +212,7 @@ module uart_control_display #(
                             watchdog<=0;
                             case(rx_buf[4])
                                 1,4: begin result_code<=0;state<=BUILD;end
-                                2: if(key_mode!=0) begin result_code<=4;state<=BUILD;end
+                                2: if(key_mode!=0 || monitor_demo!=0) begin result_code<=4;state<=BUILD;end
                                 else if(rx_buf[6]>=32 || rx_buf[7]>1 || rx_buf[8]>4 ||
                                        {rx_buf[14],rx_buf[13],rx_buf[12],rx_buf[11]}>(rx_buf[8]==4?32'h0ff00000:32'h0fffffff)) begin
                                     result_code<=3;state<=BUILD;
@@ -256,7 +267,7 @@ module uart_control_display #(
                                 9: begin result_code<=0;state<=BUILD;end
                                 10: begin
                                     if((rx_buf[6]>8 && rx_buf[6]!=11 && rx_buf[6]!=12 && rx_buf[6]!=13 && rx_buf[6]!=14 && rx_buf[6]!=15) ||
-                                       ((rx_buf[6]==13 || rx_buf[6]==15) && {rx_buf[8],rx_buf[7]}>1) || ((rx_buf[6]==5 || rx_buf[6]==6) && rx_buf[7]>11) ||
+                                       ((rx_buf[6]==13 || rx_buf[6]==15) && {rx_buf[8],rx_buf[7]}>1) || ((rx_buf[6]==5 || rx_buf[6]==6) && rx_buf[7]>12) ||
                                        (rx_buf[6]==7 && {rx_buf[8],rx_buf[7]}>16384) ||
                                        (rx_buf[6]==8 && rx_buf[7]>4)) result_code<=3;
                                     else if(ui_pending) result_code<=4;
@@ -270,6 +281,8 @@ module uart_control_display #(
                                 end
                                 11,12,13,14,16,17,19,27,29: begin result_code<=0;state<=BUILD;end
                                 // Read trim (0), or write (1, uint16 little endian) with the PA safely off.
+                                34:begin result_code<=0;state<=BUILD;end
+                                35:begin result_code<=rx_buf[6]<=3?0:3;state<=BUILD;end
                                 30:begin
                                     if(rx_buf[6]==0) result_code<=0;
                                     else if(rx_buf[6]>2 || (rx_buf[6]==1 && rx_buf[8][7:4]!=0) ||
@@ -317,7 +330,7 @@ module uart_control_display #(
                                 end
                                 15:begin
                                     if(rx_buf[6]>=12)begin result_code<=3;state<=BUILD;end
-                                    else if(!amp_ready)begin result_code<=4;state<=BUILD;end
+                                    else if(!amp_ready || monitor_demo!=0)begin result_code<=4;state<=BUILD;end
                                     else begin pc_pad<=rx_buf[6][3:0];result_code<=0;state<=PAD_APPLY;end
                                 end
                                 21:begin
@@ -420,7 +433,7 @@ module uart_control_display #(
                         tx_buf[22]={6'd0,drum_mode,native_connected};tx_buf[23]={3'd0,native_last_event};
                     end
                     if(opcode==30) begin tx_buf[7]=pt_bias[7:0];tx_buf[8]={4'b0,pt_bias[11:8]};tx_buf[9]={6'b0,pt_mode};end
-                    tx_buf[24]=31;tx_buf[25]=opcode;
+                    tx_buf[24]=32;tx_buf[25]=opcode;
 
                     if(opcode==12)begin
                         tx_buf[7]={7'd0,native_connected};tx_buf[8]={3'd0,native_last_event};tx_buf[9]={1'b1,vibrato_depth,bend_position};
@@ -513,6 +526,18 @@ module uart_control_display #(
                         for(i=0;i<4;i=i+1)begin tx_buf[12+i]=score_received_compressed[i*8+:8];tx_buf[16+i]=score_decoded_bytes[i*8+:8];end
                         for(i=20;i<24;i=i+1)tx_buf[i]=0;
                     end
+                    if(opcode==34)begin
+                        tx_buf[7]={3'd0,onset_valid,monitor_overrun,monitor_demo,monitor_open};
+                        tx_buf[8]={3'd0,missing_voice};tx_buf[9]={2'd0,measured_peaks};
+                        tx_buf[10]=onset_us[7:0];tx_buf[11]=onset_us[15:8];tx_buf[12]={2'd0,active_voices};
+                        tx_buf[13]=orphan_flush_count[7:0];tx_buf[14]=orphan_flush_count[15:8];
+                        tx_buf[15]={3'd0,measured_key};tx_buf[16]=measurement_count[7:0];tx_buf[17]=measurement_count[15:8];
+                        for(i=0;i<3;i=i+1)begin tx_buf[18+i]=physical_ons[i*8+:8];tx_buf[21+i]=physical_offs[i*8+:8];end
+                    end
+                    if(opcode==35)begin
+                        tx_buf[7]=rx_buf[6];
+                        for(i=0;i<16;i=i+1)tx_buf[8+i]={3'd0,spectrum_levels[(rx_buf[6][1:0]*16+i)*5+:5]};
+                    end
                     tx_buf[27]=8'h0d;tx_index<=0;state<=CHECKSUM;
                     if(opcode==21 && rx_buf[6]==1 && score_reserved)tx_buf[6]=4;
                     if(opcode==33 && (!score_valid || score_loading || read_capture_id!=score_page_index))begin tx_buf[6]=4;tx_buf[11]=0;end
@@ -545,9 +570,29 @@ module uart_control_display #(
                         if(score_ui_ready)begin score_ui_valid<=1;score_ui_action<=0;end
                         else begin ui_pending<=1;pending_score_exit<=1;end
                     end
+                end else if(monitor_open)begin
+                    case(pending_action)
+                     1,9:if(monitor_demo==0)begin monitor_open<=0;
+                            if(monitor_wait_clear)begin monitor_wait_clear<=0;panic<=1;amp_hold<=0;armed<=0;ui_local<=0;end
+                         end
+                         else begin monitor_demo<=2;missing_voice<=pending_action==1?missing_voice+1'b1:missing_voice-1'b1;end
+                     2:case(monitor_demo)
+                        0:if(!monitor_wait_clear && !loop_playing && !loop_recording && !loop_pending)begin
+                             missing_voice<=15;amp_hold<=1;armed<=1;ui_local<=1;watchdog<=0;timed_out<=0;
+                             if(amp_ready && (router_held!=0 || active_voices!=0 || fx_tail || fx_pending))begin
+                                 monitor_fade<=1;monitor_wait_clear<=1;
+                             end else monitor_demo<=1;
+                          end
+                        1:monitor_demo<=2;
+                        default:begin monitor_demo<=0;panic<=1;amp_hold<=0;armed<=0;gate_mask<=0;ui_local<=0;end
+                       endcase
+                     3:begin monitor_open<=0;monitor_demo<=0;monitor_wait_clear<=0;panic<=1;amp_hold<=0;armed<=0;gate_mask<=0;ui_local<=0;end
+                     7:if(drum_mode)drum_level<=pending_value;else key_level<=pending_value;
+                     13,15:if(monitor_demo==0)begin express_adjust<=1;express_depth<=pending_action==15;express_up<=pending_value[0];end
+                    endcase
                 end else case(pending_action)
-                1:ui_focus<=ui_focus==11?0:ui_focus+1'b1;
-                9:ui_focus<=ui_focus==0?11:ui_focus-1'b1;
+                1:ui_focus<=ui_focus==12?0:ui_focus+1'b1;
+                9:ui_focus<=ui_focus==0?12:ui_focus-1'b1;
                 10:change_timbre(key_wave==0?3'd4:key_wave-1'b1);
                 11:scan_toggle();
                 12:calibrate_keys();
@@ -578,6 +623,7 @@ module uart_control_display #(
                     9:begin guide_ui_valid<=1;guide_ui_action<=4;end
                     10:begin guide_ui_valid<=1;guide_ui_action<=5;end
                     11:begin guide_ui_valid<=1;guide_ui_action<=3;end
+                    12:begin monitor_open<=1;monitor_demo<=0;end
                 endcase
                 end
                 endcase
@@ -592,7 +638,12 @@ module uart_control_display #(
                     "M":begin panic<=1;amp_hold<=0;armed<=0;gate_mask<=0;ui_local<=0;end
                 endcase
             end
-            if(native_panic)begin panic<=1;amp_hold<=0;armed<=0;gate_mask<=0;ui_local<=0;ui_pending<=0;pending_score_exit<=0;end
+            if(panic)monitor_demo<=0;
+            if(score_show_requested && monitor_open)begin
+                monitor_open<=0;
+                if(monitor_demo!=0)begin monitor_demo<=0;panic<=1;amp_hold<=0;armed<=0;gate_mask<=0;ui_local<=0;end
+            end
+            if(native_panic)begin monitor_open<=0;monitor_demo<=0; panic<=1;amp_hold<=0;armed<=0;gate_mask<=0;ui_local<=0;ui_pending<=0;pending_score_exit<=0;end
             if(key_fault && !drum_mode)ui_notice<=2;
         end
     end

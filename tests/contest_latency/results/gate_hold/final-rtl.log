@@ -1,0 +1,36 @@
+EVENT scan=16 gate=1 mask=00000000 sensed=00004000
+HELD scan=17 mask=00004000 sensed=00004000
+HELD scan=18 mask=00004000 sensed=00004000
+HELD scan=19 mask=00004000 sensed=00004000
+HELD scan=20 mask=00004000 sensed=00004000
+HELD scan=21 mask=00004000 sensed=00004000
+HELD scan=22 mask=00004000 sensed=00004000
+HELD scan=23 mask=00004000 sensed=00004000
+HELD scan=24 mask=00004000 sensed=00004000
+HELD scan=25 mask=00004000 sensed=00004000
+HELD scan=26 mask=00004000 sensed=00004000
+HELD scan=27 mask=00004000 sensed=00004000
+HELD scan=28 mask=00004000 sensed=00004000
+HELD scan=29 mask=00004000 sensed=00004000
+HELD scan=30 mask=00004000 sensed=00004000
+HELD scan=31 mask=00004000 sensed=00004000
+HELD scan=32 mask=00004000 sensed=00004000
+HELD scan=33 mask=00004000 sensed=00004000
+HELD scan=34 mask=00004000 sensed=00004000
+HELD scan=35 mask=00004000 sensed=00004000
+HELD scan=36 mask=00004000 sensed=00004000
+HELD scan=37 mask=00004000 sensed=00004000
+HELD scan=38 mask=00004000 sensed=00004000
+HELD scan=39 mask=00004000 sensed=00004000
+HELD scan=40 mask=00004000 sensed=00004000
+HELD scan=41 mask=00004000 sensed=00004000
+HELD scan=42 mask=00004000 sensed=00004000
+HELD scan=43 mask=00004000 sensed=00004000
+HELD scan=44 mask=00004000 sensed=00004000
+HELD scan=45 mask=00004000 sensed=00004000
+HELD scan=46 mask=00004000 sensed=00004000
+HELD scan=47 mask=00004000 sensed=00004000
+HELD scan=48 mask=00004000 sensed=00004000
+EVENT scan=48 gate=0 mask=00004000 sensed=00000000
+RESULT 1 1 32 0
+tests/contest_latency/tb_gate_hold.v:38: $finish called at 34032160000 (1ps)

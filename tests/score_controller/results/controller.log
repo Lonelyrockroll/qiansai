@@ -1,2 +1,2 @@
-PASS score controller 144 checks, 28 UART replies: op32/33 bounds/tag races, PCM23/arm, local exit and backpressure
-F:\codex-project\pcb\tang-score\tests\score_controller\tb_score_controller.v:116: $finish called at 817936000 (1ps)
+PASS score controller 457 checks, 80 UART replies: PDF/PCM, cold and warm monitor takeover, Loop exclusion and late fade acknowledgements
+F:\codex-project\pcb\tang-contest\tests\score_controller\tb_score_controller.v:221: $finish called at 2339046000 (1ps)

@@ -1,6 +1,18 @@
-# Tang 演奏助手 · 安卓 1.2
+# Tang 演奏助手 · 安卓 1.3
 
-安装 [TangRecorder-1.2.apk](dist/TangRecorder-1.2.apk)。它与 1.0 / 1.1 使用同一包名和开发签名，versionCode 为 3，可覆盖升级并保留已录 WAV。新版本增加 PDF 曲谱，保留 MIDI 屏幕指引和录音；录音仍可与原来的 v23 及后续兼容固件使用。
+安装 [TangRecorder-1.3.apk](dist/TangRecorder-1.3.apk)。与 1.2 使用同一包名和签名，versionCode 为 4，可覆盖升级并保留已录 WAV、上次的 PDF 和 MIDI。
+
+## 在线曲谱
+
+在“PDF 曲谱”或“MIDI 屏幕指引”卡片中点“从网址下载”，粘贴 HTTPS 文件直链，再点“下载链接”。手机可在连接板卡之前下载并预览。PDF 支持 20 MB、200 页，MIDI 支持 2 MB。文件加载成功后，沿用已有的发送和选轨按钮。下载中断、服务器返回网页或文件验证失败时，上次成功的曲谱仍可打开。
+
+现场可以直接点“下载在线示范”，从 Mutopia Project 下载 Franciszek Horetzky 的《Pyrenese Melody》。排版者将此版本置于公有领域。PDF 是一页五线谱，配套 MIDI 经手机编译得到 54 个可演奏音符、108 个事件、20.68 秒，会提示略过 27 个半音。[来源 PDF](https://www.mutopiaproject.org/ftp/HoretzkyF/horetzky25/horetzky25-a4.pdf) · [配套 MIDI](https://www.mutopiaproject.org/ftp/HoretzkyF/horetzky25/horetzky25.mid)
+
+## 32 白键音高设置
+
+连接支持键位设置的 v32 固件，在“实体琴键”选择 A 和 B。编号从左至右为 H1～H32，对应的默认音高为 C2～F6。“查询 A”显示该物理键当前实际音高。先结束演奏、测试音和 Loop 并静音。实体扫描开启时，要等校准正常并实际松开全部白键，再点“交换 A 与 B”。关闭扫描时，可以在静音状态下配置。H15 和 H16 互换后，H15 发 D4，H16 发 C4。点“恢复默认音高”或重新给板卡上电，即可恢复原白键排列。
+
+手机只在收到 `~J` 的 TKAK 能力回包后启用设置。旧固件继续使用各自支持的录音、MIDI 和 PDF 功能。此入口设置实体琴键，12 键小键盘仍按固定鼓组使用。
 
 ## PDF 曲谱
 
@@ -61,3 +73,7 @@ WAV 为单声道、16 位 PCM、16276 Hz。空白段会录成静音，单段最�
 2026-11-02，1.1 App 与 v30 实物验收通过：用户确认示例 MIDI 上传成功，断开手机后指引继续。板卡随后回读为外部上传曲目、84 事件、24 秒，演示结束后进度与目标归零。记录见仓库 `tests/guide_fpga/board_20261102/phone_upload_readback.json` 与 `user_acceptance.json`。
 
 2026-11-02，1.2 App 与 v31 实物验收通过：两页示范 PDF 均通过蓝牙传入并全屏显示，手机翻页正常。每页解压后 65,536 字节，本次传输用时约 46～47 秒。板端观测和用户确认见 `tests/score_fpga/board_20261102/acceptance.json`。
+
+1.3 已在 Android 35 模拟器通过正常按钮从公网下载 PDF 并预览一页，也下载了 MIDI 并生成 108 个指引事件。另一次尝试下载 HTML 网页时，App 显示文件类型错误。退出并重新启动后，上次有效的 PDF 仍能预览。结果与 APK 哈希见 [contest_validation.json](contest_validation.json)。JVM 回归可用 `python tests/verify_app13.py --live` 运行。`KeySessionTest` 验证交换键位时丢 ACK 仍只交换一次，旧 v31 不启用键位命令。FPGA 串口 TKAK 实际帧的交叉验证见 [键位回归](../../tests/contest_keys/README.md)。
+
+Android 模拟器截图：[在线 PDF 预览](tests/evidence/online-pdf-android35.png) · [在线 MIDI 导入](tests/evidence/online-midi-android35.png)。

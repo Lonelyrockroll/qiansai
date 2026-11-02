@@ -1,2 +1,2 @@
 PASS 179 framed commands: CRC/retry/banks, same-time chords, track colors, sustain, timing, pause, step, speed, 512-event boundary and timeouts
-F:\codex-project\pcb\tang-score\tests\guide_fpga\tb_guide.v:190: $finish called at 1027760000 (1ps)
+F:\codex-project\pcb\tang-contest\tests\guide_fpga\tb_guide.v:190: $finish called at 1027760000 (1ps)

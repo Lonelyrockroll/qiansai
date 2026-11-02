@@ -1,0 +1,160 @@
+{
+  "cases": [
+    {
+      "case": 0,
+      "accepted_to_external_i2s_ns": 80940,
+      "marker_width_ns": 80960,
+      "display_us": 80,
+      "display_error_ns": -940
+    },
+    {
+      "case": 1,
+      "accepted_to_external_i2s_ns": 84780,
+      "marker_width_ns": 84800,
+      "display_us": 84,
+      "display_error_ns": -780
+    },
+    {
+      "case": 2,
+      "accepted_to_external_i2s_ns": 79020,
+      "marker_width_ns": 79040,
+      "display_us": 79,
+      "display_error_ns": -20
+    },
+    {
+      "case": 3,
+      "accepted_to_external_i2s_ns": 73260,
+      "marker_width_ns": 73280,
+      "display_us": 73,
+      "display_error_ns": -260
+    },
+    {
+      "case": 4,
+      "accepted_to_external_i2s_ns": 67500,
+      "marker_width_ns": 67520,
+      "display_us": 67,
+      "display_error_ns": -500
+    },
+    {
+      "case": 5,
+      "accepted_to_external_i2s_ns": 82220,
+      "marker_width_ns": 82240,
+      "display_us": 82,
+      "display_error_ns": -220
+    },
+    {
+      "case": 6,
+      "accepted_to_external_i2s_ns": 76460,
+      "marker_width_ns": 76480,
+      "display_us": 76,
+      "display_error_ns": -460
+    },
+    {
+      "case": 7,
+      "accepted_to_external_i2s_ns": 70700,
+      "marker_width_ns": 70720,
+      "display_us": 70,
+      "display_error_ns": -700
+    },
+    {
+      "case": 8,
+      "accepted_to_external_i2s_ns": 85420,
+      "marker_width_ns": 85440,
+      "display_us": 85,
+      "display_error_ns": -420
+    },
+    {
+      "case": 9,
+      "accepted_to_external_i2s_ns": 187540,
+      "marker_width_ns": 187560,
+      "display_us": 187,
+      "display_error_ns": -540
+    },
+    {
+      "case": 10,
+      "accepted_to_external_i2s_ns": 105280,
+      "marker_width_ns": 105300,
+      "display_us": 105,
+      "display_error_ns": -280
+    },
+    {
+      "case": 11,
+      "accepted_to_external_i2s_ns": 169900,
+      "marker_width_ns": 169920,
+      "display_us": 169,
+      "display_error_ns": -900
+    },
+    {
+      "case": 12,
+      "accepted_to_external_i2s_ns": 152620,
+      "marker_width_ns": 152640,
+      "display_us": 152,
+      "display_error_ns": -620
+    },
+    {
+      "case": 13,
+      "accepted_to_external_i2s_ns": 132780,
+      "marker_width_ns": 132800,
+      "display_us": 132,
+      "display_error_ns": -780
+    },
+    {
+      "case": 14,
+      "accepted_to_external_i2s_ns": 130220,
+      "marker_width_ns": 130240,
+      "display_us": 130,
+      "display_error_ns": -220
+    },
+    {
+      "case": 15,
+      "accepted_to_external_i2s_ns": 112940,
+      "marker_width_ns": 112960,
+      "display_us": 112,
+      "display_error_ns": -940
+    },
+    {
+      "case": 16,
+      "accepted_to_external_i2s_ns": 93100,
+      "marker_width_ns": 93120,
+      "display_us": 93,
+      "display_error_ns": -100
+    },
+    {
+      "case": 17,
+      "accepted_to_external_i2s_ns": 80940,
+      "marker_width_ns": 80960,
+      "display_us": 80,
+      "display_error_ns": -940
+    },
+    {
+      "case": 18,
+      "accepted_to_external_i2s_ns": 165420,
+      "marker_width_ns": 165440,
+      "display_us": 165,
+      "display_error_ns": -420
+    }
+  ],
+  "source_sha256": {
+    "synth_display_top.v": "7ac0dd2a548653b29a8e29153f8e56f9606de0e974658156f037751f3cfd2099",
+    "keyboard_input.v": "d917ff0ef8f282f96b4e87f898cfa6fbff119d45e43090a865b58b87de17911c",
+    "white_key_map.v": "483e1ce6d09013c075023c347a7975aaf0caa8c3b51a25f1b0675ee8319016e6",
+    "note_rom.v": "dfe25333bbd60f09f1170e737048a77dbd1e17d065cf5d717f860a2ef4dc3f9d",
+    "performance_looper.v": "fb41bd09e2af1d4e8a5778b15f7deb9dfd2319d6f26e7f86996d94cf3b6c7be7",
+    "performance_router.v": "7a362fe303dc3eeef586cb51175baf8320f99217222a0b471295f9463321aafe",
+    "synth_engine_shared.v": "bc22524234710d73d93ae6e5da6fda2d32c5f1ad300d979b34fd1ecb20eed9be",
+    "modal32.v": "598499b06e64626ee286d4acb12200d1028cc593c4a0290043844c2a817f8c1c",
+    "modal32_coeffs.v": "858c5fbab101d0b91d8d386aeefeaa190b7e9560cc210994a527f94968376026",
+    "waveform_rom.v": "8e91eabf93ebd95d50af6c6f6cd30ae28f5d7ff5407d35c431b4d25e9fc7a9d9",
+    "piano_modal_tables_compact.v": "f91e75b30a89f1eaa93ca5c022f8cde807ccb3fd6133e46bacf465091fa79a37",
+    "audio_output_limited.v": "87f76c43331c52448a13b02e78deade6580639bbd8b36b6931a03877d2c2482a",
+    "pcm_peak_limiter.v": "a6da50235153e764007c315701bf1bd4b8282e150b301d68f8467d0bae932319",
+    "audio_effects.v": "a5185f0f760cf5da5583e9ec4d0647d784798202fb065530bdbd082f43dfd7eb",
+    "chorus_lfo.v": "abab9c25c5950f30088fb44fef7f9cf69ecb190bb0aa08e9a9a4f3832334b2c2",
+    "audio_tx.v": "790163bc1eeca79e4b4e70d7553e56543087fa31bd894f3d068e29582d346ae9",
+    "bt_console.v": "2f0994e8e52fee38bd205a5a9a4cc902407007deaa466f952f29532be42b4a01",
+    "guide_transport.v": "9254cdb969c18654f4883b1bd12b8425505b009cb817e6266146bb7166c70068",
+    "key_layout.v": "b61ca7a2537e2b810aec31e459ff68816d282d45d20f0f2a30b6d0287fc8fc4a",
+    "onset_meter.v": "58f53ad5a5187d27d2b5bc307755f7f4135b12ca7e941d78d96315949f98bdca",
+    "key_release_guard.v": "479f136c1a8adca7de5771be1c9680270aa42b9840b094900ed3ac15a31b94cf"
+  }
+}

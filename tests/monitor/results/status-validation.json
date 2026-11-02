@@ -1,0 +1,10 @@
+{
+  "result": "passed",
+  "scope": "Actual renderer characters in all four header states and final RGB target/missing marker pixels.",
+  "source_sha256": {
+    "audio_monitor.v": "8c1e16f5539ce41053bda427abc07058461a1fe5542243902aaff6052749119d",
+    "tb_status.v": "51b7a736e38f018c66de706617200ffdc0c9701d067c5b421f99ca01d10549a4"
+  },
+  "summary": "PASS LIVE LAST I2S, loop warning, 32/31 labels, real RGB target and missing markers",
+  "header_rgb_sha256": "af51d9327d908ba8f3e6417aaac5bcc50ba84ad70616dcee0c4e51dbadda73a8"
+}

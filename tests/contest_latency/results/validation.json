@@ -1,0 +1,50 @@
+{
+  "scope": "50 MHz RTL simulation, 32-channel scan, modeled SOC/EOC sampling, warm performance session, idle Loop/drums, neutral pitch and bypassed FX.",
+  "case_count": 18,
+  "same_phase_repeat_exact": true,
+  "largest_tested_threshold_to_i2s_word_ms": 0.66873,
+  "largest_tested_threshold_to_i2s_abs16_ms": 0.97593,
+  "largest_tested_threshold_to_pt_word_ms": 0.66593,
+  "largest_tested_motion_start_to_i2s_abs16_ms": 7.12711,
+  "c4_phase_sweep_i2s_word_ms": [
+    0.08535,
+    0.56213
+  ],
+  "scan_revisit_ms": 0.48064,
+  "audio_tick_ms": 0.02048,
+  "physical_scope_measurement": false,
+  "zero_asynchronous_input_jitter": false,
+  "cold_simultaneous_arm_and_step": {
+    "amplifier_ready_ns": 2614450,
+    "kept_aperture_ns": 480170,
+    "scanner_handshake_ns": 2884390,
+    "engine_handshake_ns": 2885090,
+    "pcm_ns": 3024970,
+    "pt_word_ns": 3047010,
+    "i2s_word_ns": 3049810,
+    "i2s_abs16_ns": 3950930
+  },
+  "source_sha256": {
+    "synth_display_top.v": "7ac0dd2a548653b29a8e29153f8e56f9606de0e974658156f037751f3cfd2099",
+    "keyboard_input.v": "d917ff0ef8f282f96b4e87f898cfa6fbff119d45e43090a865b58b87de17911c",
+    "white_key_map.v": "483e1ce6d09013c075023c347a7975aaf0caa8c3b51a25f1b0675ee8319016e6",
+    "note_rom.v": "dfe25333bbd60f09f1170e737048a77dbd1e17d065cf5d717f860a2ef4dc3f9d",
+    "performance_looper.v": "fb41bd09e2af1d4e8a5778b15f7deb9dfd2319d6f26e7f86996d94cf3b6c7be7",
+    "performance_router.v": "7a362fe303dc3eeef586cb51175baf8320f99217222a0b471295f9463321aafe",
+    "synth_engine_shared.v": "bc22524234710d73d93ae6e5da6fda2d32c5f1ad300d979b34fd1ecb20eed9be",
+    "modal32.v": "598499b06e64626ee286d4acb12200d1028cc593c4a0290043844c2a817f8c1c",
+    "modal32_coeffs.v": "858c5fbab101d0b91d8d386aeefeaa190b7e9560cc210994a527f94968376026",
+    "waveform_rom.v": "8e91eabf93ebd95d50af6c6f6cd30ae28f5d7ff5407d35c431b4d25e9fc7a9d9",
+    "piano_modal_tables_compact.v": "f91e75b30a89f1eaa93ca5c022f8cde807ccb3fd6133e46bacf465091fa79a37",
+    "audio_output_limited.v": "87f76c43331c52448a13b02e78deade6580639bbd8b36b6931a03877d2c2482a",
+    "pcm_peak_limiter.v": "a6da50235153e764007c315701bf1bd4b8282e150b301d68f8467d0bae932319",
+    "audio_effects.v": "a5185f0f760cf5da5583e9ec4d0647d784798202fb065530bdbd082f43dfd7eb",
+    "chorus_lfo.v": "abab9c25c5950f30088fb44fef7f9cf69ecb190bb0aa08e9a9a4f3832334b2c2",
+    "audio_tx.v": "790163bc1eeca79e4b4e70d7553e56543087fa31bd894f3d068e29582d346ae9",
+    "bt_console.v": "2f0994e8e52fee38bd205a5a9a4cc902407007deaa466f952f29532be42b4a01",
+    "guide_transport.v": "9254cdb969c18654f4883b1bd12b8425505b009cb817e6266146bb7166c70068",
+    "key_layout.v": "b61ca7a2537e2b810aec31e459ff68816d282d45d20f0f2a30b6d0287fc8fc4a",
+    "onset_meter.v": "58f53ad5a5187d27d2b5bc307755f7f4135b12ca7e941d78d96315949f98bdca",
+    "key_release_guard.v": "479f136c1a8adca7de5771be1c9680270aa42b9840b094900ed3ac15a31b94cf"
+  }
+}

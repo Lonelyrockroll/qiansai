@@ -75,8 +75,9 @@
 <label>触发后延迟 / ms <input id="pcmDelay" type="number" min="0" max="10000" step="100" value="0" style="width:110px"></label>
 <button id="pcmArm" class="primary" disabled>准备抓取</button><button id="pcmAbort" disabled>取消抓取</button><button id="pcmExport" disabled>校验并导出 WAV</button>
 </div><p id="pcmStatus" class="small" style="margin-top:12px">等待连接 v19 或更新固件</p>
-<div class="row"><button id="pcmDownload" disabled>下载原始 WAV</button><button id="pcmListen" disabled>下载试听音量版</button></div>
-<p class="small">原始 WAV 不调整音量；试听版只作固定增益。导出期间可以继续演奏，缓存中的片段保持冻结。</p></div>
+<div class="row"><button id="pcmDownload" disabled>下载原始 WAV</button><button id="pcmListen" disabled>下载试听音量版</button><button id="pcmRaw" disabled>下载分析用 PCM</button><button id="pcmRelease" disabled>释放已导出的缓存</button></div>
+<p><a href="/audio-monitor" target="_blank" rel="noopener">打开电脑实时声卡观察：波形 / 宽带频谱 / 延时 XY</a></p>
+<p class="small">将裸 PCM 文件拖到工程的“电脑音频分析.cmd”可生成波形、宽带频谱、峰表和延时 XY 图。这是单段抓取。导出完成后可以释放板内缓存供 PDF 使用，电脑上的文件仍可分析。</p></div>
 <footer>本地控制工具 · 115200 baud / 8N1 · 当前音频 Fs = 48,828.125 Hz · 控制模式启动时保持静音</footer>
 </main><script>
 const TOKEN='__TOKEN__';const $=id=>document.getElementById(id);let connected=false;let queue=Promise.resolve();let pressed=new Map();let keyNotes=new Map();let pollBusy=false;let paramTimer;let paramsInitialized=false;
@@ -110,7 +111,7 @@ if(capable){
 } else $('ledFollow').textContent='跟随实体琴键';
 if(pinOk && led.diagnostic_phase)$('ledFeedback').textContent='数据线电平诊断中，结束后恢复全灭';
 const touch=s.touch||{};const touchCapable=s.connected&&s.feedback?.firmware>=11;$('touchStart').disabled=!touchCapable||!!touch.enabled;$('touchStop').disabled=!touch.enabled;$('touchFeedback').textContent=touch.enabled?`${touch.active?'正在转发触摸':'接收窗口未激活，已暂停'} · 报告 ${touch.reports||0} · 已执行 ${touch.taps||0} 次 · 坐标 ${touch.last_point?touch.last_point.join(', '):'等待触摸'}${touch.error?' · '+touch.error:''}`:touch.error|| (touchCapable?(touch.reports?`已停止转发 · 上次接收 ${touch.reports} 份报告，执行 ${touch.taps||0} 次操作 · 点击启动可继续`:'已支持 USB 触摸，点击启动接收'):'连接 v11 固件后可启用 USB 触摸');
-const display=s.display_feedback||{},v16=(display.firmware||s.feedback?.firmware||0)>=16;const hasDisplay=connected&&s.feedback?.firmware>=10;['displayNext','displayApply','displayMute','displayPattern'].forEach(id=>$(id).disabled=!hasDisplay);const menu=v16?(display.drum_mode?['开始 / 停止演奏','录制 / 结束','撤销末轮','播放 / 停止循环','录制上限','清空循环','全部静音','琴键设置']:['开始 / 停止演奏','录制 / 结束','切换音色','琴键扫描','松键校准','播放 / 停止循环','全部静音','鼓组界面']):display.drum_mode?(display.firmware>=15?['开始 / 停止演奏','录制一轮','撤销末轮','播放 / 停止循环','循环时长','清空循环','全部静音','控制模式']:['开始 / 停止演奏','控制模式','音量增加','音量减小','复位音量','停止尾音','全部静音','屏幕检测']):['开始 / 停止演奏','切换音色','音量增加','音量减小','切换扫描','松键校准','全部静音','屏幕检测'];if(display.firmware>=22)menu.push('效果切换');if(display.firmware>=30)menu.push('播放 / 暂停指引','指引下一组','指引重来');const tones=['纯净正弦','风琴音色','柔和复合','弦乐锯齿','敲击钢琴'];$('displayFeedback').textContent=hasDisplay&&display.firmware?`${display.locked?'视频时钟已锁定':'视频时钟未锁定'} · 已选：${menu[display.focus]} · ${v16?'鼓组与琴键合奏 · '+(display.drum_mode?'鼓组页':'琴键页'):display.drum_mode?'鼓组 Loop':'实体音色：'+tones[display.timbre]} · ${display.drum_mode?'鼓组音量':'实体琴键音量'}：${display.volume}% · ${display.local?'板卡独立演奏':'待机 / 电脑控制'}`:hasDisplay?'正在读取屏幕状态':connected?'当前固件没有 HDMI 界面功能':'等待连接 HDMI 界面固件';$('voiceBadge').textContent=connected&&s.feedback?.firmware?('固件 v'+s.feedback.firmware+' · '+(v16?'32 旋律 + 12 鼓组':'32 声部 / 5 音色')):'控制台 · 等待板卡';$('gatedLimit').textContent=v16?' / 44':' / 32';$('activeLimit').textContent=v16?' / 44':' / 32';
+const display=s.display_feedback||{},v16=(display.firmware||s.feedback?.firmware||0)>=16;const hasDisplay=connected&&s.feedback?.firmware>=10;['displayNext','displayApply','displayMute','displayPattern'].forEach(id=>$(id).disabled=!hasDisplay);const menu=v16?(display.drum_mode?['开始 / 停止演奏','录制 / 结束','撤销末轮','播放 / 停止循环','录制上限','清空循环','全部静音','琴键设置']:['开始 / 停止演奏','录制 / 结束','切换音色','琴键扫描','松键校准','播放 / 停止循环','全部静音','鼓组界面']):display.drum_mode?(display.firmware>=15?['开始 / 停止演奏','录制一轮','撤销末轮','播放 / 停止循环','循环时长','清空循环','全部静音','控制模式']:['开始 / 停止演奏','控制模式','音量增加','音量减小','复位音量','停止尾音','全部静音','屏幕检测']):['开始 / 停止演奏','切换音色','音量增加','音量减小','切换扫描','松键校准','全部静音','屏幕检测'];if(display.firmware>=22)menu.push('效果切换');if(display.firmware>=30)menu.push('播放 / 暂停指引','指引下一组','指引重来');if(display.firmware>=32)menu.push('声谱观察');const tones=['纯净正弦','风琴音色','柔和复合','弦乐锯齿','敲击钢琴'];$('displayFeedback').textContent=hasDisplay&&display.firmware?`${display.locked?'视频时钟已锁定':'视频时钟未锁定'} · 已选：${menu[display.focus]} · ${v16?'鼓组与琴键合奏 · '+(display.drum_mode?'鼓组页':'琴键页'):display.drum_mode?'鼓组 Loop':'实体音色：'+tones[display.timbre]} · ${display.drum_mode?'鼓组音量':'实体琴键音量'}：${display.volume}% · ${display.local?'板卡独立演奏':'待机 / 电脑控制'}`:hasDisplay?'正在读取屏幕状态':connected?'当前固件没有 HDMI 界面功能':'等待连接 HDMI 界面固件';$('voiceBadge').textContent=connected&&s.feedback?.firmware?('固件 v'+s.feedback.firmware+' · '+(v16?'32 旋律 + 12 鼓组':'32 声部 / 5 音色')):'控制台 · 等待板卡';$('gatedLimit').textContent=v16?' / 44':' / 32';$('activeLimit').textContent=v16?' / 44':' / 32';
 if((!keyboardInitialized||!keyboardDirty)&&s.keyboard){keyboardInitialized=true;$('keyMode').value=s.keyboard.mode;$('keyIndex').value=s.keyboard.key;$('keyPress').value=s.keyboard.press;$('keyRelease').value=s.keyboard.release;$('keyScale').value=s.keyboard.sensitivity;}
 $('displayHint').textContent=v16?'12 个小键盘按键固定打鼓，琴键与鼓组可同时发声并录入同一 Loop。旋钮 B 选择并执行，录制中再次执行“结束录制”可按实际时长统一各轮；第 8 项只切换参数页，不中断声音。实体琴键需启用扫描并松键校准。':display.drum_mode?'USB 打击垫：短按 B 开始演奏，旋钮 A 调音量并按压静音；旧版可长按 B 切换模式。':'实体琴键需先开启扫描、松键校准，再开始演奏。';
 const q=s.key_feedback||{};$('keyFeedback').textContent=!s.connected?'等待连接':!v16&&display.drum_mode?'当前为 USB 打击垫，鼓组和 Loop 不需要 ADC。':!s.keyboard?.mode?(v16?'琴键来源：上位机；小键盘固定鼓组，两者都可录入 Loop。':'ADC 输入未启用'):q.fault?(v16?'ADC 转换超时，现场实体琴键暂停；鼓组和已录 Loop 可继续。':'ADC 转换超时，已停止发声；检查后重新校准'):`${q.calibrated?'校准完成':'正在校准，请保持静止'} · 键 ${q.key??'—'}${s.feedback?.firmware>=26&&Number.isInteger(q.key)?' ('+noteName(whiteNotes[q.key])+')':''} · 原始码 ${q.raw??'—'} · 基线 ${q.baseline??'—'} · 偏移 ${q.delta??'—'} · 扫描 ${q.scans??'—'}`;
@@ -163,9 +164,10 @@ let pcmExportJob={};
 function renderPcm(s){
  const cap=s.pcm_capture||{},job=s.pcm_export||{},ok=s.connected&&(s.feedback?.firmware>=19),busy=cap.armed||cap.recording;
  pcmExportJob=job;
- $('pcmArm').disabled=!ok||busy||job.running;$('pcmAbort').disabled=!ok||!busy||job.running;
+ $('pcmArm').disabled=!ok||busy||cap.ready||job.running;$('pcmAbort').disabled=!ok||!busy||job.running;
  $('pcmExport').disabled=!ok||!cap.ready||cap.error||job.running;
  $('pcmDownload').disabled=!job.done;$('pcmListen').disabled=!job.done||!job.listen_path;
+ $('pcmRaw').disabled=!job.done;$('pcmRelease').disabled=!ok||!cap.ready||!job.done||job.running||job.capture_id!==cap.capture_id;
  $('pcmStatus').textContent=job.running?`正在读取并校验：${job.progress}/${job.count} 点`:
  job.error?`导出失败：${job.error}`:job.done?`已校验并保存 ${job.duration_seconds.toFixed(3)} 秒音频，CRC32 ${job.crc32}`:
  !ok?'等待连接 v19 或更新固件':cap.error?'采集错误，请重新抓取':cap.armed?'已准备：等待触发或延迟结束':
@@ -173,12 +175,14 @@ function renderPcm(s){
 }
 $('pcmArm').onclick=()=>action('pcm_arm',{length:Number($('pcmLength').value),trigger:$('pcmTrigger').value,delay_ms:Number($('pcmDelay').value)});
 $('pcmAbort').onclick=()=>action('pcm_abort');$('pcmExport').onclick=()=>action('pcm_export');
+$('pcmRelease').onclick=()=>action('pcm_release',{capture_id:pcmExportJob.capture_id});
 async function downloadPcm(kind){try{
  const r=await fetch(`/api/pcm/file?id=${encodeURIComponent(pcmExportJob.id)}&kind=${kind}`,{headers:{'X-Synth-Token':TOKEN}});
  if(!r.ok)throw new Error('文件读取失败');const u=URL.createObjectURL(await r.blob());const a=document.createElement('a');
- a.href=u;a.download=kind==='raw'?'fpga_pcm_raw.wav':'fpga_pcm_listen.wav';a.click();setTimeout(()=>URL.revokeObjectURL(u),10000);
+ a.href=u;a.download=kind==='pcm'?'fpga_capture.pcm':(kind==='raw'?'fpga_pcm_raw.wav':'fpga_pcm_listen.wav');a.click();setTimeout(()=>URL.revokeObjectURL(u),10000);
 }catch(e){report(e);}}
 $('pcmDownload').onclick=()=>downloadPcm('raw');$('pcmListen').onclick=()=>downloadPcm('listen');
+$('pcmRaw').onclick=()=>downloadPcm('pcm');
 
 async function poll(){if(pollBusy)return;pollBusy=true;try{const s=await request('/api/state');render(s);renderOutput(s);}catch(e){report(e);}finally{pollBusy=false;}}setInterval(poll,500);makePiano();updateParams();refresh();poll();
 </script></body></html>

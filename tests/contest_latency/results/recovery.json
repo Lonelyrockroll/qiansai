@@ -1,0 +1,20 @@
+{
+  "result": "passed",
+  "scope": "RTL only. Hall codes, PCM, injected orphan events and engine stalls are fixture inputs.",
+  "source_sha256": {
+    "synth_display_top.v": "7ac0dd2a548653b29a8e29153f8e56f9606de0e974658156f037751f3cfd2099",
+    "keyboard_input.v": "d917ff0ef8f282f96b4e87f898cfa6fbff119d45e43090a865b58b87de17911c",
+    "white_key_map.v": "483e1ce6d09013c075023c347a7975aaf0caa8c3b51a25f1b0675ee8319016e6",
+    "note_rom.v": "dfe25333bbd60f09f1170e737048a77dbd1e17d065cf5d717f860a2ef4dc3f9d",
+    "performance_looper.v": "fb41bd09e2af1d4e8a5778b15f7deb9dfd2319d6f26e7f86996d94cf3b6c7be7",
+    "performance_router.v": "7a362fe303dc3eeef586cb51175baf8320f99217222a0b471295f9463321aafe",
+    "bt_console.v": "2f0994e8e52fee38bd205a5a9a4cc902407007deaa466f952f29532be42b4a01",
+    "guide_transport.v": "9254cdb969c18654f4883b1bd12b8425505b009cb817e6266146bb7166c70068",
+    "key_layout.v": "b61ca7a2537e2b810aec31e459ff68816d282d45d20f0f2a30b6d0287fc8fc4a",
+    "key_release_guard.v": "479f136c1a8adca7de5771be1c9680270aa42b9840b094900ed3ac15a31b94cf",
+    "onset_meter.v": "58f53ad5a5187d27d2b5bc307755f7f4135b12ca7e941d78d96315949f98bdca",
+    "audio_tx.v": "790163bc1eeca79e4b4e70d7553e56543087fa31bd894f3d068e29582d346ae9"
+  },
+  "testbench_sha256": "42258710d37f1e85e4dde592a52e8bb10bd615a36921474086adea8d7f0f6dd9",
+  "result_line": "PASS recovery: LAST retained over second chord key; 3 orphan live notes cleared once during dense live pads/Loop playback; sustained Loop note preserved; 696 paired physical-ID/mapped-step events, 72 input masks, no ignored off/steals."
+}

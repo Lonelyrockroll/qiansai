@@ -7,7 +7,8 @@
     "tb_java_upload": "PASS Android Java's 24 exact binary frames uploaded 84 event words and drove on/off/retrigger timing"
   },
   "source_sha256": {
-    "guide_transport.v": "8940a8cb86ca4dc74c8ac27f6dacf37abd5dce839f463db615e21677c5cc9782",
+    "guide_transport.v": "9254cdb969c18654f4883b1bd12b8425505b009cb817e6266146bb7166c70068",
+    "key_layout.v": "b61ca7a2537e2b810aec31e459ff68816d282d45d20f0f2a30b6d0287fc8fc4a",
     "guide_player.v": "7ad85be1d08aa523884407602c810ba08e0c19546e77bdd90cf942823426b1ed",
     "score_store.v": "95e1498b0ee141b850069093ceac73bc66ac9ea9e6e570b967d80c4c6efc1854",
     "pcm_capture.v": "38b376b3fd4c23f393fd793cb52c8ebfddf2eee28a2ebefd5af74bc88ddf7c2d",

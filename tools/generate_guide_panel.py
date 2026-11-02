@@ -133,6 +133,7 @@ def scene():
     fx=choices(['效果 原声','效果 混响','效果 延迟','效果 混响延迟','效果 合唱','效果 混响合唱','效果 延迟合唱','效果 全开']);menu_item(8,(f'{fx}+fx',8))
     p=choices(['播放指引','暂停指引']);menu_item(9,(f'{p}+guide_playing',4))
     menu_item(10,'指引下一组');menu_item(11,'指引重来')
+    text(520,525,'13 声谱观察',color="24'hf1f5f3")
     text(24,550,'A 转滑音 · 按转颤音 · 点静音',color="24'h8ca7b3")
     text(512,550,'B 转选项 · 按转音量 · 点执行',color="24'h8ca7b3")
     bend=choices([f'滑音 {i*50:+d} 音分' if i else '滑音 0 音分' for i in range(-4,5)])
@@ -234,6 +235,7 @@ module panel_renderer(input wire clk,rst,input wire [10:0] x,y,input wire hs,vs,
    if((x>=512 && x<516 && focus<6 && y>=332+{focus,5'b0} && y<360+{focus,5'b0}) ||
       (x>=752 && x<756 && focus>=6 && focus<12 && y>=332+{(focus-4'd6),5'b0} && y<360+{(focus-4'd6),5'b0}))bg=24'h79d7bd;
   end
+  if(focus==12 && x>=512 && x<984 && y>=523 && y<545)bg=x<516?24'h79d7bd:24'h28495a;
   if(!drum_mode && x>=120 && x<312 && y>=502 && y<512)begin bg=24'h2b424d;if(x<120+(peak_width>>1))bg=peak>220?24'hec947c:24'h79d7bd;end
   if(x>=720 && x<816 && y>=32 && y<38)begin bg=24'h2b424d;if(x<720+(peak_width>>2))bg=peak>220?24'hec947c:24'h79d7bd;end
   if(y>=286 && y<296)begin

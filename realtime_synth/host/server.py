@@ -1,5 +1,6 @@
 """Local browser control panel. All sound synthesis remains on the FPGA."""
 import argparse
+import audio_web
 import json
 from pathlib import Path
 import secrets
@@ -65,9 +66,9 @@ class Controller:
                 if status['seq']!=seq or status['opcode']!=opcode:continue
                 firmware=status['firmware']
                 rate_free=(opcode in (KEY_STATUS,DISPLAY_STATUS,LED_STATUS,PCM_STATUS,PCM_READ,FX_STATUS)
-                           or (opcode==30 and firmware>=28) or (opcode==31 and firmware>=30) or (opcode in (32,33) and firmware>=31))
+                           or (opcode==30 and firmware>=28) or (opcode==31 and firmware>=30) or (opcode in (32,33) and firmware>=31) or (opcode in (34,35) and firmware>=32))
                 rate=status.get('sample_rate')
-                if (not 6<=firmware<=31 or (opcode==30 and firmware<28) or (opcode==31 and firmware<30) or (opcode in (32,33) and firmware<31)
+                if (not 6<=firmware<=32 or (opcode==30 and firmware<28) or (opcode==31 and firmware<30) or (opcode in (32,33) and firmware<31) or (opcode in (34,35) and firmware<32)
                     or (not rate_free and (rate is None or not abs(rate-FS)<=0.01))):
                     raise OSError('响应不是匹配的实时合成控制固件')
                 if opcode==DISPLAY_STATUS:
@@ -79,9 +80,11 @@ class Controller:
                 elif opcode==PMOD_STATUS:self.pmod_feedback=status
                 elif opcode==OUTPUT_GAIN_STATUS:self.output_gain_feedback=status
                 elif opcode==PCM_STATUS:self.pcm_feedback=status
-                elif opcode in (PCM_READ,30,31,32,33):pass
+                elif opcode in (PCM_READ,30,31,32,33,34,35):pass
                 else:self.feedback=status
                 if status['status']:
+                    if opcode==PCM_CONTROL and status['status']==4:
+                        raise ValueError('抓取缓存已被占用，已保留连接及现有数据')
                     raise OSError({1:'板卡拒绝了校验错误的数据帧',2:'不支持的命令',3:'板卡拒绝了超出范围的参数',4:'当前输入模式不允许此操作，或 ADC 尚未校准／故障'}.get(status['status'],'板卡命令失败'))
                 self.last_poll=time.monotonic();return status
             time.sleep(0.002)
@@ -185,11 +188,12 @@ class Controller:
             raise ValueError('触摸接收窗口未激活')
         if self.feedback.get('firmware',0)<11:raise ValueError('当前固件不支持直接触摸菜单')
         index=data.get('index')
-        if isinstance(index,bool) or not isinstance(index,int) or not 0<=index<(12 if self.feedback['firmware']>=30 else 9 if self.feedback['firmware']>=22 else 8):raise ValueError('触摸菜单编号无效')
+        if isinstance(index,bool) or not isinstance(index,int) or not 0<=index<(13 if self.feedback['firmware']>=32 else 12 if self.feedback['firmware']>=30 else 9 if self.feedback['firmware']>=22 else 8):raise ValueError('触摸菜单编号无效')
         if self.feedback['firmware']>=31:
             page=self.exchange(32)
             if page['score_show'] or page['score_visible'] or page['score_loading']:
                 return  # A sheet has no synth menu hit targets.
+        if self.feedback['firmware']>=32 and self.exchange(34)['monitor']:return
         self.exchange(DISPLAY_ACTION,bytes([5,index]))
         self.exchange(DISPLAY_STATUS);self.exchange(STATUS);self.exchange(KEY_STATUS)
         self.touch['last_menu']=index
@@ -208,7 +212,7 @@ class Controller:
                 raise ValueError('当前为打击垫模式；请先切回控制模式，再操作琴键扫描或钢琴音色')
             amount=step*count
             if action in ('menu_next','menu_prev'):
-                target=(f['focus']+(amount if action=='menu_next' else -amount))%(12 if f.get('firmware',0)>=30 else 9 if f.get('firmware',0)>=22 else 8)
+                target=(f['focus']+(amount if action=='menu_next' else -amount))%(13 if f.get('firmware',0)>=32 else 12 if f.get('firmware',0)>=30 else 9 if f.get('firmware',0)>=22 else 8)
                 self.exchange(DISPLAY_ACTION,bytes([6,target]))
             elif action.startswith('volume_'):
                 delta=round(amount*65535/100)*(1 if action=='volume_up' else -1)
@@ -333,6 +337,7 @@ class Controller:
             elif action=='fx_impulse':fx_tools.impulse(self,data.get('amplitude',8192))
             elif action=='pcm_arm':pcm_tools.arm(self,data.get('length',32768),data.get('trigger','nonzero'),data.get('delay_ms',0))
             elif action=='pcm_abort':pcm_tools.abort(self)
+            elif action=='pcm_release':pcm_tools.release_ready(self,data.get('capture_id'))
             elif action=='pcm_status':self.exchange(PCM_STATUS)
             elif action=='pcm_export':pcm_tools.start_export(self)
             elif action=='status':self.exchange(STATUS)
@@ -438,8 +443,10 @@ def main():
                     self.headers.get('Origin',origin)==origin)
         def do_GET(self):
             if self.headers.get('Host')!=f'127.0.0.1:{args.port}':self.send({'error':'invalid host'},403);return
-            if self.path in ('/','/keypad'):
-                self.send((ROOT/('keypad.html' if self.path=='/keypad' else 'index.html')).read_text(encoding='utf-8').replace('__TOKEN__',token),kind='text/html; charset=utf-8')
+            if audio_web.serve(self,token,origin):return
+            pages={'/':'index.html','/keypad':'keypad.html'}
+            if self.path in pages:
+                self.send((ROOT/pages[self.path]).read_text(encoding='utf-8').replace('__TOKEN__',token),kind='text/html; charset=utf-8')
             elif urlparse(self.path).path=='/api/pcm/file' and self.authorized():
                 query=parse_qs(urlparse(self.path).query);kind=query.get('kind',['raw'])[0]
                 with controller.lock:
@@ -447,7 +454,7 @@ def main():
                 if not job.get('done') or query.get('id',[''])[0]!=job.get('id') or not filename:
                     self.send({'error':'export not found'},404);return
                 path=Path(filename);raw=path.read_bytes()
-                self.send_response(200);self.send_header('Content-Type','audio/wav')
+                self.send_response(200);self.send_header('Content-Type','application/octet-stream' if kind=='pcm' else 'audio/wav')
                 self.send_header('Content-Length',str(len(raw)));self.send_header('Content-Disposition','attachment; filename="'+path.name+'"')
                 self.end_headers();self.wfile.write(raw)
             elif self.path in ('/api/state','/api/devices','/api/keypad') and self.authorized():

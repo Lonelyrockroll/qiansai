@@ -1,0 +1,3 @@
+LOOP 154 replay events while sustained Loop voice survives the one source-0 flush
+PASS recovery: LAST retained over second chord key; 3 orphan live notes cleared once during dense live pads/Loop playback; sustained Loop note preserved; 696 paired physical-ID/mapped-step events, 72 input masks, no ignored off/steals.
+F:\codex-project\pcb\tang-contest\tests\contest_latency\tb_release_recovery.v:120: $finish called at 37086300000 (1ps)

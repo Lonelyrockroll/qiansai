@@ -9,12 +9,14 @@
   "tested_discard_timeout": true,
   "wire_bytes": 1024,
   "source_sha256": {
-    "bt_console.v": "61c609a0861381ac31b8b549696e2b3c00ab5759fb31ff1d6bc8713975f810bb",
+    "bt_console.v": "2f0994e8e52fee38bd205a5a9a4cc902407007deaa466f952f29532be42b4a01",
     "bt_link.v": "b06b2ee036bd3ef607dd62888708ffca1211d1bde6058206b84871325ceac252",
     "bt_uart_rx.v": "0beb0e774e1ad95579bffc6480eb0463e22425699ca372fe96c1e2935b2c7491",
     "bt_uart_tx.v": "5f0484a00b7a89fb0103f692e4d00d467fa70dfb30fea499b8af8cd8a5f8d069",
-    "guide_transport.v": "4137fed5ace730e6c6867cd9d5e4b51d58bfe704475fe932d2523071d77bc03e",
+    "guide_transport.v": "9254cdb969c18654f4883b1bd12b8425505b009cb817e6266146bb7166c70068",
+    "key_layout.v": "b61ca7a2537e2b810aec31e459ff68816d282d45d20f0f2a30b6d0287fc8fc4a",
     "guide_player.v": "7ad85be1d08aa523884407602c810ba08e0c19546e77bdd90cf942823426b1ed",
+    "score_store.v": "95e1498b0ee141b850069093ceac73bc66ac9ea9e6e570b967d80c4c6efc1854",
     "record_stream.v": "96b3cb7a6a39e33b25742e75846d819e13d4c499482b2427fbaf01bc92336921",
     "record_filter.v": "6b8c3115b0631ccea52ccbb2d5690ea026baa6864482c7a7ada3532287f7554e",
     "ima_encoder.v": "f3fdf6e7f6ef30bec827c9e68f844c8473d7e5509dd91a5d76c7b592775c1b4f"
