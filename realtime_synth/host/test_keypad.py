@@ -91,7 +91,7 @@ class ControllerTests(unittest.TestCase):
     def make(self):
         c=Controller.__new__(Controller);c.touch_session='test';c.keypad_seq=0
         c.keypad=dict(enabled=True,active=True,actions=0);c.keypad_store=MappingStore(ROOT/'keypad_control/absent_test_config.json')
-        c.feedback=dict(firmware=12);c.keyboard=dict(mode=0);c.panic=Mock()
+        c.feedback=dict(firmware=12);c.keyboard=dict(mode=0);c.panic=Mock();c.output_gain_feedback={}
         c.exchange=Mock(return_value=dict(focus=0,timbre=4,level=16384));return c
     def test_exact_level_and_selection(self):
         c=self.make();c.control_function('volume_down',2)

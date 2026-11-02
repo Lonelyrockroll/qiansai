@@ -1,5 +1,7 @@
 # qiansai
 
+[琴键音量 40% 版本](VOLUME-RANGE.md)将实体琴键上限放宽到 40%，当前推荐试听设置为 32%，基于 v32 FX2，码流为 `0x00000239`。[下载码流与验证包](output/Tang-琴键音量40-v32FX2.zip)
+
 [v32 FX2 效果增强](EFFECTS-ENHANCED.md)统一板载菜单与上位机预设，提供长尾混响、约 320 ms 回声和更深的合唱调制。[码流与统一试听包](output/Tang-效果增强-v32FX2.zip)
 
 [演奏延迟实测展示包](output/Tang-延迟实测展示.zip) · [示波器接线和测量步骤](延迟测试接线.md)。在 Windows 工程目录双击「启动延迟实测」可读取板上 LAST I2S、导入示波器波形或试听 Ampero 的耳机输出录音。

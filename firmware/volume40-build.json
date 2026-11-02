@@ -1,0 +1,326 @@
+{
+  "validated": true,
+  "firmware": 32,
+  "monitor_profile": "spectrum-only",
+  "place_option": 1,
+  "resources": {
+    "Logic": [
+      47747.0,
+      59904
+    ],
+    "Register": [
+      25051.0,
+      60780
+    ],
+    "BSRAM": [
+      117.0,
+      118
+    ],
+    "DSP": [
+      57.0,
+      118
+    ]
+  },
+  "frequency": [
+    [
+      "1",
+      "sys_clk",
+      "50.000(MHz)",
+      "50.120(MHz)",
+      "8",
+      "TOP"
+    ],
+    [
+      "2",
+      "pixel_clk",
+      "49.000(MHz)",
+      "49.218(MHz)",
+      "13",
+      "TOP"
+    ],
+    [
+      "3",
+      "usb_clk",
+      "60.000(MHz)",
+      "61.802(MHz)",
+      "10",
+      "TOP"
+    ]
+  ],
+  "slack": [
+    [
+      "sys_clk",
+      "Setup",
+      "0.000",
+      "0"
+    ],
+    [
+      "sys_clk",
+      "Hold",
+      "0.000",
+      "0"
+    ],
+    [
+      "serial_clk",
+      "Setup",
+      "0.000",
+      "0"
+    ],
+    [
+      "serial_clk",
+      "Hold",
+      "0.000",
+      "0"
+    ],
+    [
+      "pixel_clk",
+      "Setup",
+      "0.000",
+      "0"
+    ],
+    [
+      "pixel_clk",
+      "Hold",
+      "0.000",
+      "0"
+    ],
+    [
+      "usb_clk",
+      "Setup",
+      "0.000",
+      "0"
+    ],
+    [
+      "usb_clk",
+      "Hold",
+      "0.000",
+      "0"
+    ]
+  ],
+  "pins": [
+    {
+      "signal": "sys_clk",
+      "pin": "V22"
+    },
+    {
+      "signal": "HP_BCK",
+      "pin": "Y17"
+    },
+    {
+      "signal": "HP_WS",
+      "pin": "AB17"
+    },
+    {
+      "signal": "HP_DIN",
+      "pin": "AA16"
+    },
+    {
+      "signal": "PA_EN",
+      "pin": "AB16"
+    },
+    {
+      "signal": "i2s_bclk",
+      "pin": "Y21"
+    },
+    {
+      "signal": "i2s_lrclk",
+      "pin": "Y22"
+    },
+    {
+      "signal": "i2s_data",
+      "pin": "AB21"
+    },
+    {
+      "signal": "debug_sample",
+      "pin": "AB22"
+    },
+    {
+      "signal": "uart_rx",
+      "pin": "V14"
+    },
+    {
+      "signal": "uart_tx",
+      "pin": "U15"
+    },
+    {
+      "signal": "keyboard_led",
+      "pin": "A13"
+    },
+    {
+      "signal": "key_addr[0]",
+      "pin": "E14"
+    },
+    {
+      "signal": "key_addr[1]",
+      "pin": "E13"
+    },
+    {
+      "signal": "key_addr[2]",
+      "pin": "C15"
+    },
+    {
+      "signal": "key_addr[3]",
+      "pin": "C14"
+    },
+    {
+      "signal": "key_addr[4]",
+      "pin": "B13"
+    },
+    {
+      "signal": "key_cs_n",
+      "pin": "C13"
+    },
+    {
+      "signal": "key_wr_n",
+      "pin": "A14"
+    },
+    {
+      "signal": "tmds_data_p[0]",
+      "pin": "J14,H14"
+    },
+    {
+      "signal": "tmds_data_p[1]",
+      "pin": "J15,H15"
+    },
+    {
+      "signal": "tmds_data_p[2]",
+      "pin": "K17,J17"
+    },
+    {
+      "signal": "tmds_clk_p",
+      "pin": "G15,G16"
+    },
+    {
+      "signal": "hpd_en",
+      "pin": "K13"
+    },
+    {
+      "signal": "key0_n",
+      "pin": "AA13"
+    },
+    {
+      "signal": "key1_n",
+      "pin": "AB13"
+    },
+    {
+      "signal": "usb_dp",
+      "pin": "H13"
+    },
+    {
+      "signal": "usb_dm",
+      "pin": "G13"
+    },
+    {
+      "signal": "bt_rx",
+      "pin": "AA20"
+    },
+    {
+      "signal": "bt_tx",
+      "pin": "AA21"
+    },
+    {
+      "signal": "led_n[0]",
+      "pin": "T18"
+    },
+    {
+      "signal": "led_n[1]",
+      "pin": "R18"
+    },
+    {
+      "signal": "led_n[2]",
+      "pin": "R17"
+    },
+    {
+      "signal": "led_n[3]",
+      "pin": "P16"
+    },
+    {
+      "signal": "led_n[4]",
+      "pin": "U21"
+    },
+    {
+      "signal": "led_n[5]",
+      "pin": "T21"
+    },
+    {
+      "signal": "led_n[6]",
+      "pin": "R19"
+    },
+    {
+      "signal": "led_n[7]",
+      "pin": "P19"
+    }
+  ],
+  "source_sha256": {
+    "audio_effects.v": "c3f748d120e89f0a0885490d5d23ff169d568655dc6b393876726cd6e679cbe8",
+    "audio_monitor.v": "8b8ebea9a25e6dca97a970d90a96711d8c9a6388b6c1b2fd5d5474f0d46fb6dd",
+    "audio_output_limited.v": "87f76c43331c52448a13b02e78deade6580639bbd8b36b6931a03877d2c2482a",
+    "audio_tx.v": "790163bc1eeca79e4b4e70d7553e56543087fa31bd894f3d068e29582d346ae9",
+    "bt_console.v": "2f0994e8e52fee38bd205a5a9a4cc902407007deaa466f952f29532be42b4a01",
+    "bt_link.v": "b06b2ee036bd3ef607dd62888708ffca1211d1bde6058206b84871325ceac252",
+    "bt_uart_rx.v": "0beb0e774e1ad95579bffc6480eb0463e22425699ca372fe96c1e2935b2c7491",
+    "bt_uart_tx.v": "5f0484a00b7a89fb0103f692e4d00d467fa70dfb30fea499b8af8cd8a5f8d069",
+    "chorus_lfo.v": "abab9c25c5950f30088fb44fef7f9cf69ecb190bb0aa08e9a9a4f3832334b2c2",
+    "compact_ui_font0.hex": "a43261537268ad4506bd0ca0f1a550c961c81dc97cdf45f575e9e0a41b73c013",
+    "compact_ui_font1.hex": "0cfda704788954fc14fe4fe64d849258ca69b159b04f30957c997f3395ce43f2",
+    "compact_ui_font2.hex": "aed909be303dd96e3ac430be40dbe6e794637dab76cdbc1617b39bd09a6b1daa",
+    "compact_ui_strings.hex": "7debb84648c6801a82758025f7648b186c8fe0b5773ee292dc4ea9e7ba4f2056",
+    "contest_tones.v": "8eee0619ad8a2171d4bd914cba64eb021d3ac26eac74be2abcd9c064841f8b83",
+    "display.cst": "b6dfadefb8373350e32f8058262634ab189a7283ecd1ca836bf3732dc32f3595",
+    "display_pll.v": "e183ec5b9423ece8c8a6eb32f4f730c4bd0cffcf5143784bfee5d791ea54e4a0",
+    "display_snapshot.v": "71355f98c0843b7a73bdead73b654e5392107eeef9da04f85df3dbbcbe24cc1d",
+    "drum_engine.v": "2837c19c8336bbd9af3cfc9673161fa246dd6428210b568b2ac768682ed67b72",
+    "drum_oscillator.hex": "6005c7d83d0ce1a06cec72c7629fd039aa9dc6ece630d5f01a8f0130633f616b",
+    "drum_parameters.v": "5e8ba81adae09e9bb7426c99f57f31375c3d0bfbef5b974727439c0c05b97b1d",
+    "DVI_TX_Top.v": "a2dc2f338438864307dc8da6c8f50b582d412eeb5ea899af9f047a8d6b46815f",
+    "guide_player.v": "7ad85be1d08aa523884407602c810ba08e0c19546e77bdd90cf942823426b1ed",
+    "guide_transport.v": "9254cdb969c18654f4883b1bd12b8425505b009cb817e6266146bb7166c70068",
+    "ima_encoder.v": "f3fdf6e7f6ef30bec827c9e68f844c8473d7e5509dd91a5d76c7b592775c1b4f",
+    "key_layout.v": "b61ca7a2537e2b810aec31e459ff68816d282d45d20f0f2a30b6d0287fc8fc4a",
+    "key_release_guard.v": "479f136c1a8adca7de5771be1c9680270aa42b9840b094900ed3ac15a31b94cf",
+    "keyboard_adc.v": "cf523f15c78ca6fd8892e47fe722fa820e0d3165d0b6e2f96bfc04341051847f",
+    "keyboard_input.v": "d917ff0ef8f282f96b4e87f898cfa6fbff119d45e43090a865b58b87de17911c",
+    "keyboard_lights.v": "f22ee18b7f2ed5a2fcf691e60c43316436765f012cfbbf37b69caadfbe6468b4",
+    "led_pin_diagnostic.v": "3287aad44c43f171400b90d587ceef1601f88ce7f469e32d9f85d1b0441e3af1",
+    "modal32.v": "598499b06e64626ee286d4acb12200d1028cc593c4a0290043844c2a817f8c1c",
+    "modal32_coeffs.v": "858c5fbab101d0b91d8d386aeefeaa190b7e9560cc210994a527f94968376026",
+    "native_keypad_drums.v": "d82e0fdc97a3be8d7bf2cd0e7c3f1e00af238d5dbafb553c62d1b8d8e403d407",
+    "native_usb_bridge.v": "dc279359cff04cd0588b2ec59202573a826cac332ab5be9955b5b22ecd5c88a7",
+    "note_rom.v": "dfe25333bbd60f09f1170e737048a77dbd1e17d065cf5d717f860a2ef4dc3f9d",
+    "onset_meter.v": "58f53ad5a5187d27d2b5bc307755f7f4135b12ca7e941d78d96315949f98bdca",
+    "panel_buttons.v": "919f66070af94e88cc6d39c47eb9b4efe7574347fc947367e2e33b0f3e27e059",
+    "panel_renderer.v": "5367a2a5f2004356aec2e9a0717afa9a67c641ef14bd1e93aaf95a3764d8a4cd",
+    "pcm_capture.v": "38b376b3fd4c23f393fd793cb52c8ebfddf2eee28a2ebefd5af74bc88ddf7c2d",
+    "pcm_peak_limiter.v": "a6da50235153e764007c315701bf1bd4b8282e150b301d68f8467d0bae932319",
+    "performance_looper.v": "fb41bd09e2af1d4e8a5778b15f7deb9dfd2319d6f26e7f86996d94cf3b6c7be7",
+    "performance_router.v": "7a362fe303dc3eeef586cb51175baf8320f99217222a0b471295f9463321aafe",
+    "piano_modal_tables_compact.v": "f91e75b30a89f1eaa93ca5c022f8cde807ccb3fd6133e46bacf465091fa79a37",
+    "piano_rom.v": "d647dc4d5d1a09c8bd59ffaa327d2192a73fa553ee18c182c08cb15841e60ed4",
+    "pitch_expression.v": "57bf1f43d4d89c420540890bea744295959d2e903eb15a0571782e5d752ef391",
+    "pmod_indicators.v": "d60c199526605a393684dd39ab75e72a967b6b76d5059d5e44325bbe3e21b869",
+    "record_filter.v": "6b8c3115b0631ccea52ccbb2d5690ea026baa6864482c7a7ada3532287f7554e",
+    "record_stream.v": "96b3cb7a6a39e33b25742e75846d819e13d4c499482b2427fbaf01bc92336921",
+    "score_capture_ram.v": "3e940ab2f3f022ade8e9a541139d877c0799b504e1f8e71cb1e35b4033741c89",
+    "score_renderer.v": "1045acf5a11434539d084c4ee9259d80ed77ab1d7a7e2893f039574e430f11e1",
+    "score_store.v": "95e1498b0ee141b850069093ceac73bc66ac9ea9e6e570b967d80c4c6efc1854",
+    "synth_display_top.v": "7ac0dd2a548653b29a8e29153f8e56f9606de0e974658156f037751f3cfd2099",
+    "synth_engine_shared.v": "bc22524234710d73d93ae6e5da6fda2d32c5f1ad300d979b34fd1ecb20eed9be",
+    "timing.sdc": "d4d416dd0beb4a6270037f7d4f148ecc1ebd2625a9c7d8fe54d390f4634b0683",
+    "uart_control_display.v": "450c4638241a9b8149b1b262f03ee194015e52a07197c7af4995bc6bdf014880",
+    "uart_rx.v": "c71e15a282dd81457defeb9acd888d50a571de846128fdba9307f4c89698f56c",
+    "uart_tx.v": "562df067d22ee3bb571ac1ad13bb08a92542d139a2abd5261103ec606fd18bbc",
+    "usb_hid_host_1189.v": "20a91d29ce43b8ca2f9bcf8bc8c0f3c2e543441e925226113d4d5fa8aafcc33f",
+    "usb_hid_host_rom.mem": "992ee0a118c6c63a9d9a0d035724df0a30351ae2f020dc35a7f4e6128546a902",
+    "usb_hid_host_rom.v": "4a47b4157f5e794962dc01bacbf1f367375c34ee050f2590e4ebb2cc9f22e6d7",
+    "usb_host_pll.v": "00bfbdb6f0fa61602f270eaabdb5d2572b786645fb04c5c4025c9ceb9ebf73d4",
+    "usb_packet_check.v": "b2f1afca6367813eb2606e675c270b6665a5571587a061c0dca11eaca0e33e7c",
+    "usb_profile_check.v": "d6990c0816944ce1ef4f3e1e7e1da35d12d6b23edb3329d204c87430ff8f2f7b",
+    "video_timing.v": "2409163c27b875f19330e4e824ec0bbc34c6ab5a3705555e52256b113ef1cae4",
+    "waveform_rom.v": "8e91eabf93ebd95d50af6c6f6cd30ae28f5d7ff5407d35c431b4d25e9fc7a9d9",
+    "white_key_map.v": "483e1ce6d09013c075023c347a7975aaf0caa8c3b51a25f1b0675ee8319016e6",
+    "ws2812b_4020_chain.v": "2373ffd94319785adeeebe9af00aaf315a3667540c6e90fd381ae245f5799f95"
+  },
+  "sha256": "6a38ba2d394c728d3bbe14ed63ef5b34927cb9a357108645e27aa215e7027e97",
+  "user_code": "0x00000239",
+  "note": "Static timing and pin checks. PR1014 clock-routing warning retained; hardware results are recorded separately."
+}

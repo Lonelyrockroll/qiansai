@@ -136,9 +136,10 @@ class Controller:
 
     def set_keyboard(self,settings):
         candidate={k:settings[k] for k in ('mode','key','press','release','sensitivity')}
-        payload=keyboard_payload(**candidate,params=self.params)
+        payload=keyboard_payload(**candidate,params=self.params,level_limit=self.output_gain_feedback.get('keyboard_limit',16384))
         candidate={k:int(v) for k,v in candidate.items()}
         self.exchange(KEY_CONFIG,payload)
+        self.params['level']=int.from_bytes(payload[3:5],'little')/65535
         self.keyboard=candidate;self.notes.clear();self.release_until.clear()
         self.exchange(KEY_STATUS)
 
@@ -217,7 +218,8 @@ class Controller:
                 self.exchange(DISPLAY_ACTION,bytes([6,target]))
             elif action.startswith('volume_'):
                 delta=round(amount*65535/100)*(1 if action=='volume_up' else -1)
-                level=max(0,min(16384,f['level']+delta))
+                limit=16384 if f.get('drum_mode') else self.output_gain_feedback.get('keyboard_limit',16384)
+                level=max(0,min(limit,f['level']+delta))
                 self.exchange(DISPLAY_ACTION,bytes([7])+level.to_bytes(2,'little'))
             elif action in ('tone_next','tone_prev'):
                 target=(f['timbre']+(amount if action=='tone_next' else -amount))%5

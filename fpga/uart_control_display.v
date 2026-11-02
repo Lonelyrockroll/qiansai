@@ -137,7 +137,8 @@ module uart_control_display #(
     // A PC request owns the binary port through its full reply. One independent
     // Bluetooth command can wait for that boundary without mixing bytes or replies.
     assign bt_accept=bt_request && ui_ready && !ui_valid && !native_panic;
-    wire [15:0] higher_level=view_level>=15073 ? 16'd16384 : view_level+16'd1311;
+    wire [15:0] view_level_limit=drum_mode?16'd16384:16'd26214;
+    wire [15:0] higher_level=view_level>=view_level_limit-16'd1311 ? view_level_limit : view_level+16'd1311;
     wire [15:0] lower_level=view_level<=1311 ? 16'd0 : view_level-16'd1311;
     task switch_input_mode;
       begin drum_mode<=!drum_mode;ui_focus<=(loop_recording || loop_pending)?1:0;ui_pattern<=0;end
@@ -253,7 +254,7 @@ module uart_control_display #(
                                 end
                                 7: begin
                                     if(rx_buf[6]>2 || rx_buf[7]>=32 || rx_buf[8]>4 ||
-                                       {rx_buf[10],rx_buf[9]}>16384 ||
+                                       {rx_buf[10],rx_buf[9]}>26214 ||
                                        {rx_buf[12],rx_buf[11]}>8191 ||
                                        {rx_buf[12],rx_buf[11]}<1 ||
                                        {rx_buf[14],rx_buf[13]}>={rx_buf[12],rx_buf[11]} ||
@@ -277,7 +278,7 @@ module uart_control_display #(
                                 10: begin
                                     if((rx_buf[6]>8 && rx_buf[6]!=11 && rx_buf[6]!=12 && rx_buf[6]!=13 && rx_buf[6]!=14 && rx_buf[6]!=15) ||
                                        ((rx_buf[6]==13 || rx_buf[6]==15) && {rx_buf[8],rx_buf[7]}>1) || ((rx_buf[6]==5 || rx_buf[6]==6) && rx_buf[7]>12) ||
-                                       (rx_buf[6]==7 && {rx_buf[8],rx_buf[7]}>16384) ||
+                                       (rx_buf[6]==7 && {rx_buf[8],rx_buf[7]}>view_level_limit) ||
                                        (rx_buf[6]==8 && rx_buf[7]>4)) result_code<=3;
                                     else if(ui_pending) result_code<=4;
                                     else begin
@@ -517,7 +518,7 @@ module uart_control_display #(
                         tx_buf[10]=limiter_gain[7:0];tx_buf[11]=limiter_gain[15:8];tx_buf[12]={7'd0,limiter_gain[16]};
                         for(i=0;i<4;i=i+1)tx_buf[13+i]=limited_frames[i*8 +: 8];
                         tx_buf[17]=8'h60;tx_buf[18]=8'h6d;
-                        tx_buf[19]=key_level[7:0];tx_buf[20]=key_level[15:8];tx_buf[21]=drum_level[7:0];tx_buf[22]=drum_level[15:8];tx_buf[23]=0;
+                        tx_buf[19]=key_level[7:0];tx_buf[20]=key_level[15:8];tx_buf[21]=drum_level[7:0];tx_buf[22]=drum_level[15:8];tx_buf[23]=40;
                     end
                     if(opcode==31)begin
                         tx_buf[7]={4'b0,guide_demo,guide_loading,guide_playing,guide_valid};tx_buf[8]={6'b0,guide_speed};

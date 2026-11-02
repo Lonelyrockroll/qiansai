@@ -51,6 +51,7 @@ module native_usb_bridge(input wire sys_clk,rst,inout wire usb_dp,usb_dm,
  native_keypad_drums decoder(.clk(sys_clk),.rst(rst || disconnect_pulse),.connected(connected),.report_valid(report_valid),
   .mode_change(1'b0),
   .report_length(report_length),.report_data(report_data),.event_valid(event_valid),.event_ready(event_ready),.event_id(event_id),.fault(parser_fault));
+ wire [15:0] volume_limit=drum_mode?16'd16384:16'd26214;
  always @*begin
   command_action=0;command_value=0;
   case(event_id)
@@ -60,7 +61,7 @@ module native_usb_bridge(input wire sys_clk,rst,inout wire usb_dp,usb_dm,
    15:command_action=1;
    12,13:begin command_action=13;command_value={15'd0,event_id==12};end
    18,19:begin command_action=15;command_value={15'd0,event_id==18};end
-   20:begin command_action=7;command_value=current_level<15073?current_level+16'd1311:16'd16384;end
+   20:begin command_action=7;command_value=current_level < volume_limit-16'd1311 ? current_level+16'd1311 : volume_limit;end
    21:begin command_action=7;command_value=current_level>1311?current_level-16'd1311:16'd0;end
    default:;
   endcase

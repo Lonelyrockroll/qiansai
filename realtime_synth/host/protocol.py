@@ -123,6 +123,8 @@ class Decoder:
                     limiter_overrun=bool(p[2]&2),gain_mode=p[3],limiter_gain_q16=int.from_bytes(p[4:7],'little'),
                     limited_frames=int.from_bytes(p[7:11],'little'),ceiling=int.from_bytes(p[11:13],'little'),
                     keyboard_level=int.from_bytes(p[13:15],'little'),drum_level=int.from_bytes(p[15:17],'little'),
+                    keyboard_limit=round(65535*(p[17] if 1<=p[17]<=100 else 25)/100),
+                    keyboard_limit_percent=p[17] if 1<=p[17]<=100 else 25,
                     sample_rate=FS,firmware=p[18],opcode=p[19]))
                 continue
             if p[19]==FX_STATUS and p[18]>=20:
@@ -224,12 +226,14 @@ def response_for_test(seq, opcode, *, status=0, gated=0, active=0, commands=0, f
     return RESPONSE_SYNC + raw[2:]
 
 
-def keyboard_payload(mode=0,key=12,press=256,release=128,sensitivity=64,params=None):
+def keyboard_payload(mode=0,key=12,press=256,release=128,sensitivity=64,params=None,level_limit=16384):
     if any(isinstance(v,bool) or int(v)!=v for v in (mode,key,press,release,sensitivity)):
         raise ValueError('琴键模式、编号及阈值必须是整数')
     if not 0<=mode<=2 or not 0<=key<32 or not 0<=release<press<=8191 or not 1<=sensitivity<=1024:
         raise ValueError('琴键参数越界：松开阈值必须小于按下阈值')
     params=dict(params or dict(timbre=4,level=.24,attack_ms=1,decay_ms=1000,sustain=0,release_ms=110))
-    params['level']=min(float(params.get('level',.24)),.25)
+    if isinstance(level_limit,bool) or not isinstance(level_limit,int) or not 1<=level_limit<=65535:
+        raise ValueError('琴键音量上限无效')
+    params['level']=min(float(params.get('level',.24)),level_limit/65535)
     _,_,wave,level,_,attack,decay,sustain,tail=struct.unpack('<BBBH I HHHH',voice_payload(0,0,440,**params))
     return struct.pack('<BBB8H',int(mode),int(key),wave,level,int(press),int(release),attack,decay,sustain,tail,int(sensitivity))
