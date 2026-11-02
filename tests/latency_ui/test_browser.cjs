@@ -89,11 +89,12 @@ async function main(){
     assert.match(await page.locator('#audio-media audio').getAttribute('src'),/\/wav\/sample$/);
     await page.click('#tab-digital');await page.click('.open-import[data-segment]');
     assert.equal(await page.locator('#paired-fields').isVisible(),false);
-    await page.setInputFiles('#csv-file',{name:'pulse.csv',mimeType:'text/csv',buffer:Buffer.from('TIME_US,CH1\n-10,0\n0,3.3\n10,3.3\n80,0')});
+    await page.setInputFiles('#csv-file',{name:'pulse.csv',mimeType:'text/csv',buffer:Buffer.from('\ufeffTIME_US,CH1\r\n-10,0\r\n0,3.3\r\n10,3.3\r\n80,0')});
     await page.waitForFunction(()=>document.querySelector('#record-name').value==='pulse.csv');
     assert.equal(await page.inputValue('#time-unit'),'us');
     await page.click('#submit-csv');await page.waitForFunction(()=>document.querySelector('#digital-summary').textContent.includes('80'));
     assert.equal(lastUpload.segment,'mark-i2s');assert.ok(!('audio_column' in lastUpload));
+    assert.ok(lastUpload.csv.startsWith('\ufeffTIME_US,CH1\r\n')); // preserve original CSV bytes, including BOM and CRLF.
     assert.equal(await page.locator('#digital-plot path[data-series]').count(),1);
     assert.equal(await page.locator('#digital-plot line[data-marker]').count(),2);
     assert.match(await page.locator('#digital-meta a').getAttribute('href'),/\/mark\/dd$/);

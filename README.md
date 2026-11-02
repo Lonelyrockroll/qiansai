@@ -2,10 +2,14 @@
 
 [琴键音量 40% 版本](VOLUME-RANGE.md)将实体琴键上限放宽到 40%，当前推荐试听设置为 32%，基于 v32 FX2，码流为 `0x00000239`。[下载码流与验证包](output/Tang-琴键音量40-v32FX2.zip)
 
+最新已验证码流使用仅谱峰显示配置。解压上面的下载包后，可用 Gowin 打开其中的 `FPGA工程/synth_display.gprj`，对应源码、引脚和时序校验结果一并保存在包内。
+
 [v32 FX2 效果增强](EFFECTS-ENHANCED.md)统一板载菜单与上位机预设，提供长尾混响、约 320 ms 回声和更深的合唱调制。[码流与统一试听包](output/Tang-效果增强-v32FX2.zip)
 
 [演奏延迟实测展示包](output/Tang-延迟实测展示.zip) · [示波器接线和测量步骤](延迟测试接线.md)。在 Windows 工程目录双击「启动延迟实测」可读取板上 LAST I2S、导入示波器波形或试听 Ampero 的耳机输出录音。
-[下载 v32 脱机验收包](output/Tang-脱机验收-v32.zip)。现场使用 `Tang-v32-full.fs`，J18 的旋钮 B 选菜单 13「声谱观察」，短按进入 LIVE，再短按展示 32 峰和 31 峰。当前实板完整版为 `0x0000365B`；同包附带通过布局时序校验的 `Tang-v32-spectrum-only.fs`。
+[下载 v32 初始脱机验收包](output/Tang-脱机验收-v32.zip)。该包保留 `0x0000365B` 完整观察页的实测版本 `Tang-v32-full.fs`，以及同阶段的 `Tang-v32-spectrum-only.fs`。J18 的旋钮 B 选菜单 13「声谱观察」，短按进入 LIVE，再短按展示 32 峰和 31 峰。
+
+延迟测试的原始采集档案保存在「延迟实测展示包」中，解压到本地工程目录后即可读取文档中 `output/latency/` 路径对应的 CSV 和 JSON。
 
 v32 增加脱机 32 峰测试、FPGA 音频观察页、数字起音计时、轻重触键归一化、安卓在线曲谱和白键互换。[台上操作与指标对照](现场验收.md) · [第 115 条及测量方案](赛题二问答与验收测量.md) · [安卓 1.3](realtime_synth/android_recorder/dist/TangRecorder-1.3.apk) · [资源与电脑分析](资源与电脑分析.md) · [独立电脑工具](output/Tang-PC-Audio-Tools.zip)
 
