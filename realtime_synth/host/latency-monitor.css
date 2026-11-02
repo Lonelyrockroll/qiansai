@@ -9,3 +9,5 @@
 @media print{.mast nav,.rail>div,.primary,.quiet,.import,footer a{display:none}.wrap{width:100%}.panel{box-shadow:none;break-inside:avoid}.plot-box{print-color-adjust:exact}.view-card[aria-pressed=false]{opacity:.7}}
 
 .head-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+.plot-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.plot-head .plot-actions .quiet{white-space:nowrap}#scope-settings{font-size:13px;margin:0 0 13px;color:var(--muted)}#scope-settings summary{cursor:pointer}#plot-dialog{width:min(1500px,calc(100% - 24px));max-width:none;border:0;background:var(--panel);border-radius:11px;padding:14px;color:var(--ink)}#plot-dialog::backdrop{background:#102720bd}.dialog-head{display:flex;align-items:center;justify-content:space-between;padding:0 4px 12px;gap:10px}.dialog-head strong,.dialog-head small{display:block}.dialog-head small{color:var(--muted)}#plot-dialog .plot-box{margin:0}#plot-dialog .expand-plot{display:none}

@@ -15,22 +15,22 @@
 <p class="lead">从 FPGA 接受一个孤立琴键事件，到首个非零标准 I²S 左声道字完整移出。此段也可以用 J8-10 的 MARK 高脉宽核对。</p>
 <div class="selectors"><label>选择一条数字记录<select id="digital-select"></select></label></div>
 <div id="digital-data"><div id="digital-run" class="run"></div><div id="digital-meta" class="meta"></div>
-<div id="digital-plot-box" class="plot-box" hidden><div class="plot-head"><strong>MARK 高脉宽</strong><button type="button" class="quiet zoom" data-target="digital">放大起音</button></div><svg id="digital-plot" class="plot" role="img" aria-label="MARK 电压及脉宽起止标记"></svg><div class="readout" id="digital-readout">移动指针查看采样值。</div></div>
+<div id="digital-plot-box" class="plot-box" hidden><div class="plot-head"><strong>MARK 高脉宽</strong><div class="plot-actions"><button type="button" class="quiet zoom" data-target="digital">放大起音</button><button type="button" class="quiet expand-plot" data-target="digital">展开波形</button></div></div><svg id="digital-plot" class="plot" role="img" aria-label="MARK 电压及脉宽起止标记"></svg><div class="readout" id="digital-readout">移动指针查看采样值。</div></div>
 <div id="digital-stats"></div></div>
 <div id="digital-empty" class="empty" hidden><strong>数字段待测</strong><p>先预热并进入板上 LIVE 页，弹一个孤立音，再读取板内记录。也可以导入单通道 MARK CSV。</p></div></section>
 
 <section id="panel-scope" class="panel" hidden><header class="section-head"><div><span class="eyebrow">02 / OSCILLOSCOPE</span><h2>示波器双通道同步测量</h2></div><button type="button" class="primary open-import">导入示波器 CSV</button></header>
 <p class="lead">两个探头使用同一时基，每次记录一个孤立动作。分别按两个通道的电压范围绘图，横轴严格对齐。</p>
 <div class="selectors"><label>测量段<select id="scope-segment"><option value="hall-headphone">霍尔越阈 → 耳机口起音</option><option value="mark-headphone">FPGA MARK → 耳机口起音</option><option value="hall-mark">霍尔越阈 → FPGA MARK</option></select></label><label>选择本段的采集<select id="scope-select"></select></label></div>
-<div id="scope-data"><div class="run" id="scope-run"></div><div id="scope-meta" class="meta"></div>
-<div class="plot-box"><div class="plot-head"><strong>同一时基的两路电压</strong><button type="button" class="quiet zoom" data-target="scope">放大起音</button></div><svg id="scope-plot" class="plot" role="img" aria-label="CH1 与 CH2 的同步波形及起止标记"></svg><div id="scope-readout" class="readout">移动指针查看两路采样值。</div></div>
+<div id="scope-data"><div class="run" id="scope-run"></div><div id="scope-meta" class="meta"></div><details id="scope-settings"><summary>查看分析参数</summary><div id="scope-parameters" class="meta"></div></details>
+<div class="plot-box"><div class="plot-head"><strong>同一时基的两路电压</strong><div class="plot-actions"><button type="button" class="quiet zoom" data-target="scope">放大起音</button><button type="button" class="quiet expand-plot" data-target="scope">展开波形</button></div></div><svg id="scope-plot" class="plot" role="img" aria-label="CH1 与 CH2 的同步波形及起止标记"></svg><div id="scope-readout" class="readout">移动指针查看两路采样值。</div></div>
 <div id="scope-stats"></div></div>
 <div id="scope-empty" class="empty" hidden><strong id="scope-empty-title">本测量段待测</strong><p>导入本段的一份双通道 CSV 后，将显示两路波形、起止阈值位置和本次延迟。</p><a href="/latency-wiring">查看探头接线</a></div></section>
 
 <section id="panel-audio" class="panel" hidden><header class="section-head"><div><span class="eyebrow">03 / SOUND CARD</span><h2>耳机口声卡记录</h2></div><a class="quiet link" href="/audio-monitor">打开实时声卡观察</a></header>
 <p class="lead">横轴以录音开始为零点，可查看沙声、失真或音符幅度。单路录音没有同步按键起点，不能从这里计算触键延迟。</p>
 <div class="selectors"><label>选择一段声卡采集<select id="audio-select"></select></label></div>
-<div id="audio-data"><div class="meta" id="audio-meta"></div><div class="plot-box"><div class="plot-head"><strong>耳机输出录音</strong><span class="caption">归一化幅度</span></div><svg id="audio-plot" class="plot" role="img" aria-label="声卡耳机输出随录音时间变化"></svg><div id="audio-readout" class="readout">移动指针查看采样值。</div></div><div id="audio-media"></div></div>
+<div id="audio-data"><div class="meta" id="audio-meta"></div><div class="plot-box"><div class="plot-head"><strong>耳机输出录音</strong><div class="plot-actions"><span class="caption">归一化幅度</span><button type="button" class="quiet expand-plot" data-target="audio">展开波形</button></div></div><svg id="audio-plot" class="plot" role="img" aria-label="声卡耳机输出随录音时间变化"></svg><div id="audio-readout" class="readout">移动指针查看采样值。</div></div><div id="audio-media"></div></div>
 <div id="audio-empty" class="empty" hidden><strong>声卡记录待采集</strong><p>完成一次耳机口声卡采集，再刷新本页查看结果。</p></div></section>
 
 <details id="import" class="panel import"><summary><span><span class="eyebrow">IMPORT</span><strong>导入示波器 CSV</strong></span><span class="action-sign" aria-hidden="true">＋</span></summary>
@@ -50,4 +50,4 @@
 <div class="form-grid" id="marker-fields"><label>琴键（可选）<input name="key" maxlength="40" placeholder="例：H15 / C4"></label><label>固件或 User Code（可选）<input name="version" maxlength="64" placeholder="以板卡实际回读为准"></label></div>
 <div class="form-foot"><p id="csv-help" class="caption">MARK 门限使用实际逻辑电压，CSV 应覆盖完整的低、高、低电平。</p><button id="submit-csv" type="submit" class="primary">分析并保存记录</button></div>
 <p id="import-status" class="form-status" role="status"></p></form></details>
-<footer>测量依据为当前保存的板端记录和采集文件。<a href="/latency-wiring">接线与测量步骤</a></footer></main></body></html>
+<footer>测量依据为当前保存的板端记录和采集文件。<a href="/latency-wiring">接线与测量步骤</a></footer></main><dialog id="plot-dialog" aria-labelledby="dialog-title"><div class="dialog-head"><div><strong id="dialog-title">测量波形</strong><small id="dialog-detail"></small></div><button type="button" id="close-plot" class="quiet">返回测量页</button></div></dialog></body></html>

@@ -62,12 +62,22 @@ def capture(args):
     with TemporaryDirectory(dir=out) as temp:
         preview=import_marker(form,raw,Path(temp))
     sampling_us=1e6/float(scope['horizontal']['sample_rate_sps'])
+    transfer=json.loads(csv_path.with_suffix('.json').read_text(encoding='utf8'))
+    ch1=transfer['channels'][0]
+    top=(127-ch1['y_offset_levels'])*ch1['y_multiplier_v_per_level']+ch1['y_zero_v']
+    quality=''
+    if max(preview['trigger_v'])>=top-.5*ch1['y_multiplier_v_per_level']:
+        quality='CH1 高平台到达采集量程上沿。此记录用于门限交越脉宽，高电平幅值未测准。'
     difference=abs(preview['us']-after['onset_us'])
     if difference>1.1+2*sampling_us:
         raise ValueError(f'MARK {preview["us"]:.3f} µs 与板内 {after["onset_us"]} µs 不一致，原始采集已保留')
     marker=import_marker(form,raw,STORE)
+    if quality:
+        marker['quality_note']=quality
+        write_json(STORE/'digital'/marker['raw_url'].split('/')[-1]/'record.json',marker)
     write_json(out/'agreement.json',dict(code=code,key='H15',board_us=after['onset_us'],scope_us=marker['us'],
-                                         sample_period_us=sampling_us,measurement_count=after['measurements']))
+                                         sample_period_us=sampling_us,measurement_count=after['measurements'],
+                                         quality_note=quality))
     print('PASS MARK %.3f us, LAST I2S %d us, sample period %.3f us'%(marker['us'],after['onset_us'],sampling_us))
     if args.audio_threshold_v is not None:
         with csv_path.open(encoding='utf8') as f:first=float(next(csv.DictReader(f))['time_s'])

@@ -1,0 +1,14 @@
+{
+  "result": "passed",
+  "scope": "Read-only browser check of the actual local result service; no board-read, recording or import command was issued.",
+  "digital": "82.64µs",
+  "mark_traces": 1,
+  "mark_times": 2,
+  "threshold_overlays": 1,
+  "hall_headphone_pending": true,
+  "audio_traces": 1,
+  "audio_source": "记录\n历史实录 · v8 C4 钢琴耳机输出\n来源\n历史 Ampero 录音 · 非本次试验\n采集类别\n历史实录\n采样率\n44,100 Hz\n通道\nASIO 5 · Tang 耳机输出\n录音时长\n2.5 s\n峰值\n-35.27 dBFS",
+  "errors": [],
+  "mark_quality_note": "波形说明　CH1 高平台到达采集量程上沿。此记录用于门限交越脉宽，高电平幅值未测准。",
+  "expanded_quality_note_visible": true
+}

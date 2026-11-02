@@ -42,7 +42,7 @@ const service=http.createServer(async(req,res)=>{
     if(data.segment==='mark-i2s'){
       const row={name:data.name,version:'TEST-FW',key:'H15',segment:data.segment,count:1,sequence:null,
         us:80,t0_ms:0,t1_ms:.08,time_ms:[-.02,0,.02,.04,.06,.08,.1],trigger_v:[0,3.3,3.3,3.3,3.3,0,0],
-        bounds_us:[60,100],source:'示波器标记测试替身',csv_sha256:'d'.repeat(64),
+        bounds_us:[60,100],source:'示波器标记测试替身',quality_note:'测试夹具：高平台可能削顶，按门限解读。',csv_sha256:'d'.repeat(64),
         raw_url:'/api/latency/mark/dd',threshold_v:data.trigger_threshold};
       saved.digital.push(row);reply(res,200,'application/json',JSON.stringify(row));return;
     }
@@ -74,6 +74,10 @@ async function main(){
     assert.equal(await page.locator('#scope-plot line[data-marker]').count(),2);
     assert.match(await page.locator('#scope-stats').innerText(),/2 次有效测量/);
     assert.match(await page.locator('#scope-stats').innerText(),/0\.06/);
+    await page.click('.expand-plot[data-target=scope]');assert.equal(await page.locator('#plot-dialog').evaluate(n=>n.open),true);
+    assert.equal(await page.locator('#plot-dialog #scope-plot path[data-series]').count(),2);
+    await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.querySelector('#plot-dialog').open);
+    assert.equal(await page.locator('#panel-scope #scope-plot').count(),1);
     await page.click('#panel-scope .zoom');assert.match(await page.locator('#panel-scope .zoom').innerText(),/查看全窗/);
     await page.locator('#scope-plot').hover({position:{x:240,y:75}});
     assert.match(await page.locator('#scope-readout').innerText(),/CH1.*CH2/);
@@ -93,6 +97,7 @@ async function main(){
     assert.equal(await page.locator('#digital-plot path[data-series]').count(),1);
     assert.equal(await page.locator('#digital-plot line[data-marker]').count(),2);
     assert.match(await page.locator('#digital-meta a').getAttribute('href'),/\/mark\/dd$/);
+    assert.match(await page.locator('#digital-meta .quality-note').innerText(),/波形说明.*削顶/);
     await page.click('#tab-scope');await page.click('#panel-scope .open-import');
     await page.setInputFiles('#csv-file',{name:'three.csv',mimeType:'text/csv',buffer:Buffer.from('TIME_US,HALL_V,OUT_V\n-30,1.6,0\n-10,1.6,0\n10,2.2,.2')});
     await page.waitForFunction(()=>document.querySelector('#time-column').value==='TIME_US' && document.querySelector('#audio-column').value==='OUT_V');

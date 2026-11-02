@@ -3,8 +3,8 @@
 const $ = id => document.getElementById(id);
 const SEGMENTS = {
   'hall-headphone': ['霍尔越阈', '耳机口起音'],
-  'mark-headphone': ['FPGA MARK 上升沿', '耳机口起音'],
-  'hall-mark': ['霍尔越阈', 'FPGA MARK 上升沿'],
+  'mark-headphone': ['FPGA MARK 起始边沿', '耳机口起音'],
+  'hall-mark': ['霍尔越阈', 'FPGA MARK 起始边沿'],
 };
 const state = {
   catalog: {digital: [], scope: [], audio: []}, tab: 'digital', busy: false, loaded: false,
@@ -79,11 +79,11 @@ function digitalPeers(row) {
   if (isMarker(row)) {
     if (!row.csv_sha256 || !number(row.threshold_v) || !row.version || !row.key ||
         String(row.version).includes('未标注') || String(row.key).includes('未标注')) return [row];
-    return unique(rows.filter(v=>v.threshold_v===row.threshold_v && v.csv_sha256 && v.condition===row.condition),
+    return unique([row,...rows.filter(v=>v.threshold_v===row.threshold_v && v.csv_sha256 && v.condition===row.condition)],
       v=>v.csv_sha256);
   }
   // Each LAST I2S read describes one event. The sequence is an event tag, never a weight.
-  return unique(rows, eventIdentity);
+  return unique([row,...rows], eventIdentity);
 }
 function eventIdentity(row) {
   return !isMarker(row) && number(row.sequence) ?
@@ -92,8 +92,8 @@ function eventIdentity(row) {
 function scopePeers(row) {
   if (!row.condition || !row.csv_sha256 || !row.settings) return [row];
   const settings = stable(row.settings);
-  return unique(state.catalog.scope.filter(v => number(v.delay_ms) && v.delay_ms>=0 && v.segment===row.segment &&
-    v.condition===row.condition && v.csv_sha256 && stable(v.settings)===settings), v=>v.csv_sha256);
+  return unique([row,...state.catalog.scope.filter(v => number(v.delay_ms) && v.delay_ms>=0 && v.segment===row.segment &&
+    v.condition===row.condition && v.csv_sha256 && stable(v.settings)===settings)], v=>v.csv_sha256);
 }
 function sameOriginURL(raw) {
   if (!raw) return null;
@@ -199,7 +199,8 @@ function draw(plotId,times,tracks,marks,zoom,xUnit) {
   const svg=$(plotId),readout=$(plotId.replace('-plot','-readout'));
   svg.replaceChildren();plots.delete(svg);
   const width=Math.max(270,Math.round(svg.clientWidth||720));
-  const height=52+tracks.length*112;
+  const height=svg.closest('dialog[open]')?Math.max(240,Math.min(840,window.innerHeight-210)):52+tracks.length*112;
+  const rowHeight=(height-52)/tracks.length;
   svg.setAttribute('viewBox','0 0 '+width+' '+height);svg.setAttribute('height',height);
   const left=width<480?50:66,right=width-16,top=26;
   if (!validSeries(times,tracks)) {
@@ -222,7 +223,7 @@ function draw(plotId,times,tracks,marks,zoom,xUnit) {
     svgElement(svg,'text',{x:px,y:height-13,fill:'#b7cdc0','text-anchor':i===0?'start':i===steps?'end':'middle'},fmt(t, xUnit==='ms'?5:3)+' '+xUnit);
   }
   tracks.forEach((track,i)=>{
-    const base=top+i*112+18,end=base+77;
+    const base=top+i*rowHeight+18,end=base+rowHeight-35;
     const indices=sparseIndices(times,track.y,lo,hi,x);
     let min=Infinity,max=-Infinity;
     for(const k of indices){min=Math.min(min,track.y[k]);max=Math.max(max,track.y[k]);}
@@ -234,6 +235,11 @@ function draw(plotId,times,tracks,marks,zoom,xUnit) {
       const value=min+(max-min)*n/2,py=y(value);
       svgElement(svg,'line',{x1:left,y1:py,x2:right,y2:py,stroke:'#344c43','stroke-width':.75});
       svgElement(svg,'text',{x:left-5,y:py+4,fill:'#b7cdc0','text-anchor':'end'},fmt(value,4));
+    }
+    for(const value of track.thresholds||[]){
+      if(!number(value) || value<min || value>max)continue;
+      const line=svgElement(svg,'line',{x1:left,x2:right,y1:y(value),y2:y(value),stroke:colors[i],opacity:.65,'stroke-dasharray':'2 5','data-threshold':value});
+      svgElement(line,'title',{},'电压门限 '+fmt(value,5)+' '+track.unit);
     }
     const group=svgElement(svg,'svg',{x:left,y:base,width:right-left,height:end-base,viewBox:'0 0 '+(right-left)+' '+(end-base),overflow:'hidden'});
     const path=indices.map((k,n)=>(n?'L':'M')+(x(times[k])-left).toFixed(2)+' '+(y(track.y[k])-base).toFixed(2)).join(' ');
@@ -254,6 +260,23 @@ function hover(event) {
   const index=nearest(v.times,v.lo+(px-v.left)/(v.right-v.left)*(v.hi-v.lo));
   v.readout.textContent='t = '+fmt(v.times[index],6)+' '+v.xUnit+'　'+v.tracks.map(t=>t.name+' '+fmt(t.y[index],5)+' '+t.unit).join('　');
 }
+let expanded=null;
+function openPlot(button) {
+  if(expanded || state.busy)return;
+  const tab=button.dataset.target,box=button.closest('.plot-box'), dialog=$('plot-dialog');
+  const record=state.catalog[tab].find(row=>identity(row,tab)===state.selected[tab]);
+  if(!record || !box)return;
+  const place=document.createComment('plot position');box.before(place);dialog.append(box);
+  expanded={place,box,button};
+  $('dialog-title').textContent=tab==='scope'?SEGMENTS[record.segment].join(' → '):tab==='digital'?'J8-10 MARK 高脉宽':'声卡耳机波形';
+  const duration=tab==='scope'?fmt(record.delay_ms,6)+' ms':tab==='digital'?fmt(record.us,4)+' µs':fmt(record.duration_s,3)+' s';
+  $('dialog-detail').textContent=display(record.name)+' · '+duration+(tab==='digital' && record.quality_note?'　波形说明　'+record.quality_note:'');
+  dialog.showModal();render();$('close-plot').focus();
+}
+function restorePlot() {
+  if(!expanded)return;
+  const {place,box,button}=expanded;expanded=null;place.replaceWith(box);render();button.focus();
+}
 function bounds(values, unit) {
   return Array.isArray(values) && values.length===2 && values.every(number) ? fmt(values[0],5)+' 至 '+fmt(values[1],5)+' '+unit : null;
 }
@@ -269,8 +292,14 @@ function renderDigital() {
   meta('digital-meta',[['来源',display(record.source)],['琴键',display(record.key)],['码流',display(record.version)],['换算',fmt(record.us/1000,6)+' ms'],
     ['板内事件序号',number(record.sequence)?record.sequence:null],['读取时间',record.read_at],['MARK 门限',number(record.threshold_v)?fmt(record.threshold_v,4)+' V':null],
     ['采样分辨区间',bounds(record.bounds_us,'µs')]],record.raw_url);
+  if(marker && typeof record.quality_note==='string' && record.quality_note.trim()){
+    const description=make('p',undefined,'quality-note notice');
+    Object.assign(description.style,{flexBasis:'100%',margin:'0',borderColor:'#b77434',background:'#f6efde',color:'#61421f'});
+    description.append(make('strong','波形说明'),document.createTextNode('　'+record.quality_note.trim()));
+    $('digital-meta').append(description);
+  }
   $('digital-plot-box').hidden=!marker;
-  if(marker && state.tab==='digital') draw('digital-plot',record.time_ms,[{name:'CH1 · MARK（V）',y:record.trigger_v,unit:'V'}],
+  if(marker && state.tab==='digital') draw('digital-plot',record.time_ms,[{name:'CH1 · MARK（V）',y:record.trigger_v,unit:'V',thresholds:[record.threshold_v]}],
     [{tag:'T₀',t:record.t0_ms},{tag:'T₁',t:record.t1_ms}],state.zoom.digital,'ms');
   const peers=digitalPeers(record);
   metricPanel('digital-stats',peers,r=>r.us,'µs',marker?'同键位、码流和绝对门限的 MARK 记录按 CSV 指纹去重。':'同键位、同码流的板内读数按事件序号与读数去重。板内累计序号不计入样本数。');
@@ -278,6 +307,10 @@ function renderDigital() {
 }
 function renderScope() {
   const seg=$('scope-segment').value;
+  for(const option of $('scope-segment').options){
+    const count=state.catalog.scope.filter(r=>r.segment===option.value).length;
+    option.text=SEGMENTS[option.value].join(' → ')+'（'+count+' 条）';
+  }
   const rows=state.catalog.scope.filter(r=>r.segment===seg && number(r.delay_ms)&&r.delay_ms>=0);
   const record=options($('scope-select'),rows,'scope',r=>display(r.name)+' · '+fmt(r.delay_ms,5)+' ms');
   $('scope-data').hidden=!record;$('scope-empty').hidden=!!record;
@@ -285,10 +318,18 @@ function renderScope() {
   $('scope-empty-title').textContent=names.join(' → ')+' · 待测';if(!record)return;
   runCard('scope-run',fmt(record.delay_ms,6),'ms',names[0],names[1],[fmt(record.t0_ms,6)+' ms',fmt(record.t1_ms,6)+' ms']);
   const settings=record.settings||{}, condition=display(record.condition,'未标注');
-  meta('scope-meta',[['来源',display(record.source)],['条件',condition],['采样分辨区间',bounds(record.bounds_ms,'ms')],
+  meta('scope-meta',[['来源',display(record.source)],['条件',condition],['采样分辨区间',bounds(record.bounds_ms,'ms')],['原始采样点',record.measurement?.sample_count],
     ['CH1 / CH2 门限',number(settings.trigger_threshold)&&number(settings.audio_threshold)?fmt(settings.trigger_threshold,5)+' / '+fmt(settings.audio_threshold,5)+' V':null],
     ['CSV 指纹',record.csv_sha256?record.csv_sha256.slice(0,12):null]],record.raw_url);
-  if(state.tab==='scope')draw('scope-plot',record.time_ms,[{name:'CH1 · '+names[0]+'（V）',y:record.trigger_v,unit:'V'},{name:'CH2 · '+names[1]+'（V）',y:record.audio_v,unit:'V'}],
+  $('scope-settings').hidden=!record.settings;
+  const direction={rising:'上升',falling:'下降',either:'任一方向'};
+  meta('scope-parameters',[['时间列',settings.time_column],['CH1 列',settings.trigger_column],['CH2 列',settings.audio_column],
+    ['静止基线',bounds(settings.baseline,settings.time_unit||'')],['CH1 方向',direction[settings.direction]],
+    ['CH1 / CH2 连续确认点数',number(settings.trigger_points)&&number(settings.audio_points)?settings.trigger_points+' / '+settings.audio_points:null]]);
+  const m=record.measurement||{};
+  const thresholds=(zero,level,direction)=>!number(zero)||!number(level)?[]:direction==='rising'?[zero+level]:direction==='falling'?[zero-level]:[zero-level,zero+level];
+  if(state.tab==='scope')draw('scope-plot',record.time_ms,[{name:'CH1 · '+names[0]+'（V）',y:record.trigger_v,unit:'V',thresholds:thresholds(m.trigger_baseline_v,settings.trigger_threshold,settings.direction)},
+    {name:'CH2 · '+names[1]+'（V）',y:record.audio_v,unit:'V',thresholds:thresholds(m.audio_baseline_v,settings.audio_threshold,'either')}],
     [{tag:'T₀',t:record.t0_ms},{tag:'T₁',t:record.t1_ms}],state.zoom.scope,'ms');
   const peers=scopePeers(record);
   metricPanel('scope-stats',peers,r=>r.delay_ms,'ms','仅合并同一测量段、同一条件和同一分析参数的记录。相同 CSV 只计一次，未标注条件的记录单独展示。');
@@ -452,10 +493,21 @@ function init() {
   document.querySelectorAll('.zoom').forEach(button=>button.addEventListener('click',()=>{
     const key=button.dataset.target;state.zoom[key]=!state.zoom[key];render();
   }));
+  document.querySelectorAll('.expand-plot').forEach(button=>button.addEventListener('click',()=>openPlot(button)));
+  $('close-plot').addEventListener('click',()=>$('plot-dialog').close());
+  $('plot-dialog').addEventListener('close',restorePlot);
   document.querySelectorAll('.open-import').forEach(button=>button.addEventListener('click',()=>{
     $('import').open=true;$('import-segment').value=button.dataset.segment || $('scope-segment').value;setImportMode();$('import-segment').focus();
   }));
-  $('refresh').addEventListener('click',()=>operate(async()=>{await loadCatalog();showNotice('记录已刷新。');}));
+  $('refresh').addEventListener('click',()=>operate(async()=>{
+    const tabs=['digital','scope','audio'], previous=Object.fromEntries(tabs.map(k=>[k,new Set(state.catalog[k].map(r=>identity(r,k)))]));
+    await loadCatalog();
+    const fresh=Object.fromEntries(tabs.map(k=>[k,state.catalog[k].filter(r=>!previous[k].has(identity(r,k)))]));
+    const incoming=fresh[state.tab].filter(r=>state.tab!=='scope' || r.segment===$('scope-segment').value);
+    if(incoming.length)state.selected[state.tab]=identity(incoming[incoming.length-1],state.tab);
+    const count=tabs.reduce((total,k)=>total+fresh[k].length,0);
+    showNotice(count?'记录已刷新，新增 '+count+' 条。':'记录已刷新。');
+  }));
   $('read-board').addEventListener('click',()=>operate(async()=>{
     $('updated').textContent='正在读取板内计时…';
     const existing=new Set(state.catalog.digital.map(eventIdentity));
