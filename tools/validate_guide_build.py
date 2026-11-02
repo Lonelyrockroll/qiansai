@@ -53,6 +53,8 @@ def validate(build, profile='full'):
     assert not re.search(r'ERROR\s+\(', (build/'build.log').read_text(errors='replace'))
     fw = int(re.search(r'tx_buf\[24\]\s*=\s*(\d+);\s*tx_buf\[25\]=opcode;', (build/'uart_control_display.v').read_text())[1])
     placement = int(re.search(r'-place_option\s+(\d+)',(build/'build.tcl').read_text())[1])
+    executed=int(re.search(r'-place_option\s+(\d+)',(build/'impl/pnr/cmd.do').read_text())[1])
+    assert placement==executed, 'Placement recipe differs from routed job'
     result = dict(validated=True, firmware=fw, monitor_profile=profile, place_option=placement, resources=resources, frequency=frequency,
                   slack=slack, pins=pins, source_sha256=built,
                   sha256=hashlib.sha256(bitstream.read_bytes()).hexdigest(),

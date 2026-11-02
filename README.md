@@ -1,5 +1,7 @@
 # qiansai
 
+[下载 v32 脱机验收包](output/Tang-脱机验收-v32.zip)。现场使用 `Tang-v32-full.fs`，J18 的旋钮 B 选菜单 13「声谱观察」，短按进入 LIVE，再短按展示 32 峰和 31 峰。当前实板完整版为 `0x0000365B`；同包附带通过布局时序校验的 `Tang-v32-spectrum-only.fs`。
+
 v32 增加脱机 32 峰测试、FPGA 音频观察页、数字起音计时、轻重触键归一化、安卓在线曲谱和白键互换。[台上操作与指标对照](现场验收.md) · [第 115 条及测量方案](赛题二问答与验收测量.md) · [安卓 1.3](realtime_synth/android_recorder/dist/TangRecorder-1.3.apk) · [资源与电脑分析](资源与电脑分析.md) · [独立电脑工具](output/Tang-PC-Audio-Tools.zip)
 
 v31 加入手机选 PDF、蓝牙传页、板卡全屏显示与翻页。[曲谱验收步骤](FULLSCREEN-SCORE.md) · [安卓 1.2](realtime_synth/android_recorder/dist/TangRecorder-1.2.apk) · [示范谱](output/pdf/score-demo.pdf)

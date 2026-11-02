@@ -19,6 +19,7 @@ def prepare(profile, target):
         shutil.copyfile(ROOT/'fpga'/name,target/name)
     if profile=='spectrum-only':
         shutil.copyfile(ROOT/'profiles/spectrum-only/fpga/audio_monitor.v',target/'audio_monitor.v')
+        shutil.copyfile(ROOT/'profiles/spectrum-only/build.tcl',target/'build.tcl')
     print(target/'synth_display.gprj')
 
 
