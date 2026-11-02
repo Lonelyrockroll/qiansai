@@ -26,6 +26,7 @@ from analyze_onset_csv import Settings, TIME_TO_MS, measure_samples, read_captur
 SEGMENTS = {'mark-headphone': 'FPGA 接受琴键 → 耳机口模拟起音',
             'hall-headphone': '霍尔越阈 → 耳机口模拟起音',
             'hall-speaker-leg': '霍尔越阈 → 喇叭功放单端起音',
+            'fixed-adc-speaker-leg': '固定 H15 · U1 ADC_OUT 越阈 → 喇叭功放单端起音',
             'hall-mark': '霍尔越阈 → FPGA 接受琴键'}
 UPLOAD_LIMIT = 24 * 1024 * 1024
 

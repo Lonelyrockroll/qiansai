@@ -26,7 +26,7 @@ def members():
         files.add(path.relative_to(ROOT).as_posix())
     for name in ('启动延迟实测.cmd','延迟展示包使用说明.md','延迟测试接线.md','AMPERO-LATENCY.md',
                  'OUTPUT-CALIBRATION.md','OUTPUT-HARMONICS.md','赛题二问答与验收测量.md',
-                 'tools/analyze_onset_csv.py','tools/capture_latency_ampero.py','tools/measure_live_mark.py','tools/load_guide_sram.py',
+                 'tools/analyze_onset_csv.py','tools/capture_latency_ampero.py','tools/measure_live_mark.py','tools/report_fixed_key_latency.py','tools/load_guide_sram.py',
                  'tools/validate_guide_build.py','fpga/check_sources.py','fpga/display.cst','fpga/audio_tx.v',
                  'fpga/keyboard_input.v','fpga/onset_meter.v','realtime_synth/control_meter_l8/verify_board.py',
                  'hardware/pcb/ProPrj_nos_pico_32key_TypeC5V_1LED_ADC_2026-09-26.epro2',
@@ -70,6 +70,14 @@ def members():
     for trial in (ROOT/'output/latency/acquisitions').glob('*/agreement.json'):
         for name in ('agreement.json','board.json','setup.json','scope.json'):
             add(trial.parent/name)
+    for summary in (ROOT/'output/latency/acquisitions').glob('*/speaker_summary.json'):
+        add(summary)
+        for name in ('criteria.json','fixed_config.json','cal_points.json','restored.json','idle.csv','held.csv','idle.json','held.json','quiet_1x.csv','quiet_1x.json'):
+            add(summary.parent/name)
+        for trial in json.loads(summary.read_text(encoding='utf8'))['trials']:
+            capture=trial['capture']
+            for suffix in ('.csv','.json','_association.json'):
+                add(summary.parent/(capture+suffix))
     return sorted(files)
 
 

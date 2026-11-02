@@ -4,6 +4,7 @@ const $ = id => document.getElementById(id);
 const SEGMENTS = {
   'hall-headphone': ['霍尔越阈', '耳机口起音'],
   'hall-speaker-leg': ['霍尔越阈', '喇叭功放单端起音'],
+  'fixed-adc-speaker-leg': ['固定 H15 · U1 越阈', '功放单端起音'],
   'mark-headphone': ['FPGA MARK 起始边沿', '耳机口起音'],
   'hall-mark': ['霍尔越阈', 'FPGA MARK 起始边沿'],
 };
@@ -271,7 +272,8 @@ function openPlot(button) {
   expanded={place,box,button};
   $('dialog-title').textContent=tab==='scope'?SEGMENTS[record.segment].join(' → '):tab==='digital'?'J8-10 MARK 高脉宽':'声卡耳机波形';
   const duration=tab==='scope'?fmt(record.delay_ms,6)+' ms':tab==='digital'?fmt(record.us,4)+' µs':fmt(record.duration_s,3)+' s';
-  $('dialog-detail').textContent=display(record.name)+' · '+duration+(tab==='digital' && record.quality_note?'　波形说明　'+record.quality_note:'');
+  const gates=tab==='scope' && record.settings?.trigger_reference==='absolute' ? absoluteGateLabels(record.settings).map(([name,value])=>name+' '+value).join(' / ') : '';
+  $('dialog-detail').textContent=display(record.name)+' · '+duration+(gates?'　'+gates:'')+(tab==='digital' && record.quality_note?'　波形说明　'+record.quality_note:'');
   dialog.showModal();render();$('close-plot').focus();
 }
 function restorePlot() {
@@ -306,6 +308,10 @@ function renderDigital() {
   metricPanel('digital-stats',peers,r=>r.us,'µs',marker?'同键位、码流和绝对门限的 MARK 记录按 CSV 指纹去重。':'同键位、同码流的板内读数按事件序号与读数去重。板内累计序号不计入样本数。');
   resultsTable('digital-stats',peers,r=>r.us,'µs');
 }
+function absoluteGateLabels(settings) {
+  const edge={falling:'下降',rising:'上升',either:''}[settings.direction] || '';
+  return [['CH1 绝对'+edge+'门限',fmt(settings.trigger_threshold,6)+' V'],['CH2 相对静音门限',fmt(settings.audio_threshold,6)+' V']];
+}
 function renderScope() {
   const seg=$('scope-segment').value;
   for(const option of $('scope-segment').options){
@@ -319,8 +325,9 @@ function renderScope() {
   $('scope-empty-title').textContent=names.join(' → ')+' · 待测';if(!record)return;
   runCard('scope-run',fmt(record.delay_ms,6),'ms',names[0],names[1],[fmt(record.t0_ms,6)+' ms',fmt(record.t1_ms,6)+' ms']);
   const settings=record.settings||{}, condition=display(record.condition,'未标注');
-  meta('scope-meta',[['来源',display(record.source)],['条件',condition],['采样分辨区间',bounds(record.bounds_ms,'ms')],['原始采样点',record.measurement?.sample_count],
-    ['CH1 / CH2 门限',number(settings.trigger_threshold)&&number(settings.audio_threshold)?fmt(settings.trigger_threshold,5)+' / '+fmt(settings.audio_threshold,5)+' V':null],
+  const absolute=settings.trigger_reference==='absolute';
+  const gates=absolute?absoluteGateLabels(settings):[['CH1 / CH2 相对基线门限',number(settings.trigger_threshold)&&number(settings.audio_threshold)?fmt(settings.trigger_threshold,5)+' / '+fmt(settings.audio_threshold,5)+' V':null]];
+  meta('scope-meta',[['来源',display(record.source)],['条件',condition],['采样分辨区间',bounds(record.bounds_ms,'ms')],['原始采样点',record.measurement?.sample_count],...gates,
     ['CSV 指纹',record.csv_sha256?record.csv_sha256.slice(0,12):null]],record.raw_url);
   $('scope-settings').hidden=!record.settings;
   const direction={rising:'上升',falling:'下降',either:'任一方向'};
@@ -329,7 +336,7 @@ function renderScope() {
     ['CH1 / CH2 连续确认点数',number(settings.trigger_points)&&number(settings.audio_points)?settings.trigger_points+' / '+settings.audio_points:null]]);
   const m=record.measurement||{};
   const thresholds=(zero,level,direction)=>!number(zero)||!number(level)?[]:direction==='rising'?[zero+level]:direction==='falling'?[zero-level]:[zero-level,zero+level];
-  if(state.tab==='scope')draw('scope-plot',record.time_ms,[{name:'CH1 · '+names[0]+'（V）',y:record.trigger_v,unit:'V',thresholds:thresholds(m.trigger_baseline_v,settings.trigger_threshold,settings.direction)},
+  if(state.tab==='scope')draw('scope-plot',record.time_ms,[{name:'CH1 · '+names[0]+'（V）',y:record.trigger_v,unit:'V',thresholds:absolute?[settings.trigger_threshold]:thresholds(m.trigger_baseline_v,settings.trigger_threshold,settings.direction)},
     {name:'CH2 · '+names[1]+'（V）',y:record.audio_v,unit:'V',thresholds:thresholds(m.audio_baseline_v,settings.audio_threshold,'either')}],
     [{tag:'T₀',t:record.t0_ms},{tag:'T₁',t:record.t1_ms}],state.zoom.scope,'ms');
   const peers=scopePeers(record);
@@ -488,6 +495,10 @@ function uploadFields() {
   return values;
 }
 function init() {
+  const requested=new URLSearchParams(location.search).get('segment');
+  if(Object.hasOwn(SEGMENTS,requested)){
+    state.tab='scope';$('scope-segment').value=requested;$('import-segment').value=requested;
+  }
   for(const tab of ['digital','scope','audio']){
     $('tab-'+tab).addEventListener('click',()=>showTab(tab));
     $(tab+'-select').addEventListener('change',e=>{state.selected[tab]=e.target.value;render();});

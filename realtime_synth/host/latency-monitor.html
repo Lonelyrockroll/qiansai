@@ -21,7 +21,7 @@
 
 <section id="panel-scope" class="panel" hidden><header class="section-head"><div><span class="eyebrow">02 / OSCILLOSCOPE</span><h2>示波器双通道同步测量</h2></div><button type="button" class="primary open-import">导入示波器 CSV</button></header>
 <p class="lead">两个探头使用同一时基，每次记录一个孤立动作。分别按两个通道的电压范围绘图，横轴严格对齐。</p>
-<div class="selectors"><label>测量段<select id="scope-segment"><option value="hall-headphone">霍尔越阈 → 耳机口起音</option><option value="hall-speaker-leg">霍尔越阈 → 喇叭功放单端起音</option><option value="mark-headphone">FPGA MARK → 耳机口起音</option><option value="hall-mark">霍尔越阈 → FPGA MARK</option></select></label><label>选择本段的采集<select id="scope-select"></select></label></div>
+<div class="selectors"><label>测量段<select id="scope-segment"><option value="hall-headphone">霍尔越阈 → 耳机口起音</option><option value="hall-speaker-leg">霍尔越阈 → 喇叭功放单端起音</option><option value="fixed-adc-speaker-leg">固定 H15 · U1 越阈 → 功放单端起音</option><option value="mark-headphone">FPGA MARK → 耳机口起音</option><option value="hall-mark">霍尔越阈 → FPGA MARK</option></select></label><label>选择本段的采集<select id="scope-select"></select></label></div>
 <div id="scope-data"><div class="run" id="scope-run"></div><div id="scope-meta" class="meta"></div><details id="scope-settings"><summary>查看分析参数</summary><div id="scope-parameters" class="meta"></div></details>
 <div class="plot-box"><div class="plot-head"><strong>同一时基的两路电压</strong><div class="plot-actions"><button type="button" class="quiet zoom" data-target="scope">放大起音</button><button type="button" class="quiet expand-plot" data-target="scope">展开波形</button></div></div><svg id="scope-plot" class="plot" role="img" aria-label="CH1 与 CH2 的同步波形及起止标记"></svg><div id="scope-readout" class="readout">移动指针查看两路采样值。</div></div>
 <div id="scope-stats"></div></div>
@@ -36,7 +36,7 @@
 <details id="import" class="panel import"><summary><span><span class="eyebrow">IMPORT</span><strong>导入示波器 CSV</strong></span><span class="action-sign" aria-hidden="true">＋</span></summary>
 <p class="lead">选择文件，核对接线、时间单位和门限。分析成功后，记录会进入对应的测量视图。</p>
 <form id="csv-form"><div class="form-grid">
-<label>测量段<select id="import-segment" name="segment"><option value="mark-i2s">仅 CH1 · J8-10 MARK 高脉宽</option><option value="hall-headphone">霍尔越阈 → 耳机口起音</option><option value="hall-speaker-leg">霍尔越阈 → 喇叭功放单端起音</option><option value="mark-headphone">FPGA MARK → 耳机口起音</option><option value="hall-mark">霍尔越阈 → FPGA MARK</option></select></label>
+<label>测量段<select id="import-segment" name="segment"><option value="mark-i2s">仅 CH1 · J8-10 MARK 高脉宽</option><option value="hall-headphone">霍尔越阈 → 耳机口起音</option><option value="hall-speaker-leg">霍尔越阈 → 喇叭功放单端起音</option><option value="fixed-adc-speaker-leg">固定 H15 · U1 越阈 → 功放单端起音</option><option value="mark-headphone">FPGA MARK → 耳机口起音</option><option value="hall-mark">霍尔越阈 → FPGA MARK</option></select></label>
 <label>CSV 文件（最大 24 MiB）<input id="csv-file" required type="file" accept=".csv,text/csv"></label>
 <label>记录名称<input id="record-name" name="name" maxlength="100" placeholder="默认使用文件名"></label>
 <label>时间单位<select name="time_unit" id="time-unit"><option value="s">秒（s）</option><option value="ms">毫秒（ms）</option><option value="us">微秒（µs）</option><option value="ns">纳秒（ns）</option></select></label>
