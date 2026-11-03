@@ -2,7 +2,7 @@
 
 [Keystation 五针 MIDI 输入 v33](MIDI-INPUT.md) · [MIDI 完整工程与下载包](output/Tang-MIDI-v33.zip)
 
-当前码流为 `0x0000FAE1`，支持 BMV51M001 的 RX 接 J8-5，使用 MIDI Note On/Off、力度、32 声部分配与延音控制。屏幕「设置 → 输入来源」可选择 MIDI，默认延音关闭，普通按键和松键即可演奏。
+当前码流为 `0x0000FAE1`。本次实物 BMV51M001 的 **TX 丝印脚接 J8-5**，VDD 接 J8-1（3.3 V），GND 接 J8-3，RX 和 NC 留空；实物 RX/TX 丝印顺序与厂家接口表相反，接线已通过模块收发回环验证。该接法已完成 Keystation 独立供电的五针实板试弹，用户确认按下发声、松开正常。程序支持 MIDI Note On/Off、力度、32 声部分配与延音控制，屏幕「设置 → 输入来源」可选择 MIDI，默认延音关闭。
 
 [新版分级菜单操作](SCREEN-NAVIGATION.md) · [完整 Gowin 工程、码流与实板记录](output/Tang-分级菜单UI-v32.zip)
 

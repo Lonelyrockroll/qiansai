@@ -56,7 +56,7 @@
 <a href="https://appgallery1.huawei.com/#/app/C102224743" style="color:var(--accent)" target="_blank" rel="noopener">蓝牙调试宝 · 华为应用市场</a> · <a href="https://play.google.com/store/apps/details?id=de.kai_morich.serial_bluetooth_terminal" style="color:var(--accent)" target="_blank" rel="noopener">Serial Bluetooth Terminal · Google Play</a></details>
 <p class="small">手机每次发一条，等回包再发下一条。+ / - 调当前页音量，T 换琴键音色，F 换效果，L 测灯，M 静音。</p></div>
 <div class="card" id="midiPanel"><div class="section">MIDI 键盘 · 五针 DIN</div>
-<p class="small">BMV51M001 的 RX 接 J8-5，VDD 接 J8-1（3.3V），GND 接 J8-3。切换输入后点“开始演奏”。MIDI 模式可脱离电脑持续演奏，A 或“全部静音”停止声音。</p>
+<p class="small">本次实物 BMV51M001 的 <strong>TX 丝印脚接 J8-5</strong>，VDD 接 J8-1（3.3V），GND 接 J8-3；演奏时 RX、NC 留空。该模块丝印与厂家接口表的 RX/TX 顺序相反，接法已通过模块回环验证。切换输入后点“开始演奏”，A 或“全部静音”停止声音。</p>
 <div class="row"><button id="midiUse" disabled>使用 MIDI 键盘</button><button id="midiKeys" disabled>使用 32 键琴板</button><button id="midiPc" disabled>使用电脑琴键</button><button id="midiClear" disabled>清接收计数</button></div>
 <p id="midiStatus" class="small">等待 v33 MIDI 固件</p></div>
 <div class="card" id="fxPanel"><div class="section">FPGA 数字效果器</div>
