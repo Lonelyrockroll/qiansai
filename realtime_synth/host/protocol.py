@@ -16,6 +16,7 @@ OUTPUT_GAIN_STATUS = 27
 PMOD_TEST, PMOD_STATUS = 28, 29
 SCORE_CONTROL, SCORE_READ = 32, 33
 NAVIGATION = 36
+MIDI_STATUS = 37
 # H1..H32 on the white-key instrument. Index is independent of the allocated voice.
 WHITE_KEYS = tuple(36 + 12*(i//7) + (0,2,4,5,7,9,11)[i%7] for i in range(32))
 
@@ -79,6 +80,19 @@ class Decoder:
                 continue
             del self.buffer[:28]
             p = frame[6:26]
+            if p[19]==MIDI_STATUS and p[18]>=33:
+                status=dict(seq=frame[3],opcode=p[19],status=p[0],firmware=p[18])
+                if p[1]&128:
+                    status.update(group=1,last_velocity=p[1]&127,last_channel=p[2]+1,
+                        sustain_channels=int.from_bytes(p[3:5],'little'),ignored_offs=int.from_bytes(p[5:7],'little'),
+                        steals=int.from_bytes(p[7:9],'little'),sounding=p[9])
+                else:
+                    status.update(group=0,mode=p[1],rx_high=bool(p[2]&1),session=bool(p[2]&2),
+                        ready=bool(p[2]&4),sustain=bool(p[2]&8),error=bool(p[2]&16),held=p[3],queued=p[4],
+                        bytes=int.from_bytes(p[5:9],'little'),events=int.from_bytes(p[9:13],'little'),
+                        framing_errors=int.from_bytes(p[13:15],'little'),overflows=int.from_bytes(p[15:17],'little'),last_note=p[17])
+                result.append(status)
+                continue
             if p[19]==NAVIGATION and p[18]>=32:
                 rows=5 if p[1]==4 else 6
                 result.append(dict(seq=frame[3],opcode=p[19],status=p[0],firmware=p[18],
@@ -238,7 +252,7 @@ def response_for_test(seq, opcode, *, status=0, gated=0, active=0, commands=0, f
 def keyboard_payload(mode=0,key=12,press=256,release=128,sensitivity=64,params=None,level_limit=16384):
     if any(isinstance(v,bool) or int(v)!=v for v in (mode,key,press,release,sensitivity)):
         raise ValueError('琴键模式、编号及阈值必须是整数')
-    if not 0<=mode<=2 or not 0<=key<32 or not 0<=release<press<=8191 or not 1<=sensitivity<=1024:
+    if not 0<=mode<=3 or not 0<=key<32 or not 0<=release<press<=8191 or not 1<=sensitivity<=1024:
         raise ValueError('琴键参数越界：松开阈值必须小于按下阈值')
     params=dict(params or dict(timbre=4,level=.24,attack_ms=1,decay_ms=1000,sustain=0,release_ms=110))
     if isinstance(level_limit,bool) or not isinstance(level_limit,int) or not 1<=level_limit<=65535:

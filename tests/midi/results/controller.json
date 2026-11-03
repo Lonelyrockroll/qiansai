@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "output": "PASS MIDI controller 56 checks, 11 UART replies\nC:\\Users\\ASUS\\AppData\\Local\\Temp\\midi-controller-288cn7mt\\tb.v:99: $finish called at 821005000 (1ps)\n",
+  "source_sha256": {
+    "uart_control_display.v": "79b30f25356b1e3d4bd68bbbdf07845f26fb0943a4f7b76dda2baed73b99085d",
+    "uart_rx.v": "c71e15a282dd81457defeb9acd888d50a571de846128fdba9307f4c89698f56c",
+    "uart_tx.v": "562df067d22ee3bb571ac1ad13bb08a92542d139a2abd5261103ec606fd18bbc"
+  }
+}

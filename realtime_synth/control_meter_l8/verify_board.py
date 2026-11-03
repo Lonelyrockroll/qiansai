@@ -79,9 +79,9 @@ class Board:
         self.fx(s['25'])
         for _ in range(80):
             state=self.call(9)
-            if not loop['key_mode'] or state['calibrated']:break
+            if loop['key_mode'] in (0,3) or state['calibrated']:break
             time.sleep(.02)
-        assert not loop['key_mode'] or (state['calibrated'] and not state['fault']),state
+        assert loop['key_mode'] in (0,3) or (state['calibrated'] and not state['fault']),state
 
 def main():
     parser=argparse.ArgumentParser()

@@ -1,0 +1,31 @@
+{
+  "passed": true,
+  "scope": "Production MIDI, arbitration, Loop, voice router, synth, effects, limiter and independent I2S decoder. Peripheral controls tied idle.",
+  "source_sha256": {
+    "synth_display_top": "67942c0fd3092c95b9fff9163085402e00c2506cb71ceb9aaa4f8d9cb148bd7a",
+    "keyboard_input": "d917ff0ef8f282f96b4e87f898cfa6fbff119d45e43090a865b58b87de17911c",
+    "white_key_map": "483e1ce6d09013c075023c347a7975aaf0caa8c3b51a25f1b0675ee8319016e6",
+    "note_rom": "dfe25333bbd60f09f1170e737048a77dbd1e17d065cf5d717f860a2ef4dc3f9d",
+    "performance_looper": "fb41bd09e2af1d4e8a5778b15f7deb9dfd2319d6f26e7f86996d94cf3b6c7be7",
+    "performance_router": "a0640b7383f8d7bc9dce89f79d748eb88adc55a0a97d3c032bfb872c237aa450",
+    "synth_engine_shared": "bc22524234710d73d93ae6e5da6fda2d32c5f1ad300d979b34fd1ecb20eed9be",
+    "midi_input": "07a41fabdb29bc8ed5a9bc154510b8f945c1e3789f320f5f104abe7965a4c38f",
+    "midi_decoder": "edbac7227c074baca29373a4c9004d8a3c1d69e3d9610114853893daf1caf69e",
+    "uart_rx": "c71e15a282dd81457defeb9acd888d50a571de846128fdba9307f4c89698f56c",
+    "modal32": "598499b06e64626ee286d4acb12200d1028cc593c4a0290043844c2a817f8c1c",
+    "modal32_coeffs": "858c5fbab101d0b91d8d386aeefeaa190b7e9560cc210994a527f94968376026",
+    "waveform_rom": "8e91eabf93ebd95d50af6c6f6cd30ae28f5d7ff5407d35c431b4d25e9fc7a9d9",
+    "piano_modal_tables_compact": "f91e75b30a89f1eaa93ca5c022f8cde807ccb3fd6133e46bacf465091fa79a37",
+    "audio_output_limited": "87f76c43331c52448a13b02e78deade6580639bbd8b36b6931a03877d2c2482a",
+    "pcm_peak_limiter": "a6da50235153e764007c315701bf1bd4b8282e150b301d68f8467d0bae932319",
+    "audio_effects": "c3f748d120e89f0a0885490d5d23ff169d568655dc6b393876726cd6e679cbe8",
+    "chorus_lfo": "abab9c25c5950f30088fb44fef7f9cf69ecb190bb0aa08e9a9a4f3832334b2c2",
+    "audio_tx": "790163bc1eeca79e4b4e70d7553e56543087fa31bd894f3d068e29582d346ae9",
+    "bt_console": "2f0994e8e52fee38bd205a5a9a4cc902407007deaa466f952f29532be42b4a01",
+    "guide_transport": "9254cdb969c18654f4883b1bd12b8425505b009cb817e6266146bb7166c70068",
+    "key_layout": "b61ca7a2537e2b810aec31e459ff68816d282d45d20f0f2a30b6d0287fc8fc4a",
+    "onset_meter": "58f53ad5a5187d27d2b5bc307755f7f4135b12ca7e941d78d96315949f98bdca",
+    "key_release_guard": "479f136c1a8adca7de5771be1c9680270aa42b9840b094900ed3ac15a31b94cf"
+  },
+  "output": "PASS full MIDI audio path, 553 decoded I2S samples, peak 1481, normal key release and pedal release both reach silence\nF:\\codex-project\\pcb\\tang-contest\\tests\\midi\\tb_audio.v:56: $finish called at 11342340000 (1ps)\n"
+}

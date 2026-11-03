@@ -1,9 +1,9 @@
 {
   "passed": true,
   "scope": "UART navigation controller connected to production guide_player and performance_looper RTL",
-  "stdout": "PASS navigation integration 199 checks, 39 UART replies: real guide timeline and real Loop state\nC:\\Users\\ASUS\\AppData\\Local\\Temp\\navigation-integration-m6nl2po_\\tb.v:167: $finish called at 1461276000 (1ps)\n",
+  "stdout": "PASS navigation integration 199 checks, 39 UART replies: real guide timeline and real Loop state\nC:\\Users\\ASUS\\AppData\\Local\\Temp\\navigation-integration-kwqwj180\\tb.v:167: $finish called at 1461276000 (1ps)\n",
   "source_sha256": {
-    "uart_control_display.v": "1b932923700e48cd2ffed6df424c501c2ab8e71d0147f4fa3b1387fa1d00a70c",
+    "uart_control_display.v": "79b30f25356b1e3d4bd68bbbdf07845f26fb0943a4f7b76dda2baed73b99085d",
     "uart_rx.v": "c71e15a282dd81457defeb9acd888d50a571de846128fdba9307f4c89698f56c",
     "uart_tx.v": "562df067d22ee3bb571ac1ad13bb08a92542d139a2abd5261103ec606fd18bbc",
     "guide_player.v": "7ad85be1d08aa523884407602c810ba08e0c19546e77bdd90cf942823426b1ed",

@@ -1,5 +1,6 @@
 `timescale 1ns/1ps
 module synth_display_top(
+    input wire midi_rx,
     input wire sys_clk,input wire bt_rx,output wire bt_tx,output wire [7:0] led_n,input wire uart_rx,output wire uart_tx,inout wire usb_dp,usb_dm,
     output wire HP_BCK,HP_WS,HP_DIN,PA_EN,
     output wire [4:0] key_addr,output wire key_cs_n,key_wr_n,keyboard_led,
@@ -63,6 +64,22 @@ module synth_display_top(
     wire [4:0] key_voice;wire [31:0] key_step,key_pressed;
     wire [15:0] key_level,key_press,key_release,key_attack,key_decay,key_sustain,key_tail,key_scale;
     wire [15:0] key_cv_level,key_raw,key_base,key_delta,key_velocity,key_scans;
+    wire midi_valid,midi_ready,midi_fault,midi_rx_high,midi_clear_counters;
+    wire [122:0] midi_data;
+    wire [31:0] midi_bytes,midi_messages,midi_pressed;
+    wire [15:0] midi_framing,midi_overflows,midi_ignored,midi_steals,midi_pedals;
+    wire [6:0] midi_last_note,midi_last_velocity;
+    wire [3:0] midi_last_channel;
+    wire [5:0] midi_held,midi_sounding;
+    wire [4:0] midi_queued;
+    midi_input midi(.clk(sys_clk),.rst(rst),.rx(midi_rx),.enabled(key_mode==3),
+      .session(uart_amp_hold && !demo_active),.clear(panic || clear_engine || control_live_flush),.clear_counters(midi_clear_counters),
+      .timbre(key_wave),.level(key_level),.attack(key_attack),.decay(key_decay),.sustain(key_sustain),.release_step(key_tail),
+      .event_valid(midi_valid),.event_ready(midi_ready),.event_data(midi_data),.panic_request(midi_fault),.rx_high(midi_rx_high),
+      .byte_count(midi_bytes),.message_count(midi_messages),.framing_errors(midi_framing),.overflows(midi_overflows),
+      .ignored_offs(midi_ignored),.steals(midi_steals),.last_note(midi_last_note),.last_velocity(midi_last_velocity),
+      .last_channel(midi_last_channel),.pedal_mask(midi_pedals),.held_count(midi_held),.sounding_count(midi_sounding),
+      .queued(midi_queued),.white_keys(midi_pressed));
     wire adc_soc,adc_eoc;wire [12:0] adc_data;
     reg fault_old=0;
     always @(posedge sys_clk) if(rst) fault_old<=0;else fault_old<=key_fault;
@@ -190,10 +207,11 @@ module synth_display_top(
     panel_buttons buttons(.clk(sys_clk),.rst(rst),.next_n(key1_n),.apply_n(key0_n),.valid(button_valid),.action(button_action));
     wire pcm_valid,busy,overrun,clipped;
     wire [5:0] active_voices=music_voices+drum_voices;
-    wire use_keys=(key_mode!=0);
-    wire source_valid=use_keys?key_cv:cfg_valid;
-    wire source_gate=use_keys?key_gate:cfg_gate;
-    wire [15:0] source_level=use_keys?key_cv_level:cfg_level;
+    wire use_keys=(key_mode==1 || key_mode==2);
+    wire use_midi=(key_mode==3);
+    wire source_valid=use_midi?midi_valid:(use_keys?key_cv:cfg_valid);
+    wire source_gate=use_midi?midi_data[120]:(use_keys?key_gate:cfg_gate);
+    wire [15:0] source_level=use_midi?midi_data[79:64]:(use_keys?key_cv_level:cfg_level);
     wire audible_command=source_gate && source_level!=0;
     wire music_allowed=source_valid && (!audible_command || amp_ready) && !amp_muting && !panic;
     wire pads_allowed=amp_ready && !amp_muting && !panic;
@@ -209,14 +227,15 @@ module synth_display_top(
       (use_keys?key_sustain:cfg_sustain),(use_keys?key_tail:cfg_release)};
     assign performance_live_valid=!demo_active && (choose_reset || choose_native || choose_pc || choose_music);
     assign performance_live_data=choose_reset?{2'b10,121'd0}:(choose_native || choose_pc)?
-      {2'b00,1'b1,1'b0,(choose_native?drum_hit_pad:pc_pad),115'd0}:music_event;
-    assign cfg_ready=!demo_active && !use_keys && choose_music && loop_live_ready;
+      {2'b00,1'b1,1'b0,(choose_native?drum_hit_pad:pc_pad),115'd0}:(use_midi?midi_data:music_event);
+    assign cfg_ready=!demo_active && key_mode==0 && choose_music && loop_live_ready;
+    assign midi_ready=!demo_active && use_midi && choose_music && loop_live_ready;
     assign key_cr=!demo_active && use_keys && choose_music && loop_live_ready;
     assign pc_pad_ready=!demo_active && choose_pc && loop_live_ready;
     assign drum_hit_ready=demo_active || (!uart_amp_hold && !amp_ready) || amp_muting || panic ? 1'b1:(choose_native && loop_live_ready);
     always @(posedge sys_clk)begin
       if(rst || clear_engine || panic)live_flush_pending<=0;
-        else if(control_live_flush || orphan_flush || (key_fault && !fault_old))live_flush_pending<=1;
+        else if(control_live_flush || orphan_flush || (use_keys && key_fault && !fault_old))live_flush_pending<=1;
       else if(choose_reset && loop_live_ready)live_flush_pending<=0;
     end
     keyboard_adc adc(.clk(sys_clk),.rst(rst),.soc(adc_soc),.eoc(adc_eoc),.data(adc_data));
@@ -241,7 +260,7 @@ module synth_display_top(
       else if(key_cv && key_cr)mapped_pressed[mapped_key]<=key_gate;
     keyboard_input keys(.clk(sys_clk),.rst(rst),.recalibrate(key_recalibrate),
         .play(!demo_active && amp_hold && amp_ready && !amp_muting && !panic && !clear_engine),
-        .mode(key_mode),.test_key(key_test),.press_threshold(key_press),.release_threshold(key_release),
+        .mode(use_keys?key_mode:2'd0),.test_key(key_test),.press_threshold(key_press),.release_threshold(key_release),
         .max_level(key_level),.velocity_scale(key_scale),.mux_addr(key_addr),.mux_cs_n(key_cs_n),.mux_wr_n(key_wr_n),
         .adc_soc(adc_soc),.adc_eoc(adc_eoc),.adc_data(adc_data),.calibrated(key_calibrated),.fault(key_fault),
         .pressed_mask(key_pressed),.scan_count(key_scans),.last_raw(key_raw),.last_base(key_base),
@@ -276,9 +295,14 @@ module synth_display_top(
         .magnitude(magnitude),.muted(PA_EN),
         .lamps(pmod_lamps),.testing(pmod_testing),.led_n(led_n));
     wire [31:0] pc_key_pressed;
-    wire [31:0] panel_keys=key_mode==0?pc_key_pressed:mapped_pressed;
+    wire [31:0] panel_keys=use_midi?midi_pressed:(key_mode==0?pc_key_pressed:mapped_pressed);
     wire [11:0] pt_bias;wire [1:0] pt_mode;
     uart_control_display controller(.monitor_open(monitor_open),.monitor_demo(monitor_demo),.missing_voice(missing_voice),
+        .midi_fault(midi_fault),.midi_rx_high(midi_rx_high),.midi_bytes(midi_bytes),.midi_messages(midi_messages),
+        .midi_framing(midi_framing),.midi_overflows(midi_overflows),.midi_ignored(midi_ignored),.midi_steals(midi_steals),
+        .midi_pedals(midi_pedals),.midi_last_note(midi_last_note),.midi_last_velocity(midi_last_velocity),
+        .midi_last_channel(midi_last_channel),.midi_held(midi_held),.midi_sounding(midi_sounding),
+        .midi_queued(midi_queued),.midi_clear_counters(midi_clear_counters),
         .monitor_fade(monitor_fade),.engine_cleared(clear_engine),.orphan_flush_count(orphan_flush_count),
         .measured_key(measured_key),.measurement_count(measurement_count),.physical_ons(physical_ons),.physical_offs(physical_offs),
         .measured_peaks(measured_peaks),.spectrum_levels(spectrum_levels),.monitor_overrun(monitor_overrun),
@@ -323,7 +347,7 @@ module synth_display_top(
         .ui_page(ui_page),.ui_cursor(ui_cursor),.ui_confirm(ui_confirm),
         .sample_tick(tick),.active_voices(active_voices),.pcm(pcm),.overrun(overrun|drum_overrun|fx_overrun|limiter_overrun),.clipped(clipped|output_clipped|fx_clipped),
         .amp_muted(PA_EN),.amp_ready(amp_ready),.gain_mode(gain_mode),.amp_hold(uart_amp_hold),
-        .key_calibrated(key_calibrated),.key_fault(key_fault),.key_pressed(key_mode==0?pc_key_pressed:key_pressed),
+        .key_calibrated(key_calibrated),.key_fault(key_fault),.key_pressed(use_midi?midi_pressed:(key_mode==0?pc_key_pressed:key_pressed)),
         .key_last(key_last),.key_raw(key_raw),.key_base(key_base),.key_delta(key_delta),.key_velocity(key_velocity),.key_scans(key_scans),
         .key_mode(key_mode),.key_test(key_test),.key_wave(key_wave),.key_recalibrate(key_recalibrate),
         .key_level(key_level),.key_press(key_press),.key_release(key_release),.key_attack(key_attack),
@@ -365,9 +389,10 @@ module synth_display_top(
             else if(peak_div==0 && peak!=0) peak<=peak-1'b1;
         end
     end
-    wire [378:0] panel_state;
-    display_snapshot #(.WIDTH(379)) snapshot(.sys_clk(sys_clk),.sys_rst(rst),.pixel_clk(pixel_clk),.pixel_rst(pixel_rst),
-        .frame_start(frame_start),.source({ui_page,ui_cursor,ui_confirm,panel_keys,guide_colors,guide_next,guide_onset,guide_current,guide_speed,guide_index,guide_count,guide_duration_cs,guide_time_cs,guide_demo,guide_loading,guide_playing,guide_valid,bend_position,vibrato_depth,fx_status_mask,ui_focus[3],loop_actual_cs,loop_position_cs,loop_layers,loop_duration,loop_playing,loop_recording,loop_pending,loop_notice,loop_progress,drum_mode,ui_focus[2:0],key_wave,ui_volume,active_voices,key_mode,
+    wire [15:0] midi_error_count=midi_framing+midi_overflows;
+    wire [427:0] panel_state;
+    display_snapshot #(.WIDTH(428)) snapshot(.sys_clk(sys_clk),.sys_rst(rst),.pixel_clk(pixel_clk),.pixel_rst(pixel_rst),
+        .frame_start(frame_start),.source({midi_bytes[15:0],midi_messages[15:0],midi_error_count,(midi_pedals!=0),ui_page,ui_cursor,ui_confirm,panel_keys,guide_colors,guide_next,guide_onset,guide_current,guide_speed,guide_index,guide_count,guide_duration_cs,guide_time_cs,guide_demo,guide_loading,guide_playing,guide_valid,bend_position,vibrato_depth,fx_status_mask,ui_focus[3],loop_actual_cs,loop_position_cs,loop_layers,loop_duration,loop_playing,loop_recording,loop_pending,loop_notice,loop_progress,drum_mode,ui_focus[2:0],key_wave,ui_volume,active_voices,key_mode,
             key_calibrated,key_fault,PA_EN,amp_ready,uart_amp_hold,ui_pattern,ui_notice,(drum_mode?{20'd0,drum_mask}:panel_keys),peak}),.snapshot(panel_state));
     wire [23:0] rgb,score_rgb,final_rgb;wire hs_out,vs_out,de_out,score_select;
     score_renderer score_video(.clk(pixel_clk),.rst(pixel_rst),.show_requested(score_show),
@@ -384,7 +409,7 @@ module synth_display_top(
       .pixel_clk(pixel_clk),.pixel_rst(pixel_rst),.frame_start(frame_start),.x(x),.y(y),
       .peak_count(measured_peaks),.spectrum_levels(spectrum_levels),.analysis_overrun(monitor_overrun),.rgb(monitor_rgb));
     assign final_rgb=score_select?score_rgb:(monitor_visible?monitor_rgb:rgb);
-    panel_renderer renderer(.actual_keys(panel_state[370:339]),.guide_colors(panel_state[338:275]),
+    panel_renderer renderer(.midi_bytes(panel_state[427:412]),.midi_messages(panel_state[411:396]),.midi_errors(panel_state[395:380]),.midi_pedal(panel_state[379]),.actual_keys(panel_state[370:339]),.guide_colors(panel_state[338:275]),
         .ui_page(panel_state[378:376]),.ui_cursor(panel_state[375:372]),.ui_confirm(panel_state[371]),
         .guide_next(panel_state[274:243]),.guide_onset(panel_state[242:211]),.guide_target(panel_state[210:179]),
         .guide_speed(panel_state[178:177]),.guide_index(panel_state[176:167]),.guide_count(panel_state[166:157]),

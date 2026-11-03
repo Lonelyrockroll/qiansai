@@ -3,7 +3,7 @@
   "scope": "trusted RX byte injection; independent physical serial TX decoder, no production RTL edits",
   "stdout": "PASS score controller 457 checks, 80 UART replies: PDF/PCM, cold and warm monitor takeover, Loop exclusion and late fade acknowledgements\nF:\\codex-project\\pcb\\tang-contest\\tests\\score_controller\\tb_score_controller.v:221: $finish called at 2339046000 (1ps)\n",
   "source_sha256": {
-    "uart_control_display.v": "1b932923700e48cd2ffed6df424c501c2ab8e71d0147f4fa3b1387fa1d00a70c",
+    "uart_control_display.v": "79b30f25356b1e3d4bd68bbbdf07845f26fb0943a4f7b76dda2baed73b99085d",
     "uart_rx.v": "c71e15a282dd81457defeb9acd888d50a571de846128fdba9307f4c89698f56c",
     "uart_tx.v": "562df067d22ee3bb571ac1ad13bb08a92542d139a2abd5261103ec606fd18bbc"
   }

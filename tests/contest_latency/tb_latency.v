@@ -7,7 +7,7 @@ module tb_latency;
   always #10 clk=~clk;
   wire bclk, lrclk, serial_data, hp_clk, hp_ws, hp_data;
   wire [4:0] addr;
-  synth_display_top top(.sys_clk(clk),.bt_rx(1'b1),.key_addr(addr),.i2s_bclk(bclk),
+  synth_display_top top(.sys_clk(clk),.midi_rx(1'b1),.bt_rx(1'b1),.key_addr(addr),.i2s_bclk(bclk),
     .i2s_lrclk(lrclk),.i2s_data(serial_data),.HP_BCK(hp_clk),.HP_WS(hp_ws),.HP_DIN(hp_data));
 
   localparam REVISIT_NS=751*32*20;

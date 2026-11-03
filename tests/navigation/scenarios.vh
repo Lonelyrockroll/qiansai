@@ -117,7 +117,8 @@
 
    nav_select(5,1);before_cal=cal_count;nav_execute();check(dut.key_mode==2 && cal_count==before_cal+1,"scan enable with calibration");
    nav_select(5,2);nav_execute();check(cal_count==before_cal+2,"explicit calibration");
-   nav_select(5,1);nav_execute();check(dut.key_mode==0,"scan disable");
+   nav_select(5,1);nav_execute();check(dut.key_mode==3,"MIDI input selected");
+   nav_execute();check(dut.key_mode==0,"PC input selected after MIDI");
    nav_select(5,2);nav_execute();check(dut.ui_notice==1,"calibrate with scan disabled gives notice");
    nav_select(5,3);nav_execute();check(!dut.drum_mode,"volume target toggles without changing page");
    check(dut.ui_page==5 && dut.ui_cursor==3,"settings selection retained after target switch");

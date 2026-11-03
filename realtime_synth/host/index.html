@@ -21,13 +21,13 @@
 <details id="ledPinPanel"><summary>数据线电平诊断 · 万用表</summary><p class="small">黑表笔接键盘 GND，红表笔接 D1 的 DIN。每次最多保持 30 秒，随后自动恢复全灭数据；这里只测试数据脚，不给灯供电。</p>
 <div class="row"><button id="pinLow" disabled>数据脚 0 V · 30 秒</button><button id="pinHigh" disabled>数据脚 3.3 V · 30 秒</button><button id="pinExit" disabled>退出电平诊断</button></div><p class="small" id="pinFeedback">需要 v18 诊断固件</p></details></div>
 <div class="card"><div class="section">实体琴键 / 信号源测试</div>
-<div class="controls"><label>输入方式<select id="keyMode"><option value="0">上位机琴键</option><option value="1">单路 ADC 信号源</option><option value="2">ADG732 · 32 键扫描</option></select></label>
+<div class="controls"><label>输入方式<select id="keyMode"><option value="0">上位机琴键</option><option value="1">单路 ADC 信号源</option><option value="2">ADG732 · 32 键扫描</option><option value="3">MIDI · 五针 DIN</option></select></label>
 <label>测试 / 观测键（0～31）<input id="keyIndex" type="number" min="0" max="31" value="12"></label>
 <label>按下阈值（偏离基线的 ADC 码）<input id="keyPress" type="number" min="1" max="8191" value="256"></label>
 <label>松开阈值（ADC 码）<input id="keyRelease" type="number" min="0" max="8190" value="128"></label>
 <label>速度增益（1～1024）<input id="keyScale" type="number" min="1" max="1024" value="64"></label></div>
 <div class="row"><button id="keyApply">应用输入设置</button><button id="keyCalibrate">释放全部琴键后校准</button></div>
-<p class="small">切换模式或音色参数后会停止演奏并重新校准；校准时保持松键或稳定的信号源低电平，再点“开始演奏”。模拟输入接 J11-2，J11-1 接地，限 0～1 V，禁止接 3.3 V。实体琴键幅度上限 <span id="keyLevelLimit">25%</span>，上位机按键与实体输入互斥。</p>
+<p class="small">模拟琴板校准时保持松键或稳定的信号源低电平，再点“开始演奏”。MIDI 选择和诊断见下方独立面板。模拟输入接 J11-2，J11-1 接地，限 0～1 V，禁止接 3.3 V。实体琴键幅度上限 <span id="keyLevelLimit">25%</span>，上位机按键与实体输入互斥。</p>
 <p id="keyFeedback" class="small">ADC 输入未启用</p></div>
 <div class="card"><div class="row"><button id="arm" class="primary" disabled>开始演奏 · 预热功放</button><span class="small">演奏期间保持功放开启；按“全部静音”后关闭功放。首次使能仍可能有模拟瞬态。</span></div></div>
 <div class="card"><div class="section">演奏</div><div class="row"><button id="chord" disabled>四声部和弦</button><button id="spectrum" disabled>32 声部频谱测试</button><label>电脑快捷键起点 <select id="octave"><option value="36">C2</option><option value="48">C3</option><option value="60" selected>C4</option><option value="72">C5</option><option value="84">C6</option></select></label></div><div class="piano" id="piano" aria-label="C2 到 F6，共 32 个白键"></div><p class="small">从左到右为实体 H1～H32（C2～F6）。A S D F G H J 弹选中八度的七个白键，K L 弹下一组的 C、D，最高到 F6。可用鼠标或触屏。切换窗口、释放指针、按 Esc 均会停止演奏。</p><div id="noteList">没有按下音符</div></div>
@@ -55,6 +55,10 @@
 <li>选择文本收发，关闭 HEX。先单独发 <code>UUUU</code>，然后单独发英文 <code>?</code>。收到 <code>OK V… T… F…</code> 就表示板卡已回复。B 是 FPGA 测得的位宽，网页会显示换算后的速率。</li></ol>
 <a href="https://appgallery1.huawei.com/#/app/C102224743" style="color:var(--accent)" target="_blank" rel="noopener">蓝牙调试宝 · 华为应用市场</a> · <a href="https://play.google.com/store/apps/details?id=de.kai_morich.serial_bluetooth_terminal" style="color:var(--accent)" target="_blank" rel="noopener">Serial Bluetooth Terminal · Google Play</a></details>
 <p class="small">手机每次发一条，等回包再发下一条。+ / - 调当前页音量，T 换琴键音色，F 换效果，L 测灯，M 静音。</p></div>
+<div class="card" id="midiPanel"><div class="section">MIDI 键盘 · 五针 DIN</div>
+<p class="small">BMV51M001 的 RX 接 J8-5，VDD 接 J8-1（3.3V），GND 接 J8-3。切换输入后点“开始演奏”。MIDI 模式可脱离电脑持续演奏，A 或“全部静音”停止声音。</p>
+<div class="row"><button id="midiUse" disabled>使用 MIDI 键盘</button><button id="midiKeys" disabled>使用 32 键琴板</button><button id="midiPc" disabled>使用电脑琴键</button><button id="midiClear" disabled>清接收计数</button></div>
+<p id="midiStatus" class="small">等待 v33 MIDI 固件</p></div>
 <div class="card" id="fxPanel"><div class="section">FPGA 数字效果器</div>
 <div class="row"><button class="fxPreset" data-preset="off">原声 / 旁路</button><button class="fxPreset" data-preset="piano">钢琴 · 轻空间</button><button class="fxPreset" data-preset="reverb">混响</button><button class="fxPreset" data-preset="delay">延迟</button><button class="fxPreset" data-preset="chorus">合唱</button><button class="fxPreset" data-preset="combined">组合效果</button></div>
 <div class="controls" style="margin-top:16px"><label><input id="fxRevOn" type="checkbox"> 混响混合量 <output id="fxRevText">18.8%</output><input id="fxRev" type="range" min="0" max="96" value="48"></label>
@@ -86,7 +90,7 @@ let playReady=false;let keyboardInitialized=false;let keyboardDirty=false;let ph
 function renderOutput(s){$('keyLevelLimit').textContent=(s.output_gain?.keyboard_limit_percent??25)+'%';physicalMode=!!s.keyboard?.mode;physicalPressed=s.connected && physicalMode && s.feedback?.firmware>=26?(s.key_feedback?.pressed_mask||0)>>>0:0;paintKeys();['keyApply','keyCalibrate'].forEach(id=>$(id).disabled=!s.connected);$('gain').value=s.gain_mode??1;$('gain').disabled=!s.connected;const f=s.feedback||{};playReady=!!(s.connected&&f.amp_hold&&f.amp_ready);$('arm').disabled=!s.connected||!!f.amp_hold;['chord','spectrum'].forEach(id=>$(id).disabled=!playReady||physicalMode);document.querySelectorAll('.key').forEach(k=>k.disabled=!playReady||physicalMode);$('ampStatus').textContent=s.connected?(s.effects?.monitor_mute?'功放：模拟输出关闭，数字合成和抓取仍可运行':f.amp_muted?'功放：硬件静音，请先开始演奏':playReady?'功放：演奏保持，按键不会反复开关':'功放：启动或淡出中'):'功放状态：等待板卡回读';}
 async function request(path,body){const response=await fetch(path,{method:body?'POST':'GET',headers:{'Content-Type':'application/json','X-Synth-Token':TOKEN},body:body?JSON.stringify(body):undefined});const result=await response.json();if(!response.ok)throw new Error(result.error||'请求失败');return result;}
 function report(error){$('notice').textContent=String(error.message||error);}
-function action(action,data={}){const work=queue.then(()=>request('/api/action',{action,...data})).then(s=>{render(s);renderOutput(s);return s;}).catch(report);queue=work;return work;}
+function action(action,data={}){const work=queue.then(()=>request('/api/action',{action,...data})).then(s=>{render(s);renderOutput(s);renderMidi(s);return s;}).catch(report);queue=work;return work;}
 function render(s){connected=s.connected;renderFx(s);renderPcm(s);
 const pm=s.pmod||{},capable=connected && s.feedback?.firmware>=22;
 const meterMode=capable && s.feedback.firmware>=24, fromL8=meterMode && s.feedback.firmware>=25;
@@ -125,7 +129,7 @@ function up(source){const note=pressed.get(source);if(note===undefined)return;pr
 function allOff(){pressed.clear();keyNotes.clear();paintKeys();if(connected)action('panic');}
 function makePiano(){const p=$('piano');p.replaceChildren();for(const note of whiteNotes){const k=document.createElement('button');k.className='key white';k.dataset.note=note;k.textContent=noteName(note);p.append(k);}p.querySelectorAll('.key').forEach(k=>{k.setAttribute('aria-label',noteName(Number(k.dataset.note)));k.addEventListener('pointerdown',e=>{e.preventDefault();k.setPointerCapture(e.pointerId);down('pointer'+e.pointerId,Number(k.dataset.note));});['pointerup','pointercancel','lostpointercapture'].forEach(event=>k.addEventListener(event,e=>up('pointer'+e.pointerId)));});}
 const keyboard={a:0,s:2,d:4,f:5,g:7,h:9,j:11,k:12,l:14};
-window.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();allOff();return;}if(e.repeat||e.ctrlKey||e.altKey||e.metaKey||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||keyboard[e.key.toLowerCase()]===undefined)return;const key=e.key.toLowerCase(),note=Number($('octave').value)+keyboard[key];e.preventDefault();keyNotes.set(key,note);down('key'+key,note);});window.addEventListener('keyup',e=>{const key=e.key.toLowerCase();if(keyNotes.has(key)){up('key'+key);keyNotes.delete(key);}});window.addEventListener('blur',allOff);document.addEventListener('visibilitychange',()=>{if(document.hidden)allOff();});
+window.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();allOff();return;}if(e.repeat||e.ctrlKey||e.altKey||e.metaKey||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||keyboard[e.key.toLowerCase()]===undefined)return;const key=e.key.toLowerCase(),note=Number($('octave').value)+keyboard[key];e.preventDefault();keyNotes.set(key,note);down('key'+key,note);});window.addEventListener('keyup',e=>{const key=e.key.toLowerCase();if(keyNotes.has(key)){up('key'+key);keyNotes.delete(key);}});function leaveBrowserKeys(){pressed.clear();keyNotes.clear();paintKeys();if(connected)action('release_browser');}window.addEventListener('blur',leaveBrowserKeys);document.addEventListener('visibilitychange',()=>{if(document.hidden)leaveBrowserKeys();});
 function params(){const p={};['timbre','level','attack_ms','decay_ms','sustain','release_ms'].forEach(k=>p[k]=Number($(k).value));return p;}
 function updateParams(send=true){const p=params();['level','sustain','attack_ms','decay_ms','release_ms'].forEach(k=>$(k+'Text').textContent=k.endsWith('ms')?p[k]+' ms':Math.round(p[k]*100)+'%');const c=$('envelope'),ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);const durations=[Math.max(3,p.attack_ms),Math.max(3,p.decay_ms),250,Math.max(3,p.release_ms)],total=durations.reduce((a,b)=>a+b,0);let x=25;ctx.strokeStyle='#65d4bf';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x,155);x+=durations[0]/total*740;ctx.lineTo(x,25);x+=durations[1]/total*740;ctx.lineTo(x,155-p.sustain*130);x+=durations[2]/total*740;ctx.lineTo(x,155-p.sustain*130);x+=durations[3]/total*740;ctx.lineTo(x,155);ctx.stroke();clearTimeout(paramTimer);if(connected&&send){$('paramsStatus').textContent='等待更新';paramTimer=setTimeout(()=>action('params',{params:p}).then(s=>{$('paramsStatus').textContent=s?'板卡已确认':'更新失败';}),150);}}
 const standardEnvelope=updateParams;
@@ -140,7 +144,7 @@ $('keyCalibrate').onclick=()=>action('calibrate');
 [['displayNext',1],['displayApply',2],['displayMute',3],['displayPattern',4]].forEach(([id,command])=>$(id).onclick=()=>action('display',{command}));
 $('touchStart').onclick=()=>action('touch_start');$('touchStop').onclick=()=>action('touch_stop');
 async function refresh(){try{const r=await request('/api/devices');$('devices').replaceChildren();for(const d of r.devices){const o=document.createElement('option');o.value=d.id;o.textContent=d.label;$('devices').append(o);}const preferred=r.devices.find(d=>d.preferred);if(preferred)$('devices').value=preferred.id;if(!r.devices.length){const o=document.createElement('option');o.value='';o.textContent='未发现设备，请连接 DEBUG-USB2';$('devices').append(o);}$('notice').textContent=r.warnings.join('；');}catch(e){report(e);}}
-$('refresh').onclick=refresh;$('connect').onclick=async()=>{if(!$('devices').value){report('请先刷新并选择端口');return;}$('notice').textContent='正在握手…';const s=await action('connect',{device:$('devices').value});if(connected&&s){if(s.feedback?.firmware>=22){paramsInitialized=false;render(s);$('notice').textContent='已读取板卡当前设置';}else{$('notice').textContent='握手成功，板卡启动时保持静音';await action('params',{params:params()});}}};$('disconnect').onclick=()=>{allOff();action('disconnect');};$('panic').onclick=allOff;$('chord').onclick=()=>{pressed.clear();paintKeys();action('chord');};$('spectrum').onclick=()=>{pressed.clear();paintKeys();action('spectrum');};
+$('refresh').onclick=refresh;$('connect').onclick=async()=>{if(!$('devices').value){report('请先刷新并选择端口');return;}$('notice').textContent='正在握手…';const s=await action('connect',{device:$('devices').value});if(connected&&s){if(s.feedback?.firmware>=22){paramsInitialized=false;render(s);$('notice').textContent='已读取板卡当前设置';}else{$('notice').textContent='握手成功，板卡启动时保持静音';await action('params',{params:params()});}}};$('disconnect').onclick=()=>{leaveBrowserKeys();action('disconnect');};$('panic').onclick=allOff;$('chord').onclick=()=>{pressed.clear();paintKeys();action('chord');};$('spectrum').onclick=()=>{pressed.clear();paintKeys();action('spectrum');};
 for(const [id,mode] of [['ledChase',1],['ledRgb',3],['ledFollow',2],['ledOff',0]])$(id).onclick=()=>action('led',{mode});
 for(const [id,mode] of [['pinLow',1],['pinHigh',2],['pinExit',0]])$(id).onclick=()=>action('led_pin',{mode});
 $('pmodTest').onclick=()=>action('pmod_test');$('pmodSingle').onclick=()=>action('pmod_test',{index:Number($('singleLamp').value)});
@@ -189,5 +193,16 @@ async function downloadPcm(kind){try{
 $('pcmDownload').onclick=()=>downloadPcm('raw');$('pcmListen').onclick=()=>downloadPcm('listen');
 $('pcmRaw').onclick=()=>downloadPcm('pcm');
 
-async function poll(){if(pollBusy)return;pollBusy=true;try{const s=await request('/api/state');render(s);renderOutput(s);}catch(e){report(e);}finally{pollBusy=false;}}setInterval(poll,500);makePiano();updateParams();refresh();poll();
+function renderMidi(s){
+ const available=!!s.connected&&(s.feedback?.firmware>=33),m=s.midi||{};
+ for(const id of ['midiUse','midiKeys','midiPc','midiClear'])$(id).disabled=!available;
+ $('midiStatus').textContent=available?`输入 ${m.mode===3?'MIDI':m.mode===2?'32 键琴板':'电脑/测试'} · 接收 ${m.bytes??0} 字节 · ${m.events??0} 事件 · 按住 ${m.held??0} 音 · 延音 ${m.sustain?'开':'关'} · 最近音符 ${m.last_note??'—'} / 上次按键力度 ${m.last_velocity??'—'} / 通道 ${m.last_channel??'—'} · 帧错误 ${m.framing_errors??0} · FIFO 溢出 ${m.overflows??0} · 满复音替换 ${m.steals??0}`:'等待 v33 MIDI 固件';
+ if(m.mode===3&&available)$('keyCalibrate').disabled=true;
+ if(m.mode===3&&available)$('keyFeedback').textContent='MIDI 输入就绪，支持黑键、力度与 CC64 延音踏板。接收计数见 MIDI 键盘面板。';
+}
+$('midiUse').onclick=()=>action('midi',{command:'mode',mode:3});
+$('midiKeys').onclick=()=>action('midi',{command:'mode',mode:2});
+$('midiPc').onclick=()=>action('midi',{command:'mode',mode:0});
+$('midiClear').onclick=()=>action('midi',{command:'clear'});
+async function poll(){if(pollBusy)return;pollBusy=true;try{const s=await request('/api/state');render(s);renderOutput(s);renderMidi(s);}catch(e){report(e);}finally{pollBusy=false;}}setInterval(poll,500);makePiano();updateParams();refresh();poll();
 </script></body></html>

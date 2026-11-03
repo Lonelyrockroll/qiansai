@@ -4,10 +4,10 @@
   "bank_width_bits": 16,
   "font_words_used": 3030,
   "all_glyph_rows_unchanged": true,
-  "generated_at_utc": "2026-11-02T17:02:09.742690+00:00",
-  "baseline_renderer_sha256": "5117deb9bf0b00a72d08b29e2faf5cb24c3c1b16f92dca605479fe2798fe0483",
+  "generated_at_utc": "2026-11-03T05:02:09.115221+00:00",
+  "baseline_renderer_sha256": "bbf2bdeeec45ff2ca2b2167201e82cdee52f4c623f53dcd7ca04fbea3fe15f8f",
   "pixel_latency_cycles": 3,
-  "baseline_kind": "Actual RTL frames inspected for layout and text clipping; not physical board photographs",
+  "baseline_kind": "v33 MIDI: reviewed changes limited to input selector, compact expression values and one effects description; original keyboard pixels unchanged",
   "testbench": "tests/guide_ui/render_tb.v",
   "pages": {
     "home": {
@@ -24,7 +24,7 @@
       "ui_confirm": 0,
       "drum_mode": 0,
       "rendered_pixels": 614400,
-      "rgb_sha256": "0c7c327499e8f401b68da3310840aec8c97db332884dadd24e99fccdd02ace83"
+      "rgb_sha256": "5032918766d9e6622402b4a8bd0ef23b723b38c3b0901f5927af5d55ff5f0267"
     },
     "effects": {
       "ui_page": 2,
@@ -32,7 +32,7 @@
       "ui_confirm": 0,
       "drum_mode": 0,
       "rendered_pixels": 614400,
-      "rgb_sha256": "6a3be1985d374bdd169d431612aa97c037ffa5f285caa02db2fe8d15213415c7"
+      "rgb_sha256": "c7ba35d9e16d81123d15f0006c44f388994deb1298d40bdf5d9ffa15cc718e60"
     },
     "loop_confirm": {
       "ui_page": 3,
@@ -56,7 +56,7 @@
       "ui_confirm": 0,
       "drum_mode": 0,
       "rendered_pixels": 614400,
-      "rgb_sha256": "8de984d5e4babb00cc7b53a2e8e5823302d257859ae975de70c5b4bf30793d46"
+      "rgb_sha256": "336248881f90ac2175ba291eb3626c9bba10f102c60493fc21fef1bb4ff1e3d1"
     },
     "drums": {
       "ui_page": 3,

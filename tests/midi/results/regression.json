@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "bit_clocks": 32,
+  "source_sha256": {
+    "uart_rx.v": "c71e15a282dd81457defeb9acd888d50a571de846128fdba9307f4c89698f56c",
+    "midi_decoder.v": "edbac7227c074baca29373a4c9004d8a3c1d69e3d9610114853893daf1caf69e",
+    "midi_input.v": "07a41fabdb29bc8ed5a9bc154510b8f945c1e3789f320f5f104abe7965a4c38f",
+    "note_rom.v": "dfe25333bbd60f09f1170e737048a77dbd1e17d065cf5d717f860a2ef4dc3f9d",
+    "performance_router.v": "a0640b7383f8d7bc9dce89f79d748eb88adc55a0a97d3c032bfb872c237aa450"
+  },
+  "output": "PASS MIDI 63 checks, 56 note-ons, 49 offs, 9 immediate kills, bit clocks 32\nF:\\codex-project\\pcb\\tang-contest\\tests\\midi\\tb_midi.v:124: $finish called at 5545920000 (1ps)\n"
+}

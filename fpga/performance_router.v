@@ -9,7 +9,7 @@ module performance_router(input wire clk,rst,clear,cancel,
  input wire [31:0] voice_active_mask,
  output reg [31:0] held_mask,output reg [5:0] held_count,live_held_count,
  output reg [31:0] events_applied,notes_applied,steals,ignored_offs);
- localparam IDLE=0,DRUM=1,SEARCH=2,DECIDE=3,SEND=4,F_SCAN=5,F_WAIT=6,F_LOAD=7,F_SEND=8;
+ localparam IDLE=0,DRUM=1,SEARCH=2,DECIDE=3,SEND=4,F_SCAN=5,F_WAIT=6,F_LOAD=7,F_SEND=8,OFF_WAIT=9,OFF_LOAD=10;
  reg [3:0] state;reg [122:0] payload;reg [2:0] source;
  reg [2:0] owner[0:31];reg [4:0] logical_id[0:31];reg [31:0] valid_mask,live_mask;
  reg [114:0] profiles[0:31];reg [4:0] profile_address;reg [114:0] profile_q,parameters_q;
@@ -20,6 +20,8 @@ module performance_router(input wire clk,rst,clear,cancel,
  reg [5:0] scan;reg matched,free_found,releasing_found;reg [4:0] match_slot,free_slot,release_slot,steal_cursor;
  reg [4:0] flush_sources;
  wire [4:0] chosen=matched?match_slot:free_found?free_slot:releasing_found?release_slot:steal_cursor;
+ wire stored_off=!payload[120] && payload[114:112]==5;
+ wire hard_off=!payload[120] && payload[114:112]==7;
  assign event_ready=state==IDLE && !rst && !clear && !cancel;
  assign drum_valid=state==DRUM && !cancel && !clear;
  assign drum_pad=payload[118:115];
@@ -60,16 +62,19 @@ module performance_router(input wire clk,rst,clear,cancel,
     if(scan==31)state<=DECIDE;else scan<=scan+1'b1;
    end
    DECIDE:begin
-    if(!payload[120] && (!matched || !held_mask[match_slot]))begin ignored_offs<=ignored_offs+1'b1;state<=IDLE;end
+    if(!payload[120] && (!matched || (!held_mask[match_slot] && !hard_off)))begin ignored_offs<=ignored_offs+1'b1;state<=IDLE;end
     else begin
      cfg_voice<=chosen;cfg_gate<=payload[120];cfg_restart<=payload[120] && (!matched || !held_mask[chosen]);
-     parameters_q<=payload[114:0];state<=SEND;
+     parameters_q<=hard_off?{3'd0,32'd0,16'd0,16'd1,16'd1,16'd0,16'hffff}:payload[114:0];
+     if(stored_off)begin profile_address<=chosen;state<=OFF_WAIT;end else state<=SEND;
      if(payload[120] && !matched)begin
       steal_cursor<=chosen+1'b1;
       if(valid_mask[chosen] && held_mask[chosen])steals<=steals+1'b1;
      end
     end
    end
+   OFF_WAIT:state<=OFF_LOAD;
+   OFF_LOAD:begin parameters_q<=profile_q;state<=SEND;end
    SEND:if(cfg_ready)begin
     valid_mask[cfg_voice]<=1;held_mask[cfg_voice]<=cfg_gate;live_mask[cfg_voice]<=source==0;
     owner[cfg_voice]<=source;logical_id[cfg_voice]<=payload[119:115];notes_applied<=notes_applied+1'b1;state<=IDLE;

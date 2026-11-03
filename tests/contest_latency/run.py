@@ -11,7 +11,7 @@ HERE = Path(__file__).resolve().parent
 FPGA = HERE.parents[1] / 'fpga'
 SOURCES = (
     'synth_display_top', 'keyboard_input', 'white_key_map', 'note_rom',
-    'performance_looper', 'performance_router', 'synth_engine_shared',
+    'performance_looper', 'performance_router', 'synth_engine_shared', 'midi_input', 'midi_decoder', 'uart_rx',
     'modal32', 'modal32_coeffs', 'waveform_rom', 'piano_modal_tables_compact',
     'audio_output_limited', 'pcm_peak_limiter', 'audio_effects', 'chorus_lfo', 'audio_tx',
     'bt_console', 'guide_transport', 'key_layout', 'onset_meter', 'key_release_guard',

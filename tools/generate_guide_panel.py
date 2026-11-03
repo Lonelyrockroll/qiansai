@@ -60,7 +60,7 @@ def scene():
     tone=state_expr('timbre',['纯净正弦','风琴','柔和复合','弦乐','敲击钢琴'])
     effect=state_expr('fx',['原声','混响','延时','混响延时','合唱','混响合唱','延时合唱','组合效果'])
     amp=state_expr('muted?0:(ready?1:2)',['已静音','演奏就绪','功放预热'])
-    scan=state_expr('fault?3:(mode==0?2:(calibrated?0:1))',['已校准','校准中','扫描未开','ADC故障'])
+    scan=state_expr('mode==3?4:(fault?3:(mode==0?2:(calibrated?0:1)))',['已校准','校准中','扫描未开','ADC故障','MIDI'])
     loop=state_expr('loop_pending?3:(loop_recording?2:(loop_playing?1:0))',['等待录制','循环播放','正在录制','录制准备'])
     guide=state_expr('guide_loading?3:(guide_playing?2:(guide_valid?1:0))',['等待曲目','曲目就绪','跟拍进行','接收曲目'])
     speed=state_expr('guide_speed',['速度 0.50倍','速度 0.75倍','速度 1.00倍','速度 1.25倍'])
@@ -70,7 +70,7 @@ def scene():
     record=state_expr('loop_pending?2:(loop_recording?1:0)',['录制一轮','结束录制','取消准备'])
     loop_play=state_expr('loop_playing',['播放循环','停止循环'])
     guide_play=state_expr('guide_playing',['播放指引','暂停指引'])
-    toggle_scan=state_expr('mode!=0',['开启扫描','关闭扫描'])
+    toggle_scan=state_expr('mode==3?2:(mode==0?0:1)',['输入 PC','输入 扫描','输入 MIDI'])
     volume_target=state_expr('drum_mode',['音量对象  琴键','音量对象  鼓组'])
     clear=state_expr('ui_confirm',['清空循环','再次点按确认清空'])
     home=label_expr('返回首页')
@@ -125,7 +125,7 @@ def scene():
     text(40,463,'琴键',color="24'h708b96",condition='ui_page<3')
     text(120,463,(scan,4),color="fault?24'heca27f:24'h79d7bd",condition='ui_page<3')
     text(304,463,(loop,4),color="loop_recording?24'heca27f:24'h8ca7b3",condition='ui_page<3')
-    text(40,434,'实时合成 / 硬件效果',color="24'h8ca7b3",condition='ui_page==2')
+    text(40,434,'实时音色 / 音频效果',color="24'h8ca7b3",condition='ui_page==2')
     text(40,495,'点按 B 切换 · A 静音返回',color="24'h708b96",condition='ui_page==1 || ui_page==2')
     text(40,495,'B 选择功能 · 按转调音量',color="24'h708b96",condition='ui_page==0')
 
@@ -149,8 +149,8 @@ def scene():
     for i in range(3):digit(272+i*16,434,f'count_bcd[{(2-i)*4} +: 4]',color="24'h8ca7b3",condition='ui_page==4')
     text(40,463,'手机传曲后可独立跟拍',color="24'h8ca7b3",condition='ui_page==4')
     text(40,495,'曲谱需先在手机发送',color="notice==3?24'heab17e:24'h708b96",condition='ui_page==4')
-    text(40,463,'校准时请松开全部琴键',color="24'h8ca7b3",condition='ui_page==5')
-    text(40,495,'鼓组按键始终可以演奏',color="24'h708b96",condition='ui_page==5')
+    text(40,463,'校准时请松开全部琴键',color="24'h8ca7b3",condition='ui_page==5 && mode!=3')
+    text(40,495,'鼓组按键始终可以演奏',color="24'h708b96",condition='ui_page==5 && mode!=3')
 
     text(680,309,'B 选择 / 点按确认',color="24'h8ca7b3")
     for i in range(6):
@@ -158,13 +158,23 @@ def scene():
         expr=select_expr('ui_page',[page[i] for page in menus])
         text(704,333+36*i,(expr,9),1,color="ui_confirm && ui_page==3 && ui_cursor==5?24'hffe0b7:24'he0e9e7",condition=condition)
     text(40,533,'输出',color="24'h708b96",condition='ui_page!=1')
-    text(360,533,'校准异常',color="24'heca27f",condition='fault || notice==2')
+    text(360,533,'校准异常',color="24'heca27f",condition='(fault && mode!=3) || notice==2')
     text(360,533,'请先开启扫描',color="24'heab17e",condition='!fault && notice==1')
-    text(360,533,'循环操作受限',color="24'heca27f",condition='!fault && notice==0 && loop_notice!=0')
-    bend=state_expr('bend_position',[f'滑音 {i*50:+d}' if i else '滑音 0' for i in range(-4,5)])
-    depth=state_expr('vibrato_depth',[f'颤音 {i*10}' for i in range(6)])
-    text(40,533,(bend,7),color="timbre==4?24'h546e78:24'h8ca7b3",condition='ui_page==1')
-    text(200,533,(depth,5),color="timbre==4?24'h546e78:24'h8ca7b3",condition='ui_page==1')
+    text(360,533,'循环操作受限',color="24'heca27f",condition='notice==4 || (!fault && notice==0 && loop_notice!=0)')
+    text(40,533,'滑音',color="24'h8ca7b3",condition='ui_page==1')
+    text(120,533,(state_expr('bend_position<4',['+','-']),1),color="24'h8ca7b3",condition='ui_page==1')
+    for i in range(3):digit(136+i*16,533,f'(bend_value/{10**(2-i)})%10',color="24'h8ca7b3",condition='ui_page==1')
+    text(216,533,'颤音',color="24'h8ca7b3",condition='ui_page==1')
+    digit(296,533,'vibrato_depth',color="24'h8ca7b3",condition='ui_page==1')
+    digit(312,533,'0',color="24'h8ca7b3",condition='ui_page==1')
+    text(40,463,'接收',color="24'h8ca7b3",condition='ui_page==5 && mode==3')
+    text(280,463,'事件',color="24'h8ca7b3",condition='ui_page==5 && mode==3')
+    text(40,495,'异常',color="midi_errors!=0?24'heab17e:24'h8ca7b3",condition='ui_page==5 && mode==3')
+    for i in range(5):
+        for x,y,name in [(120,463,'midi_rx_bcd'),(360,463,'midi_event_bcd'),(120,495,'midi_error_bcd')]:
+            digit(x+16*i,y,f'{name}[{(4-i)*4} +: 4]',color="24'hc6d3d6",condition='ui_page==5 && mode==3')
+    text(280,495,'延音',color="24'h8ca7b3",condition='ui_page==5 && mode==3')
+    digit(360,495,'midi_pedal',color="24'h79d7bd",condition='ui_page==5 && mode==3')
     text(24,574,'A 点按静音返回 · 旋转滑音 · 按转颤音',color="24'h708b96")
     text(632,574,'B 旋转选择 · 按转音量',color="24'h8ca7b3")
     return key_base
@@ -172,6 +182,7 @@ def scene():
 HEADER='''`timescale 1ns/1ps
 // Generated by tools/generate_guide_panel.py. Three-cycle pixel pipeline.
 module panel_renderer(input wire clk,rst,input wire [10:0] x,y,input wire hs,vs,de,
+ input wire [15:0] midi_bytes,midi_messages,midi_errors,input wire midi_pedal,
  input wire [2:0] ui_page,input wire [3:0] ui_cursor,input wire ui_confirm,
  input wire [3:0] bend_position,focus,input wire [2:0] vibrato_depth,fx,timbre,input wire [6:0] volume,input wire [5:0] voices,
  input wire [1:0] mode,input wire calibrated,fault,muted,ready,playing,pattern,
@@ -194,12 +205,13 @@ module panel_renderer(input wire clk,rst,input wire [10:0] x,y,input wire hs,vs,
  end
 
  // Round-robin binary-to-BCD conversion decouples decimal formatting from the
- // pixel path. All five values refresh within 85 pixel clocks.
+ // pixel path. All eight values refresh within 136 pixel clocks.
  reg [2:0] bcd_slot;
  reg [4:0] bcd_step;
  reg [15:0] bcd_binary;
  reg [19:0] bcd_work,bcd_adjust;
- reg [19:0] time_bcd,duration_bcd,count_bcd,index_bcd,loop_bcd;
+ reg [19:0] time_bcd,duration_bcd,count_bcd,index_bcd,loop_bcd,midi_rx_bcd,midi_event_bcd,midi_error_bcd;
+ wire [8:0] bend_value=(bend_position<4?4-bend_position:bend_position-4)*50;
  integer digit_index;
  always @* begin
   bcd_adjust=bcd_work;
@@ -207,13 +219,14 @@ module panel_renderer(input wire clk,rst,input wire [10:0] x,y,input wire hs,vs,
    if(bcd_work[digit_index*4 +: 4]>=5)bcd_adjust[digit_index*4 +: 4]=bcd_work[digit_index*4 +: 4]+4'd3;
  end
  always @(posedge clk) begin
-  if(rst) begin bcd_slot<=0;bcd_step<=0;bcd_binary<=0;bcd_work<=0;time_bcd<=0;duration_bcd<=0;count_bcd<=0;index_bcd<=0;loop_bcd<=0;end
+  if(rst) begin bcd_slot<=0;bcd_step<=0;bcd_binary<=0;bcd_work<=0;time_bcd<=0;duration_bcd<=0;count_bcd<=0;index_bcd<=0;loop_bcd<=0;midi_rx_bcd<=0;midi_event_bcd<=0;midi_error_bcd<=0;end
   else if(bcd_step==0) begin
    bcd_work<=0;bcd_step<=1;
    case(bcd_slot)
     0:bcd_binary<=guide_time_cs;1:bcd_binary<=guide_duration_cs;
     2:bcd_binary<={6'd0,guide_count};3:bcd_binary<={6'd0,guide_index};
-    default:bcd_binary<={6'd0,(loop_recording?loop_position_cs:loop_actual_cs)};
+    4:bcd_binary<={6'd0,(loop_recording?loop_position_cs:loop_actual_cs)};
+    5:bcd_binary<=midi_bytes;6:bcd_binary<=midi_messages;default:bcd_binary<=midi_errors;
    endcase
   end else begin
    bcd_work<={bcd_adjust[18:0],bcd_binary[15]};bcd_binary<={bcd_binary[14:0],1'b0};
@@ -221,9 +234,11 @@ module panel_renderer(input wire clk,rst,input wire [10:0] x,y,input wire hs,vs,
     case(bcd_slot)
      0:time_bcd<={bcd_adjust[18:0],bcd_binary[15]};1:duration_bcd<={bcd_adjust[18:0],bcd_binary[15]};
      2:count_bcd<={bcd_adjust[18:0],bcd_binary[15]};3:index_bcd<={bcd_adjust[18:0],bcd_binary[15]};
-     default:loop_bcd<={bcd_adjust[18:0],bcd_binary[15]};
+     4:loop_bcd<={bcd_adjust[18:0],bcd_binary[15]};
+     5:midi_rx_bcd<={bcd_adjust[18:0],bcd_binary[15]};6:midi_event_bcd<={bcd_adjust[18:0],bcd_binary[15]};
+     7:midi_error_bcd<={bcd_adjust[18:0],bcd_binary[15]};
     endcase
-    bcd_slot<=bcd_slot==4?0:bcd_slot+1'b1;bcd_step<=0;
+    bcd_slot<=bcd_slot+1'b1;bcd_step<=0;
    end else bcd_step<=bcd_step+1'b1;
   end
  end

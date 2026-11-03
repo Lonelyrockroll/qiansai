@@ -18,7 +18,7 @@ PROGRAMMER = Path('E:/Gowin_edu/Gowin_V1.9.11.03_Education_x64/Programmer/bin/pr
 
 def load(build, folder, replace_example=False, after_repower=False, profile='full'):
     verified = validate(build,profile)
-    assert verified['firmware'] in (30,31,32)
+    assert verified['firmware'] in (30,31,32,33)
     image = build/'impl/pnr/synth_display.fs'
     folder.mkdir(parents=True, exist_ok=True)
     def programmer(args, name):
@@ -45,11 +45,11 @@ def load(build, folder, replace_example=False, after_repower=False, profile='ful
         try:
             before = board.state()
             loop = board.call(14)
-            assert before['4']['firmware'] in (29,30,31,32), before['4']
-            assert not before['4']['active'] and not before['9']['pressed_mask']
+            assert before['4']['firmware'] in (29,30,31,32,33), before['4']
+            assert not before['4']['active'] and not before['4']['gated'] and not before['9']['pressed_mask']
             assert not before['16']['length_set'] and not any(loop[k] for k in ('playing','recording','pending_record','present','layers'))
             assert not any(before['22'][k] for k in ('recording','armed','ready'))
-            assert before['9']['mode'] in (0,2)
+            assert before['9']['mode'] in (0,2,3)
             if before['4']['firmware'] >= 30:
                 guide = board.call(31)
                 known_example=(replace_example and guide['guide_count']==84 and guide['guide_duration_cs']==2400 and guide['guide_time_cs']==0)
@@ -75,7 +75,7 @@ def load(build, folder, replace_example=False, after_repower=False, profile='ful
         assert board.call(4)['firmware'] == verified['firmware']
         if before:
             board.restore(before)
-            if before['9']['mode']:
+            if before['9']['mode'] in (1,2):
                 board.call(8)
                 time.sleep(.8)
             board.call(10,bytes([6,before['11']['focus']]))

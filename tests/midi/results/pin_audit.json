@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "prior_pin_count": 38,
+  "current_pin_count": 39,
+  "preserved_prior_bindings": true,
+  "new_input": {
+    "signal": "midi_rx",
+    "package_pin": "AA19",
+    "connector": "J8-5",
+    "logic_volts": 3.3,
+    "module_signal": "BMV51M001 RX"
+  },
+  "module_power": "VDD -> J8-1 3.3V; GND -> J8-3",
+  "baud": 31250,
+  "format": "8N1",
+  "synchronizer": "uart_rx rx_meta -> rx_sync",
+  "schematic": "https://www.bestmodulescorp.com/en/amfile/file/download/file/2107/product/1316/",
+  "routed_input_row": "midi_rx         | -         | AA19/8        | Y          | in    | IOB85[A] | RDWR_B          | LVCMOS33   | OFF   | UP        | OFF       | ON         | OFF        | SLOW      | OFF        | OFF             | OFF           | 3.3        | MEDIUM        | NONE         ",
+  "routed_user_code": "0x0000FAE1"
+}

@@ -1,0 +1,45 @@
+{
+  "home": {
+    "changed_bounds": null,
+    "outside_expected": null
+  },
+  "tones": {
+    "changed_bounds": [
+      41,
+      534,
+      323,
+      549
+    ],
+    "outside_expected": null
+  },
+  "effects": {
+    "changed_bounds": [
+      73,
+      435,
+      183,
+      450
+    ],
+    "outside_expected": null
+  },
+  "loop_confirm": {
+    "changed_bounds": null,
+    "outside_expected": null
+  },
+  "guide": {
+    "changed_bounds": null,
+    "outside_expected": null
+  },
+  "settings": {
+    "changed_bounds": [
+      704,
+      371,
+      862,
+      397
+    ],
+    "outside_expected": null
+  },
+  "drums": {
+    "changed_bounds": null,
+    "outside_expected": null
+  }
+}

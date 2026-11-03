@@ -33,6 +33,7 @@ def menu_names(display,navigation=None):
     if navigation_enabled(navigation):
         names=list(NAVIGATION_MENUS[navigation['page']])
         if navigation['page']==3 and navigation.get('confirm'):names[5]='再次确认清空'
+        if navigation['page']==5 and display.get('firmware',0)>=33:names[1]='输入来源'
         return names
     if display.get('firmware',0)>=32:return menu_names(dict(display,firmware=31))+['声谱观察']
     if display.get('firmware',0)>=30:

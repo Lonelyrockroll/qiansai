@@ -1,8 +1,12 @@
 # qiansai
 
+[Keystation 五针 MIDI 输入 v33](MIDI-INPUT.md) · [MIDI 完整工程与下载包](output/Tang-MIDI-v33.zip)
+
+当前码流为 `0x0000FAE1`，支持 BMV51M001 的 RX 接 J8-5，使用 MIDI Note On/Off、力度、32 声部分配与延音控制。屏幕「设置 → 输入来源」可选择 MIDI，默认延音关闭，普通按键和松键即可演奏。
+
 [新版分级菜单操作](SCREEN-NAVIGATION.md) · [完整 Gowin 工程、码流与实板记录](output/Tang-分级菜单UI-v32.zip)
 
-新版 `0x000090FB` 在顶部完整显示 32 个白键，首页提供音色、效果、循环录制、曲目指引和设置五个入口。旋转 B 选择，短按 B 执行，按住 B 旋转调音量，短按 A 静音回首页。
+分级菜单初版 `0x000090FB` 在顶部完整显示 32 个白键，首页提供音色、效果、循环录制、曲目指引和设置五个入口。旋转 B 选择，短按 B 执行，按住 B 旋转调音量，短按 A 静音回首页。
 
 ![分级菜单首页](tests/guide_ui/results/hierarchical/home.png)
 

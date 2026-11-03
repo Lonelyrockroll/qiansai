@@ -41,7 +41,7 @@ class Tests(unittest.TestCase):
     def test_keyboard_payload_and_source_exclusion(self):
         values=struct.unpack('<BBB8H',keyboard_payload(2,31,params=dict(timbre=4,level=.9,attack_ms=1,decay_ms=1000,sustain=0,release_ms=110)))
         self.assertEqual(values[:3],(2,31,4));self.assertLessEqual(values[3],16384)
-        for args in [dict(mode=3),dict(key=32),dict(press=128,release=128),dict(sensitivity=0),dict(key=1.2)]:
+        for args in [dict(mode=4),dict(key=32),dict(press=128,release=128),dict(sensitivity=0),dict(key=1.2)]:
             with self.assertRaises(ValueError):keyboard_payload(**args)
         ctl=server.Controller();ctl.stop.set();ctl.worker.join();ctl.transport=FakeTransport()
         ctl.keyboard['mode']=1
@@ -123,7 +123,7 @@ class Tests(unittest.TestCase):
         finally:ctl.disconnect()
 
     def test_unknown_version_and_bad_rate_still_fail(self):
-        for version in (5,27,33,99):
+        for version in (5,27,34,99):
             ctl=server.Controller();ctl.stop.set();ctl.worker.join();fake=FirmwareTransport(version);ctl.transport=fake
             with self.assertRaises(OSError):ctl.exchange(30)
             self.assertIsNone(ctl.transport);self.assertTrue(fake.closed)

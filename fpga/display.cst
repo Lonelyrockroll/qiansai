@@ -21,6 +21,9 @@ IO_LOC "uart_rx" V14;
 IO_PORT "uart_rx" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
 IO_LOC "uart_tx" U15;
 IO_PORT "uart_tx" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=4 BANK_VCCIO=3.3;
+// BMV51M001 RX (opto-isolated output) -> J8-5 / PMOD1_IO6. Module VDD is J8-1, 3.3 V.
+IO_LOC "midi_rx" AA19;
+IO_PORT "midi_rx" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
 
 // Keyboard ADG732 control on J13 pins 1..7. No SDRAM module may share this connector.
 // J13-8 -> keyboard PCB U5.4, WS2812B-4020 DIN. FPGA A13 (not AA13), Bank 1.

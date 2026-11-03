@@ -21,6 +21,7 @@ from transports import list_devices, open_device
 from protocol import DISPLAY_ACTION, DISPLAY_STATUS, LED_CONTROL, LED_STATUS, LED_PIN_CONTROL, PCM_CONTROL, PCM_STATUS, PCM_READ, FX_CONTROL, FX_STATUS, FX_IMPULSE
 from protocol import OUTPUT_GAIN_STATUS, PMOD_TEST, PMOD_STATUS, NAVIGATION
 from touch_logic import navigation_enabled, menu_names
+from protocol import MIDI_STATUS
 from keypad_config import MappingStore,INPUTS,CATALOG,LABELS,defaults,BY_ACTION,DRUM_NAMES
 
 ROOT=Path(__file__).resolve().parent
@@ -41,6 +42,7 @@ class Controller:
         self.key_feedback={}
         self.display_feedback={}
         self.navigation_feedback={}
+        self.midi_feedback={}
         self.led_feedback={}
         self.fx_feedback={};self.pcm_feedback={};self.pcm_job={};self.pcm_context={};self.pcm_files={}
         self.output_gain_feedback={};self.pmod_feedback={}
@@ -73,9 +75,9 @@ class Controller:
                 if status['seq']!=seq or status['opcode']!=opcode:continue
                 firmware=status['firmware']
                 rate_free=(opcode in (KEY_STATUS,DISPLAY_STATUS,LED_STATUS,PCM_STATUS,PCM_READ,FX_STATUS)
-                           or (opcode==30 and firmware>=28) or (opcode==31 and firmware>=30) or (opcode in (32,33) and firmware>=31) or (opcode in (34,35,NAVIGATION) and firmware>=32))
+                           or (opcode==30 and firmware>=28) or (opcode==31 and firmware>=30) or (opcode in (32,33) and firmware>=31) or (opcode in (34,35,NAVIGATION) and firmware>=32) or (opcode==MIDI_STATUS and firmware>=33))
                 rate=status.get('sample_rate')
-                if (not 6<=firmware<=32 or (opcode==30 and firmware<28) or (opcode==31 and firmware<30) or (opcode in (32,33) and firmware<31) or (opcode in (34,35,NAVIGATION) and firmware<32)
+                if (not 6<=firmware<=33 or (opcode==30 and firmware<28) or (opcode==31 and firmware<30) or (opcode in (32,33) and firmware<31) or (opcode in (34,35,NAVIGATION) and firmware<32)
                     or (not rate_free and (rate is None or not abs(rate-FS)<=0.01))):
                     raise OSError('响应不是匹配的实时合成控制固件')
                 if opcode==DISPLAY_STATUS:
@@ -87,6 +89,8 @@ class Controller:
                 elif opcode==PMOD_STATUS:self.pmod_feedback=status
                 elif opcode==OUTPUT_GAIN_STATUS:self.output_gain_feedback=status
                 elif opcode==PCM_STATUS:self.pcm_feedback=status
+                elif opcode==MIDI_STATUS:
+                    if status['status']==0:self.midi_feedback.update(status)
                 elif opcode==NAVIGATION:
                     if status['status']==0 or (status['status']==2 and not any(payload)):
                         self.navigation_feedback=status
@@ -101,6 +105,8 @@ class Controller:
                         raise NavigationChanged('菜单状态已变化或操作未就绪，请重试')
                     if opcode==NAVIGATION and status['status'] in (2,3):
                         raise ValueError('菜单状态已变化或操作未就绪，请重试')
+                    if opcode==MIDI_STATUS and status['status'] in (3,4):
+                        raise ValueError('请先停止 Loop 或声谱测试，再切换演奏输入')
                     if opcode==PCM_CONTROL and status['status']==4:
                         raise ValueError('抓取缓存已被占用，已保留连接及现有数据')
                     raise OSError({1:'板卡拒绝了校验错误的数据帧',2:'不支持的命令',3:'板卡拒绝了超出范围的参数',4:'当前输入模式不允许此操作，或 ADC 尚未校准／故障'}.get(status['status'],'板卡命令失败'))
@@ -112,6 +118,7 @@ class Controller:
         self.disconnect()
         self.display_feedback={}
         self.navigation_feedback={}
+        self.midi_feedback={}
         self.led_feedback={}
         devices,_=list_devices()
         self.output_gain_feedback={};self.pmod_feedback={}
@@ -126,6 +133,7 @@ class Controller:
                 self.params.update(timbre=display['timbre'],level=output['keyboard_level']/65535)
                 self.exchange(KEY_STATUS);self.exchange(FX_STATUS);self.exchange(PMOD_STATUS)
                 if hello['firmware']>=32:self.exchange(NAVIGATION)
+                if hello['firmware']>=33:self.exchange(MIDI_STATUS);self.exchange(MIDI_STATUS,b'\0\1')
             else:
                 self.exchange(PANIC);self.keyboard['mode']=0;self.set_keyboard(self.keyboard);self.set_gain(self.gain_mode)
             self.error='';self.ui_seen=time.monotonic()
@@ -138,13 +146,21 @@ class Controller:
         self.keypad['enabled']=False;self.keypad['active']=False
         if self.transport:
             handle=self.transport
-            try:self.exchange(PANIC)
+            try:
+                if self.feedback.get('firmware',0)>=33:self.exchange(PANIC,b'\x02')
+                else:self.exchange(PANIC)
             except Exception:pass
             finally:handle.close();self.transport=None
         self.notes.clear();self.release_until.clear();self.device=''
 
     def panic(self,keep_open=False):
         status=self.exchange(PANIC,bytes([int(keep_open)]));self.notes.clear();self.release_until.clear();return status
+
+    def release_browser_controls(self):
+        if self.feedback.get('firmware',0)<33:return self.panic()
+        status=self.exchange(PANIC,b'\x02')
+        self.notes.clear();self.release_until.clear()
+        return status
 
     def begin_performance(self):
         self.exchange(ARM)
@@ -154,6 +170,8 @@ class Controller:
             time.sleep(.005);self.exchange(STATUS)
 
     def set_keyboard(self,settings):
+        if int(settings.get('mode',0))==3 and self.feedback.get('firmware',0)<33:
+            raise ValueError('MIDI 输入需要 v33 或更新固件')
         candidate={k:settings[k] for k in ('mode','key','press','release','sensitivity')}
         payload=keyboard_payload(**candidate,params=self.params,level_limit=self.output_gain_feedback.get('keyboard_limit',16384))
         candidate={k:int(v) for k,v in candidate.items()}
@@ -379,6 +397,8 @@ class Controller:
             if action=='connect':self.connect(str(data['device']))
             elif action=='disconnect':self.disconnect()
             elif action=='panic':self.panic()
+            elif action=='release_browser':
+                self.release_browser_controls()
             elif action=='note_on':self.note_on(data['note'])
             elif action=='note_off':self.note_off(data['note'])
             elif action=='gain':self.set_gain(data['mode'])
@@ -450,6 +470,16 @@ class Controller:
                 self.exchange(DISPLAY_STATUS)
                 if navigation_enabled(getattr(self,'navigation_feedback',{})):self.exchange(NAVIGATION)
                 self.exchange(STATUS);self.exchange(KEY_STATUS)
+            elif action=='midi':
+                if not self.transport or self.feedback.get('firmware',0)<33:raise ValueError('请先连接 MIDI v33 固件')
+                command=data.get('command','status')
+                if command=='mode':
+                    mode=data.get('mode')
+                    if isinstance(mode,bool) or mode not in (0,2,3):raise ValueError('输入模式无效')
+                    self.exchange(MIDI_STATUS,bytes([1,mode]))
+                elif command=='clear':self.exchange(MIDI_STATUS,b'\2')
+                elif command!='status':raise ValueError('MIDI 操作无效')
+                self.exchange(MIDI_STATUS);self.exchange(MIDI_STATUS,b'\0\1');self.exchange(DISPLAY_STATUS);self.exchange(KEY_STATUS)
             elif action=='led':
                 if not self.transport or self.feedback.get('firmware',0)<17:raise ValueError('请先连接 v17 灯光固件')
                 mode=data.get('mode')
@@ -466,7 +496,7 @@ class Controller:
 
     def snapshot(self):
         return dict(connected=self.transport is not None,device=self.device,
-                    notes=list(self.notes.values()),params=self.params,gain_mode=self.gain_mode,feedback=self.feedback,keyboard=self.keyboard,key_feedback=self.key_feedback,display_feedback=self.display_feedback,navigation=self.navigation_feedback,led_feedback=self.led_feedback,effects=self.fx_feedback,pmod=self.pmod_feedback,output_gain=self.output_gain_feedback,pcm_capture=self.pcm_feedback,pcm_export=self.pcm_job.copy(),touch=self.touch.copy(),
+                    notes=list(self.notes.values()),params=self.params,gain_mode=self.gain_mode,feedback=self.feedback,keyboard=self.keyboard,key_feedback=self.key_feedback,display_feedback=self.display_feedback,navigation=self.navigation_feedback,midi=self.midi_feedback,led_feedback=self.led_feedback,effects=self.fx_feedback,pmod=self.pmod_feedback,output_gain=self.output_gain_feedback,pcm_capture=self.pcm_feedback,pcm_export=self.pcm_job.copy(),touch=self.touch.copy(),
                     keypad=dict(self.keypad,revision=self.keypad_store.revision,config=self.keypad_store.snapshot(),config_error=self.keypad_store.error),error=self.error)
 
     def monitor(self):
@@ -477,9 +507,9 @@ class Controller:
                     if (self.touch['enabled'] or self.keypad['enabled']) and time.monotonic()-self.touch_seen>2.0:
                         self.touch.update(enabled=False,active=False,error='触摸接收中断，已静音')
                         self.keypad.update(enabled=False,active=False,error='设备接收中断，已静音')
-                        self.panic()
+                        self.release_browser_controls()
                     if time.monotonic()-self.ui_seen>2.0:
-                        self.disconnect();self.error='控制页面已离开，已静音并断开连接';continue
+                        self.disconnect();self.error='控制页面已离开，已断开电脑连接';continue
                     if time.monotonic()-self.last_poll>0.25:
                         self.exchange(STATUS)
                         if self.pcm_feedback.get('armed') or self.pcm_feedback.get('recording'):self.exchange(PCM_STATUS)
@@ -489,6 +519,7 @@ class Controller:
                         if self.feedback.get('firmware',0)>=21:self.exchange(OUTPUT_GAIN_STATUS)
                         if self.feedback.get('firmware',0)>=22:self.exchange(PMOD_STATUS)
                         if navigation_enabled(getattr(self,'navigation_feedback',{})):self.exchange(NAVIGATION)
+                        if self.feedback.get('firmware',0)>=33:self.exchange(MIDI_STATUS);self.exchange(MIDI_STATUS,b'\0\1')
                         if self.keyboard['mode']:self.exchange(KEY_STATUS)
                 except Exception as error:
                     self.error=str(error)

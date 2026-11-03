@@ -36,7 +36,7 @@ def check(folder):
     def menu(action,arg=0): return board.call(10,bytes([action,arg]))
     try:
         before=status(board)
-        assert before['4']['firmware']==32 and not before['4']['amp_hold'] and not before['4']['active']
+        assert before['4']['firmware'] in (32,33) and not before['4']['amp_hold'] and not before['4']['active']
         assert not before['16']['length_set'] and not before['14']['playing'] and not before['14']['recording']
         assert not board.call(32)['score_reserved'] and not board.call(34)['monitor']
         assert not any(before['22'][k] for k in ('armed','recording','ready'))

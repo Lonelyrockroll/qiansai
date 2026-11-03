@@ -5,7 +5,7 @@ module guide_ui_check;
  reg [15:0] tm=0,duration=0;reg [9:0] index=0,count=0,lpc=0;reg drums=0;
  reg [2:0] page=0,effects=1;reg [3:0] cursor=0;reg confirm=0;
  wire [23:0] rgb;
- panel_renderer dut(.clk(clk),.rst(rst),.x(x),.y(y),.hs(1'b0),.vs(1'b0),.de(1'b1),
+ panel_renderer dut(.midi_bytes(16'd65535),.midi_messages(16'd12345),.midi_errors(16'd2),.midi_pedal(1'b0),.clk(clk),.rst(rst),.x(x),.y(y),.hs(1'b0),.vs(1'b0),.de(1'b1),
  .ui_page(page),.ui_cursor(cursor),.ui_confirm(confirm),.bend_position(4'd4),.focus(4'd9),.vibrato_depth(3'd2),.fx(effects),.timbre(3'd4),.volume(7'd7),.voices(6'd3),.mode(2'd2),
  .calibrated(1'b1),.fault(1'b0),.muted(1'b0),.ready(1'b1),.playing(1'b1),.pattern(1'b0),
  .loop_actual_cs(lpc),.loop_position_cs(10'd0),.loop_layers(3'd2),.loop_notice(3'd0),.loop_duration(2'd2),
@@ -18,6 +18,7 @@ module guide_ui_check;
  integer menu_row,menu_x,menu_y;
  initial begin repeat(3)@(negedge clk);rst=0;tm=65535;duration=4820;count=512;index=511;lpc=800;
  repeat(200)@(negedge clk);
+ if(dut.midi_rx_bcd!==20'h65535 || dut.midi_event_bcd!==20'h12345 || dut.midi_error_bcd!==20'h00002)$fatal(1,"MIDI count conversion");
  if(dut.time_bcd!==20'h65535 || dut.duration_bcd!==20'h04820 || dut.count_bcd!==20'h00512 || dut.index_bcd!==20'h00511 || dut.loop_bcd!==20'h00800)$fatal(1,"BCD conversion");
  tm=0;duration=1;count=0;index=1;lpc=0;repeat(200)@(negedge clk);
  if(dut.time_bcd!==0 || dut.duration_bcd!==1 || dut.count_bcd!==0 || dut.index_bcd!==1 || dut.loop_bcd!==0)$fatal(1,"BCD update");

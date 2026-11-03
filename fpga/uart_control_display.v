@@ -6,6 +6,12 @@ module uart_control_display #(
     parameter [11:0] DEFAULT_PT_BIAS=12'd1577
 )(
     input wire clk,input wire rst,input wire uart_in,output wire uart_out,
+    input wire midi_fault,midi_rx_high,
+    input wire [31:0] midi_bytes,midi_messages,
+    input wire [15:0] midi_framing,midi_overflows,midi_ignored,midi_steals,midi_pedals,
+    input wire [6:0] midi_last_note,midi_last_velocity,
+    input wire [3:0] midi_last_channel,input wire [5:0] midi_held,midi_sounding,
+    input wire [4:0] midi_queued,output reg midi_clear_counters,
     input wire bt_request,input wire [7:0] bt_command,input wire bt_locked,pmod_testing,
     input wire [15:0] bt_period,bt_count,bt_dropped,input wire [7:0] pmod_lamps,
     output wire bt_accept,output reg pmod_test,pmod_single,output reg [2:0] pmod_select,
@@ -156,8 +162,20 @@ module uart_control_display #(
     task scan_toggle;
       begin key_mode<=key_mode==0?2:0;key_recalibrate<=1;live_piano_flush<=1;gate_mask<=0;end
     endtask
+    task select_input(input [1:0] new_mode);
+      begin
+        key_mode<=new_mode;key_recalibrate<=new_mode==1 || new_mode==2;
+        live_piano_flush<=1;gate_mask<=0;panic<=1;amp_hold<=0;armed<=0;ui_local<=0;
+      end
+    endtask
+    task cycle_input;
+      begin
+        if(loop_recording || loop_pending || loop_playing)ui_notice<=4;
+        else select_input(key_mode==0?2:(key_mode==3?0:3));
+      end
+    endtask
     task calibrate_keys;
-      begin if(key_mode==0)ui_notice<=1;else begin key_recalibrate<=1;live_piano_flush<=1;gate_mask<=0;end end
+      begin if(key_mode==0 || key_mode==3)ui_notice<=1;else begin key_recalibrate<=1;live_piano_flush<=1;gate_mask<=0;end end
     endtask
     task loop_play_toggle;
       begin loop_command_valid<=1;loop_command<=3;
@@ -224,7 +242,7 @@ module uart_control_display #(
                 else ui_pending<=1;
             endcase
           5:case(ui_cursor)
-              1:scan_toggle();2:calibrate_keys();3:switch_input_mode();
+              1:cycle_input();2:calibrate_keys();3:switch_input_mode();
               4:begin monitor_open<=1;monitor_demo<=0;end
               5:ui_pattern<=!ui_pattern;
             endcase
@@ -236,6 +254,7 @@ module uart_control_display #(
     always @* gated_count=router_held+drum_voices;
     always @(posedge clk) begin
         if(rst) begin
+            midi_clear_counters<=0;
             pmod_test<=0;pmod_single<=0;pmod_select<=0;fx_command_valid<=0;fx_monitor_mute<=0;fx_test_valid<=0;fx_test_value<=0;
             fx_mask<=0;fx_reverb_mix<=48;fx_delay_mix<=64;fx_chorus_mix<=80;fx_feedback<=96;
             fx_delay_time<=2;fx_room<=1;fx_rate<=1;fx_depth<=1;
@@ -260,6 +279,7 @@ module uart_control_display #(
             for(i=0;i<26;i=i+1) rx_buf[i]<=0;
             for(i=0;i<28;i=i+1) tx_buf[i]<=0;
         end else begin
+            midi_clear_counters<=0;
             pmod_test<=0;fx_command_valid<=0;fx_test_valid<=0;
             capture_command_valid<=0;
             led_command_valid<=0;
@@ -270,8 +290,8 @@ module uart_control_display #(
                 else if(engine_cleared)begin monitor_wait_clear<=0;monitor_demo<=1;end
             end
             if(sample_tick) frame_count<=frame_count+1'b1;
-            if(armed && !ui_local && watchdog<WATCHDOG_CYCLES) watchdog<=watchdog+1'b1;
-            if(armed && !ui_local && watchdog==WATCHDOG_CYCLES-1) begin
+            if(armed && !ui_local && key_mode!=3 && watchdog<WATCHDOG_CYCLES) watchdog<=watchdog+1'b1;
+            if(armed && !ui_local && key_mode!=3 && watchdog==WATCHDOG_CYCLES-1) begin
                 panic<=1;gate_mask<=0;armed<=0;timed_out<=1;amp_hold<=0;
                 ui_epoch<=ui_epoch+1'b1;
             end
@@ -316,11 +336,15 @@ module uart_control_display #(
                                     result_code<=0;state<=APPLY;
                                 end
                                 3: begin
+                                  // A browser-detach request releases only PC ownership.
+                                  if(rx_buf[6][1] && key_mode==3)begin result_code<=0;state<=BUILD;end
+                                  else begin
                                     ui_local<=0;
                                     ui_epoch<=ui_epoch+1'b1;
                                     panic<=1;gate_mask<=0;command_count<=command_count+1'b1;
                                     amp_hold<=rx_buf[6][0] && amp_hold;
                                     armed<=rx_buf[6][0] && amp_hold;timed_out<=0;result_code<=0;state<=CLEAR;
+                                  end
                                 end
                                 5: begin
                                     if(rx_buf[6]>2) result_code<=3;
@@ -333,7 +357,7 @@ module uart_control_display #(
                                     command_count<=command_count+1'b1;result_code<=0;state<=BUILD;
                                 end
                                 7: begin
-                                    if(rx_buf[6]>2 || rx_buf[7]>=32 || rx_buf[8]>4 ||
+                                    if(rx_buf[6]>3 || rx_buf[7]>=32 || rx_buf[8]>4 ||
                                        {rx_buf[10],rx_buf[9]}>26214 ||
                                        {rx_buf[12],rx_buf[11]}>8191 ||
                                        {rx_buf[12],rx_buf[11]}<1 ||
@@ -375,6 +399,16 @@ module uart_control_display #(
                                 // Read trim (0), or write (1, uint16 little endian) with the PA safely off.
                                 34:begin result_code<=0;state<=BUILD;end
                                 35:begin result_code<=rx_buf[6]<=3?0:3;state<=BUILD;end
+                                37:begin
+                                    state<=BUILD;result_code<=0;
+                                    if(rx_buf[6]>3 || (rx_buf[6]==0 && rx_buf[7]>1) ||
+                                       (rx_buf[6]==1 && rx_buf[7]>3))result_code<=3;
+                                    else if(rx_buf[6]==1)begin
+                                        if(loop_recording || loop_pending || loop_playing || monitor_demo!=0)result_code<=4;
+                                        else begin select_input(rx_buf[7][1:0]);ui_epoch<=ui_epoch+1'b1;end
+                                    end else if(rx_buf[6]==2)midi_clear_counters<=1;
+                                    else if(rx_buf[6]==3)begin mute_home();ui_epoch<=ui_epoch+1'b1;end
+                                end
                                 // Hierarchical UI. Selection and execution are separate so
                                 // hosts can mirror exactly the controls on the HDMI screen.
                                 36:begin
@@ -552,7 +586,7 @@ module uart_control_display #(
                         tx_buf[22]={6'd0,drum_mode,native_connected};tx_buf[23]={3'd0,native_last_event};
                     end
                     if(opcode==30) begin tx_buf[7]=pt_bias[7:0];tx_buf[8]={4'b0,pt_bias[11:8]};tx_buf[9]={6'b0,pt_mode};end
-                    tx_buf[24]=32;tx_buf[25]=opcode;
+                    tx_buf[24]=33;tx_buf[25]=opcode;
 
                     if(opcode==12)begin
                         tx_buf[7]={7'd0,native_connected};tx_buf[8]={3'd0,native_last_event};tx_buf[9]={1'b1,vibrato_depth,bend_position};
@@ -662,6 +696,21 @@ module uart_control_display #(
                         tx_buf[9]={4'd0,ui_pending,score_visible,monitor_open,ui_confirm};
                         tx_buf[10]=ui_page==4?5:6;tx_buf[11]={4'd0,ui_focus};tx_buf[12]=1;
                         tx_buf[13]=ui_epoch;for(i=14;i<24;i=i+1)tx_buf[i]=0;
+                    end
+                    if(opcode==37)begin
+                        tx_buf[7]={6'd0,key_mode};
+                        tx_buf[8]={3'd0,(midi_framing!=0 || midi_overflows!=0),(midi_pedals!=0),amp_ready,amp_hold,midi_rx_high};
+                        tx_buf[9]={2'd0,midi_held};tx_buf[10]={3'd0,midi_queued};
+                        for(i=0;i<4;i=i+1)begin tx_buf[11+i]=midi_bytes[i*8+:8];tx_buf[15+i]=midi_messages[i*8+:8];end
+                        tx_buf[19]=midi_framing[7:0];tx_buf[20]=midi_framing[15:8];
+                        tx_buf[21]=midi_overflows[7:0];tx_buf[22]=midi_overflows[15:8];tx_buf[23]={1'b0,midi_last_note};
+                        if(rx_buf[6]==0 && rx_buf[7]==1)begin
+                            tx_buf[7]={1'b1,midi_last_velocity};tx_buf[8]={4'd0,midi_last_channel};
+                            tx_buf[9]=midi_pedals[7:0];tx_buf[10]=midi_pedals[15:8];
+                            tx_buf[11]=midi_ignored[7:0];tx_buf[12]=midi_ignored[15:8];
+                            tx_buf[13]=midi_steals[7:0];tx_buf[14]=midi_steals[15:8];
+                            tx_buf[15]={2'd0,midi_sounding};for(i=16;i<24;i=i+1)tx_buf[i]=0;
+                        end
                     end
                     tx_buf[27]=8'h0d;tx_index<=0;state<=CHECKSUM;
                     if(opcode==21 && rx_buf[6]==1 && score_reserved)tx_buf[6]=4;
@@ -776,7 +825,11 @@ module uart_control_display #(
                 if(monitor_demo!=0)begin monitor_demo<=0;panic<=1;amp_hold<=0;armed<=0;gate_mask<=0;ui_local<=0;end
             end
             if(native_panic)begin monitor_open<=0;monitor_demo<=0;mute_home();ui_epoch<=ui_epoch+1'b1;ui_pending<=0;pending_score_exit<=0;end
-            if(key_fault && !drum_mode)ui_notice<=2;
+            if(midi_fault && key_mode==3)begin
+                monitor_open<=0;monitor_demo<=0;mute_home();ui_notice<=5;
+                ui_epoch<=ui_epoch+1'b1;ui_pending<=0;pending_score_exit<=0;
+            end
+            if(key_fault && !drum_mode && (key_mode==1 || key_mode==2))ui_notice<=2;
         end
     end
 endmodule

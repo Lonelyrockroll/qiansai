@@ -1,0 +1,2 @@
+PASS MIDI 63 checks, 56 note-ons, 49 offs, 9 immediate kills, bit clocks 32
+F:\codex-project\pcb\tang-contest\tests\midi\tb_midi.v:124: $finish called at 5545920000 (1ps)

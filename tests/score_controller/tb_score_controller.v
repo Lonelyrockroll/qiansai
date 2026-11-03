@@ -59,7 +59,7 @@ module tb_score_controller;
    wait(wire_count>=base+28);for(i=0;i<28;i=i+1)reply[i]=wire_bytes[base+i];
    check(reply[0]==8'h5a && reply[1]==8'ha5 && reply[2]==1 && reply[3]==seqno && reply[4]==8'h80 && reply[5]==20 && reply[27]==13,"UART reply envelope");
    xor_byte=0;for(i=2;i<26;i=i+1)xor_byte=xor_byte^reply[i];check(reply[26]===xor_byte,"UART reply XOR");
-   check(reply[6]===expected,"reply status");check(reply[24]==32 && reply[25]==op,"firmware/opcode unchanged");
+   check(reply[6]===expected,"reply status");check(reply[24]==33 && reply[25]==op,"firmware/opcode unchanged");
    wait(dut.state==0);repeat(2)@(posedge clk);
  end endtask
  task transaction(input [7:0] op,input [7:0] expected);begin start_request(op);finish_reply(op,expected);end endtask
